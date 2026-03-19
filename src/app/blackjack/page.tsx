@@ -39,6 +39,7 @@ type Action =
   | { type: "STAND" }
   | { type: "DOUBLE"; balance: number }
   | { type: "SPLIT"; balance: number }
+  | { type: "DEALER_HIT" }
   | { type: "NEW_HAND" };
 
 function initialState(): State {
@@ -59,18 +60,6 @@ function drawCard(deck: Card[], faceDown = false): [Card, Card[]] {
   return [{ ...card, faceDown }, rest];
 }
 
-function runDealerTurn(deck: Card[], dealerHand: Card[]): { deck: Card[]; dealerHand: Card[] } {
-  // Reveal hole card first
-  let hand: Card[] = dealerHand.map(c => ({ ...c, faceDown: false }));
-  let d = deck;
-  while (dealerShouldHit(hand)) {
-    const [card, rest] = drawCard(d);
-    hand = [...hand, card];
-    d = rest;
-  }
-  return { deck: d, dealerHand: hand };
-}
-
 function resolveAllHands(
   playerHands: Hand[],
   dealerHand: Card[]
@@ -87,6 +76,17 @@ function needsDealerPlay(playerHands: Hand[]): boolean {
     const { total } = handTotal(h.cards);
     return total <= 21;
   });
+}
+
+/** Reveal hole card and start dealer turn, or skip straight to result if all bust */
+function startDealerTurn(state: State, hands: Hand[], deck: Card[]): State {
+  const revealed = state.dealerHand.map(c => ({ ...c, faceDown: false }));
+  if (needsDealerPlay(hands)) {
+    return { ...state, deck, playerHands: hands, dealerHand: revealed, phase: "dealer" };
+  }
+  // All bust — no dealer play, resolve immediately
+  const resolved = resolveAllHands(hands, revealed);
+  return { ...state, deck, playerHands: resolved, dealerHand: revealed, phase: "result" };
 }
 
 function reducer(state: State, action: Action): State {
@@ -152,14 +152,7 @@ function reducer(state: State, action: Action): State {
         if (nextIdx < hands.length) {
           return { ...state, deck, playerHands: hands, activeHandIndex: nextIdx };
         }
-        // Dealer turn
-        if (needsDealerPlay(hands)) {
-          const { deck: d2, dealerHand } = runDealerTurn(deck, state.dealerHand);
-          const resolved = resolveAllHands(hands, dealerHand);
-          return { ...state, deck: d2, playerHands: resolved, dealerHand, phase: "result" };
-        }
-        const resolved = resolveAllHands(hands, state.dealerHand.map(c => ({ ...c, faceDown: false })));
-        return { ...state, deck, playerHands: resolved, dealerHand: state.dealerHand.map(c => ({ ...c, faceDown: false })), phase: "result" };
+        return startDealerTurn(state, hands, deck);
       }
 
       return { ...state, deck, playerHands: hands };
@@ -172,14 +165,7 @@ function reducer(state: State, action: Action): State {
       if (nextIdx < hands.length) {
         return { ...state, activeHandIndex: nextIdx };
       }
-      // All hands done — dealer turn
-      if (needsDealerPlay(hands)) {
-        const { deck, dealerHand } = runDealerTurn(state.deck, state.dealerHand);
-        const resolved = resolveAllHands(hands, dealerHand);
-        return { ...state, deck, playerHands: resolved, dealerHand, phase: "result" };
-      }
-      const resolved = resolveAllHands(hands, state.dealerHand.map(c => ({ ...c, faceDown: false })));
-      return { ...state, playerHands: resolved, dealerHand: state.dealerHand.map(c => ({ ...c, faceDown: false })), phase: "result" };
+      return startDealerTurn(state, hands, state.deck);
     }
 
     case "DOUBLE": {
@@ -197,13 +183,7 @@ function reducer(state: State, action: Action): State {
       if (nextIdx < hands.length) {
         return { ...state, deck, playerHands: hands, activeHandIndex: nextIdx };
       }
-      if (needsDealerPlay(hands)) {
-        const { deck: d2, dealerHand } = runDealerTurn(deck, state.dealerHand);
-        const resolved = resolveAllHands(hands, dealerHand);
-        return { ...state, deck: d2, playerHands: resolved, dealerHand, phase: "result" };
-      }
-      const resolved = resolveAllHands(hands, state.dealerHand.map(c => ({ ...c, faceDown: false })));
-      return { ...state, deck, playerHands: resolved, dealerHand: state.dealerHand.map(c => ({ ...c, faceDown: false })), phase: "result" };
+      return startDealerTurn(state, hands, deck);
     }
 
     case "SPLIT": {
@@ -220,6 +200,17 @@ function reducer(state: State, action: Action): State {
 
       hands.splice(state.activeHandIndex, 1, hand1, hand2);
       return { ...state, deck, playerHands: hands };
+    }
+
+    case "DEALER_HIT": {
+      if (state.phase !== "dealer") return state;
+      if (dealerShouldHit(state.dealerHand)) {
+        const [card, deck] = drawCard(state.deck);
+        return { ...state, deck, dealerHand: [...state.dealerHand, card] };
+      }
+      // Dealer stands — resolve all hands
+      const resolved = resolveAllHands(state.playerHands, state.dealerHand);
+      return { ...state, playerHands: resolved, phase: "result" };
     }
 
     case "NEW_HAND":
@@ -286,6 +277,17 @@ export default function BlackjackPage() {
     else if (allLose) playLose();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase]);
+
+  // Dealer turn: one card at a time, 750ms apart
+  useEffect(() => {
+    if (phase !== "dealer") return;
+    const timer = setTimeout(() => {
+      if (dealerShouldHit(dealerHand)) playCardDeal();
+      dispatch({ type: "DEALER_HIT" });
+    }, 750);
+    return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, dealerHand.length]);
 
   // Deduct bet when dealing
   const handleDeal = useCallback(() => {
@@ -833,6 +835,40 @@ export default function BlackjackPage() {
             >
               SPLIT
             </motion.button>
+          </div>
+        )}
+
+        {phase === "dealer" && (
+          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "10px", padding: "4px 0" }}>
+            <div style={{
+              display: "flex",
+              gap: "5px",
+              alignItems: "center",
+            }}>
+              {[0, 1, 2].map(i => (
+                <motion.div
+                  key={i}
+                  style={{
+                    width: "6px",
+                    height: "6px",
+                    borderRadius: "50%",
+                    background: "var(--accent-gold)",
+                  }}
+                  animate={{ opacity: [0.3, 1, 0.3] }}
+                  transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
+                />
+              ))}
+            </div>
+            <span style={{
+              fontFamily: "'Barlow Condensed', sans-serif",
+              fontSize: "0.9rem",
+              fontWeight: 600,
+              letterSpacing: "0.12em",
+              color: "var(--accent-gold)",
+              textTransform: "uppercase",
+            }}>
+              Dealer&apos;s Turn
+            </span>
           </div>
         )}
 
