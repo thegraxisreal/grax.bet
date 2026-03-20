@@ -3,9 +3,9 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 
 const TRACKS = [
-  { file: "/music/gamblesong.mp3",                           label: "Gamble Song" },
-  { file: "/music/freemusicforvideo-lofi-chill-music-495628.mp3", label: "Lofi Chill" },
-  { file: "/music/03. Arcana Theme.mp3",                     label: "Arcana Theme" },
+  { file: "/music/all-in.mp3",         label: "All In" },
+  { file: "/music/felt-table.mp3",     label: "Felt Table" },
+  { file: "/music/midnight-casino.mp3", label: "Midnight Casino" },
 ];
 
 // Fisher-Yates shuffle
