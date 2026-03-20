@@ -11,14 +11,10 @@ import { playChipClick } from "@/lib/sound";
 const ROWS = 16;
 const BUCKETS = ROWS + 1;
 
-type Risk = "low" | "medium" | "high";
 type Phase = "idle" | "dropping" | "result";
 
-const MULTIPLIERS: Record<Risk, number[]> = {
-  low: [0.5, 0.7, 0.8, 1, 1.2, 1.5, 2, 3, 5, 3, 2, 1.5, 1.2, 1, 0.8, 0.7, 0.5],
-  medium: [0.2, 0.3, 0.5, 1, 1.5, 2, 3, 5, 10, 5, 3, 2, 1.5, 1, 0.5, 0.3, 0.2],
-  high: [0.1, 0.2, 0.3, 0.5, 1, 2, 5, 10, 25, 10, 5, 2, 1, 0.5, 0.3, 0.2, 0.1],
-};
+// Real plinko: edges are jackpots, center is a loss — balls land in center most often
+const MULTIPLIERS = [150, 20, 8, 3, 2, 1.2, 0.6, 0.3, 0.2, 0.3, 0.6, 1.2, 2, 3, 8, 20, 150];
 
 const BALL_COUNTS = [1, 3, 5, 10];
 const SPEED_LABELS: Record<string, number> = { Slow: 0.6, Normal: 1, Fast: 2 };
@@ -224,7 +220,6 @@ export default function PlinkoPage() {
   const [phase, setPhase] = useState<Phase>("idle");
   const [bet, setBet] = useState(1);
   const [ballCount, setBallCount] = useState(1);
-  const [risk, setRisk] = useState<Risk>("medium");
   const [speed, setSpeed] = useState("Normal");
   const [sessionProfit, setSessionProfit] = useState(0);
 
@@ -252,7 +247,6 @@ export default function PlinkoPage() {
   const animFrameRef = useRef(0);
   const ballIdRef = useRef(0);
   const phaseRef = useRef<Phase>("idle");
-  const riskRef = useRef<Risk>(risk);
   const betRef = useRef(bet);
   const speedRef = useRef(SPEED_LABELS[speed]);
   const dropContextRef = useRef<{
@@ -264,7 +258,6 @@ export default function PlinkoPage() {
   } | null>(null);
 
   phaseRef.current = phase;
-  riskRef.current = risk;
   betRef.current = bet;
   speedRef.current = SPEED_LABELS[speed];
 
@@ -298,7 +291,7 @@ export default function PlinkoPage() {
     let running = true;
     let lastTime = performance.now();
 
-    const mults = () => MULTIPLIERS[riskRef.current];
+    const mults = () => MULTIPLIERS;
 
     function drawBoard(ctx: CanvasRenderingContext2D, scaleX: number, scaleY: number) {
       ctx.save();
@@ -536,6 +529,14 @@ export default function PlinkoPage() {
             const ny = dy / dist;
             ball.x = peg.x + nx * minDist;
             ball.y = peg.y + ny * minDist;
+            // Clamp to walls immediately so peg can't push ball through the boundary
+            const clampedX = Math.max(SIDE_PAD + BALL_RADIUS, Math.min(BOARD_W - SIDE_PAD - BALL_RADIUS, ball.x));
+            if (clampedX !== ball.x) {
+              // Peg tried to push ball into a wall — redirect downward to escape the stuck zone
+              ball.vx = (clampedX === SIDE_PAD + BALL_RADIUS ? 1 : -1) * Math.abs(ball.vx) * 0.3;
+              ball.vy = Math.abs(ball.vy) + 80;
+            }
+            ball.x = clampedX;
 
             // Reflect velocity
             const dot = ball.vx * nx + ball.vy * ny;
@@ -546,10 +547,7 @@ export default function PlinkoPage() {
               ball.vy *= bounceDamping;
 
               // Add random horizontal nudge for realism
-              const riskBias = riskRef.current === "low" ? 0.6 : riskRef.current === "high" ? 0.3 : 0.45;
-              const nudge = (Math.random() < riskBias ? -1 : 1) *
-                (30 + Math.random() * 60) *
-                (ball.x > BOARD_W / 2 ? -0.3 : 0.3); // slight center bias
+              const nudge = (Math.random() < 0.5 ? -1 : 1) * (30 + Math.random() * 70);
               ball.vx += nudge;
 
               // Squish
@@ -857,13 +855,13 @@ export default function PlinkoPage() {
             ))}
           </div>
           <div style={{ display: "flex", gap: 4, marginTop: 4 }}>
-            <button onClick={() => setBet(Math.round(balance / 2 * 100) / 100)}
+            <button onClick={() => setBet(Math.floor((balance / 2 / ballCount) * 100) / 100)}
               disabled={phase === "dropping"}
               style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 4, padding: "5px 6px", borderRadius: 5, border: "1px solid rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.06)", color: "var(--text-secondary)", fontFamily: "'Barlow Condensed', sans-serif", fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", cursor: "pointer" }}>
               <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="13" r="6" fill="var(--text-muted)"/><circle cx="10" cy="13" r="4.5" fill="var(--bg-secondary)"/><circle cx="10" cy="9" r="6" fill="var(--text-secondary)"/><circle cx="10" cy="9" r="4.5" fill="var(--bg-secondary)"/><text x="10" y="10" textAnchor="middle" dominantBaseline="middle" fontSize="5" fill="var(--text-secondary)" fontWeight="800">½</text></svg>
               Half
             </button>
-            <button onClick={() => setBet(Math.round(balance * 100) / 100)}
+            <button onClick={() => setBet(Math.floor((balance / ballCount) * 100) / 100)}
               disabled={phase === "dropping"}
               style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 4, padding: "5px 6px", borderRadius: 5, border: "1px solid rgba(240,180,41,0.3)", background: "rgba(240,180,41,0.08)", color: "var(--accent-gold)", fontFamily: "'Barlow Condensed', sans-serif", fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", cursor: "pointer" }}>
               <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="15" r="5" fill="#8b6914"/><circle cx="10" cy="15" r="3.5" fill="#0f1923"/><circle cx="10" cy="11" r="5" fill="#b8960c"/><circle cx="10" cy="11" r="3.5" fill="#0f1923"/><circle cx="10" cy="7" r="5" fill="#d4af37"/><circle cx="10" cy="7" r="3.5" fill="#0f1923"/><text x="10" y="8" textAnchor="middle" dominantBaseline="middle" fontSize="4.5" fill="#d4af37" fontWeight="800">MAX</text></svg>
@@ -886,27 +884,6 @@ export default function PlinkoPage() {
                   fontWeight: ballCount === n ? 800 : 500,
                 }}>
                 {n}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Risk */}
-        <div>
-          <label style={labelStyle}>Risk</label>
-          <div style={{ display: "flex", gap: 4 }}>
-            {(["low", "medium", "high"] as Risk[]).map(r => (
-              <button key={r} onClick={() => setRisk(r)}
-                disabled={phase === "dropping"}
-                style={{
-                  ...pillStyle,
-                  flex: 1,
-                  background: risk === r ? "var(--accent-green)" : "rgba(255,255,255,0.07)",
-                  color: risk === r ? "#0f1923" : "var(--text-secondary)",
-                  fontWeight: risk === r ? 800 : 500,
-                  textTransform: "uppercase",
-                }}>
-                {r}
               </button>
             ))}
           </div>

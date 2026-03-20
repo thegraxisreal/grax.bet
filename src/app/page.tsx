@@ -439,7 +439,7 @@ const GAMES = [
   {
     label: "Crash",
     href: "/crash",
-    locked: true,
+    locked: false,
     gradient: "linear-gradient(145deg, #ea580c 0%, #9a3412 55%, #431407 100%)",
     art: <CrashArt />,
   },

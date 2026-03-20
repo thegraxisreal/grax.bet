@@ -139,7 +139,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Blackjack", href: "/blackjack", icon: <BlackjackIcon /> },
   { label: "Slots",     href: "/slots",     icon: <SlotsIcon />,   locked: true },
   { label: "Roulette",  href: "/roulette",  icon: <RouletteIcon /> },
-  { label: "Crash",     href: "/crash",     icon: <CrashIcon />,   locked: true },
+  { label: "Crash",     href: "/crash",     icon: <CrashIcon /> },
   { label: "Sports",    href: "/sports",    icon: <SportsIcon />,  locked: true },
   { label: "Mines",     href: "/mines",     icon: <MinesIcon /> },
   { label: "Plinko",    href: "/plinko",    icon: <PlinkoIcon /> },
