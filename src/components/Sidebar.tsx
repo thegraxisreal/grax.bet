@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import MusicPlayer from "@/components/MusicPlayer";
 
 interface NavItem {
   label: string;
@@ -128,7 +129,7 @@ function LockIcon() {
 const NAV_ITEMS: NavItem[] = [
   { label: "Blackjack", href: "/blackjack", icon: <BlackjackIcon /> },
   { label: "Slots",     href: "/slots",     icon: <SlotsIcon />,   locked: true },
-  { label: "Roulette",  href: "/roulette",  icon: <RouletteIcon />,locked: true },
+  { label: "Roulette",  href: "/roulette",  icon: <RouletteIcon /> },
   { label: "Crash",     href: "/crash",     icon: <CrashIcon />,   locked: true },
   { label: "Sports",    href: "/sports",    icon: <SportsIcon />,  locked: true },
   { label: "Mines",     href: "/mines",     icon: <MinesIcon /> },
@@ -224,11 +225,13 @@ export default function Sidebar() {
         })}
       </nav>
 
+      {/* Music player */}
+      <MusicPlayer />
+
       {/* Footer */}
       <div style={{
-        padding: "12px 16px",
-        borderTop: "1px solid var(--border-color)",
-        fontSize: "0.65rem",
+        padding: "8px 14px",
+        fontSize: "0.62rem",
         color: "var(--text-muted)",
         letterSpacing: "0.05em",
       }}>
