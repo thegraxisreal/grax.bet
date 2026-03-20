@@ -11,6 +11,14 @@ interface NavItem {
   icon: React.ReactNode;
 }
 
+function HomeIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+      <path d="M3 10.5L11 3L19 10.5V19.5H14.5V14H7.5V19.5H3V10.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" fill="none"/>
+    </svg>
+  );
+}
+
 function BlackjackIcon() {
   return (
     <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
@@ -127,6 +135,7 @@ function LockIcon() {
 }
 
 const NAV_ITEMS: NavItem[] = [
+  { label: "Home",      href: "/",          icon: <HomeIcon /> },
   { label: "Blackjack", href: "/blackjack", icon: <BlackjackIcon /> },
   { label: "Slots",     href: "/slots",     icon: <SlotsIcon />,   locked: true },
   { label: "Roulette",  href: "/roulette",  icon: <RouletteIcon /> },
