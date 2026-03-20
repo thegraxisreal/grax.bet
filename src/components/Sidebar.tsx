@@ -142,7 +142,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Crash",     href: "/crash",     icon: <CrashIcon />,   locked: true },
   { label: "Sports",    href: "/sports",    icon: <SportsIcon />,  locked: true },
   { label: "Mines",     href: "/mines",     icon: <MinesIcon /> },
-  { label: "Plinko",    href: "/plinko",    icon: <PlinkoIcon />,  locked: true },
+  { label: "Plinko",    href: "/plinko",    icon: <PlinkoIcon /> },
 ];
 
 export default function Sidebar() {

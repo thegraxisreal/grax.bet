@@ -31,6 +31,7 @@ interface State {
 
 type Action =
   | { type: "ADD_BET"; amount: number }
+  | { type: "SET_BET"; amount: number }
   | { type: "CLEAR_BET" }
   | { type: "DEAL"; balance: number }
   | { type: "TAKE_INSURANCE" }
@@ -95,6 +96,8 @@ function reducer(state: State, action: Action): State {
       const next = Math.round((state.currentBet + action.amount) * 100) / 100;
       return { ...state, currentBet: next };
     }
+    case "SET_BET":
+      return { ...state, currentBet: Math.round(action.amount * 100) / 100 };
     case "CLEAR_BET":
       return { ...state, currentBet: 0 };
 
@@ -718,7 +721,7 @@ export default function BlackjackPage() {
       }}>
         {phase === "betting" && (
           <>
-            {/* Chips row */}
+            {/* Chips row + Half/All-In */}
             <div style={{ display: "flex", gap: "16px", alignItems: "center", justifyContent: "center", flexWrap: "wrap" }}>
               {[1, 5, 10, 25].map(val => (
                 <CasinoChip
@@ -729,41 +732,55 @@ export default function BlackjackPage() {
                 />
               ))}
             </div>
+            <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
+              <button onClick={() => dispatch({ type: "SET_BET", amount: Math.round(balance / 2 * 100) / 100 })}
+                style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 14px", borderRadius: 6, border: "1px solid rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.06)", color: "var(--text-secondary)", fontFamily: "'Barlow Condensed', sans-serif", fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", cursor: "pointer" }}>
+                <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="13" r="6" fill="var(--text-muted)"/><circle cx="10" cy="13" r="4.5" fill="var(--bg-secondary)"/><circle cx="10" cy="9" r="6" fill="var(--text-secondary)"/><circle cx="10" cy="9" r="4.5" fill="var(--bg-secondary)"/><text x="10" y="10" textAnchor="middle" dominantBaseline="middle" fontSize="5" fill="var(--text-secondary)" fontWeight="800">½</text></svg>
+                Half
+              </button>
+              <button onClick={() => dispatch({ type: "SET_BET", amount: balance })}
+                style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 14px", borderRadius: 6, border: "1px solid rgba(240,180,41,0.3)", background: "rgba(240,180,41,0.08)", color: "var(--accent-gold)", fontFamily: "'Barlow Condensed', sans-serif", fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", cursor: "pointer" }}>
+                <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="15" r="5" fill="#8b6914"/><circle cx="10" cy="15" r="3.5" fill="#0f1923"/><circle cx="10" cy="11" r="5" fill="#b8960c"/><circle cx="10" cy="11" r="3.5" fill="#0f1923"/><circle cx="10" cy="7" r="5" fill="#d4af37"/><circle cx="10" cy="7" r="3.5" fill="#0f1923"/><text x="10" y="8" textAnchor="middle" dominantBaseline="middle" fontSize="4.5" fill="#d4af37" fontWeight="800">MAX</text></svg>
+                All In
+              </button>
+            </div>
 
             {/* Bet display + deal */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "16px", flexWrap: "wrap" }}>
-              {/* Current bet */}
+              {/* Current bet input */}
               <div style={{
                 background: "var(--bg-card)",
                 border: "1px solid var(--border-color)",
                 borderRadius: "8px",
-                padding: "8px 20px",
+                padding: "8px 14px",
                 display: "flex",
                 alignItems: "center",
-                gap: "12px",
+                gap: "8px",
                 minWidth: "140px",
               }}>
-                <span style={{ color: "var(--text-muted)", fontSize: "0.75rem", fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.1em" }}>BET</span>
-                <span style={{ color: "var(--text-primary)", fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "1.1rem" }}>
-                  ${currentBet.toFixed(2)}
-                </span>
+                <span style={{ color: "var(--text-muted)", fontSize: "0.75rem", fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.1em" }}>$</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={currentBet || ""}
+                  onChange={e => {
+                    const v = parseFloat(e.target.value);
+                    dispatch({ type: "SET_BET", amount: isNaN(v) ? 0 : Math.min(Math.max(0, v), balance) });
+                  }}
+                  placeholder="0.00"
+                  style={{
+                    flex: 1, background: "none", border: "none", outline: "none",
+                    fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700,
+                    fontSize: "1.1rem", color: "var(--text-primary)", width: 60,
+                  }}
+                />
                 {currentBet > 0 && (
                   <button
                     onClick={() => dispatch({ type: "CLEAR_BET" })}
-                    style={{
-                      background: "none",
-                      border: "none",
-                      color: "var(--text-muted)",
-                      cursor: "pointer",
-                      fontSize: "1rem",
-                      lineHeight: 1,
-                      padding: "0",
-                      marginLeft: "auto",
-                    }}
+                    style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", fontSize: "1rem", lineHeight: 1, padding: "0" }}
                     title="Clear bet"
-                  >
-                    ×
-                  </button>
+                  >×</button>
                 )}
               </div>
 
@@ -783,7 +800,7 @@ export default function BlackjackPage() {
               {lastBet > 0 && lastBet <= balance && (
                 <button
                   className="btn-action"
-                  onClick={() => dispatch({ type: "ADD_BET", amount: Math.min(lastBet, balance) })}
+                  onClick={() => dispatch({ type: "SET_BET", amount: Math.min(lastBet, balance) })}
                   style={{ fontSize: "0.8rem" }}
                 >
                   Rebet ${lastBet.toFixed(2)}

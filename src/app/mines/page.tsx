@@ -452,9 +452,46 @@ export default function MinesPage() {
 
             <PanelDivider />
 
-            {/* Bet chips */}
+            {/* Bet amount input */}
             <div>
               <PanelLabel>Bet Amount</PanelLabel>
+              <div style={{
+                display: "flex",
+                alignItems: "center",
+                background: "rgba(0,0,0,0.25)",
+                border: "1px solid var(--border-color)",
+                borderRadius: "7px",
+                padding: "4px 8px",
+                gap: "6px",
+              }}>
+                <span style={{ fontSize: "0.65rem", fontFamily: "'Barlow Condensed', sans-serif",
+                  letterSpacing: "0.14em", color: "var(--text-muted)", textTransform: "uppercase" }}>$</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={pendingBet || ""}
+                  onChange={e => {
+                    const v = parseFloat(e.target.value);
+                    setPendingBet(isNaN(v) ? 0 : Math.min(Math.max(0, Math.round(v * 100) / 100), balance));
+                  }}
+                  placeholder="0.00"
+                  style={{
+                    flex: 1, background: "none", border: "none", outline: "none",
+                    fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700,
+                    fontSize: "1.05rem", color: "var(--text-primary)", width: "100%",
+                  }}
+                />
+                {pendingBet > 0 && (
+                  <button onClick={() => setPendingBet(0)}
+                    style={{ background: "none", border: "none", color: "var(--text-muted)",
+                      cursor: "pointer", fontSize: "1rem", padding: 0, lineHeight: 1 }}>×</button>
+                )}
+              </div>
+            </div>
+
+            {/* Chips + Half/All-In */}
+            <div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px", justifyItems: "center" }}>
                 {[1, 5, 10, 25].map(val => (
                   <CasinoChip
@@ -465,33 +502,18 @@ export default function MinesPage() {
                   />
                 ))}
               </div>
-            </div>
-
-            {/* Bet display */}
-            <div style={{
-              display: "flex",
-              alignItems: "center",
-              background: "rgba(0,0,0,0.25)",
-              border: "1px solid var(--border-color)",
-              borderRadius: "7px",
-              padding: "7px 11px",
-              gap: "8px",
-            }}>
-              <span style={{ fontSize: "0.65rem", fontFamily: "'Barlow Condensed', sans-serif",
-                letterSpacing: "0.14em", color: "var(--text-muted)", textTransform: "uppercase" }}>
-                Bet
-              </span>
-              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700,
-                fontSize: "1.05rem", color: "var(--text-primary)", flex: 1 }}>
-                ${pendingBet.toFixed(2)}
-              </span>
-              {pendingBet > 0 && (
-                <button onClick={() => setPendingBet(0)}
-                  style={{ background: "none", border: "none", color: "var(--text-muted)",
-                    cursor: "pointer", fontSize: "1rem", padding: 0, lineHeight: 1 }}>
-                  ×
+              <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
+                <button onClick={() => setPendingBet(Math.round(balance / 2 * 100) / 100)}
+                  style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 5, padding: "6px 8px", borderRadius: 6, border: "1px solid rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.06)", color: "var(--text-secondary)", fontFamily: "'Barlow Condensed', sans-serif", fontSize: "0.78rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", cursor: "pointer" }}>
+                  <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="13" r="6" fill="var(--text-muted)"/><circle cx="10" cy="13" r="4.5" fill="var(--bg-secondary)"/><circle cx="10" cy="9" r="6" fill="var(--text-secondary)"/><circle cx="10" cy="9" r="4.5" fill="var(--bg-secondary)"/><text x="10" y="10" textAnchor="middle" dominantBaseline="middle" fontSize="5" fill="var(--text-secondary)" fontWeight="800">½</text></svg>
+                  Half
                 </button>
-              )}
+                <button onClick={() => setPendingBet(Math.round(balance * 100) / 100)}
+                  style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 5, padding: "6px 8px", borderRadius: 6, border: "1px solid rgba(240,180,41,0.3)", background: "rgba(240,180,41,0.08)", color: "var(--accent-gold)", fontFamily: "'Barlow Condensed', sans-serif", fontSize: "0.78rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", cursor: "pointer" }}>
+                  <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="15" r="5" fill="#8b6914"/><circle cx="10" cy="15" r="3.5" fill="#0f1923"/><circle cx="10" cy="11" r="5" fill="#b8960c"/><circle cx="10" cy="11" r="3.5" fill="#0f1923"/><circle cx="10" cy="7" r="5" fill="#d4af37"/><circle cx="10" cy="7" r="3.5" fill="#0f1923"/><text x="10" y="8" textAnchor="middle" dominantBaseline="middle" fontSize="4.5" fill="#d4af37" fontWeight="800">MAX</text></svg>
+                  All In
+                </button>
+              </div>
             </div>
 
             <PanelDivider />

@@ -453,7 +453,7 @@ const GAMES = [
   {
     label: "Plinko",
     href: "/plinko",
-    locked: true,
+    locked: false,
     gradient: "linear-gradient(145deg, #8b5cf6 0%, #4c1d95 40%, #2563eb 100%)",
     art: <PlinkoArt />,
   },
