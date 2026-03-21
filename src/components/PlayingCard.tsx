@@ -173,6 +173,7 @@ export default function PlayingCard({ card, index = 0, faceDown }: PlayingCardPr
         damping: 22,
         delay: index * 0.08,
       }}
+      className="playing-card"
       style={{ display: "inline-block", flexShrink: 0 }}
     >
       {faceDown || card.faceDown ? (

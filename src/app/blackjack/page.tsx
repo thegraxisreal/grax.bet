@@ -412,7 +412,7 @@ export default function BlackjackPage() {
         minHeight: 0,
       }}>
         {/* Felt table */}
-        <div style={{
+        <div className="bj-felt-table" style={{
           flex: 1,
           margin: "16px 16px 0",
           borderRadius: "160px 160px 0 0",
@@ -465,7 +465,7 @@ export default function BlackjackPage() {
           }} />
 
           {/* DEALER ZONE */}
-          <div style={{
+          <div className="bj-dealer-zone" style={{
             flex: "0 0 auto",
             display: "flex",
             flexDirection: "column",
@@ -710,7 +710,7 @@ export default function BlackjackPage() {
       </div>
 
       {/* Bottom controls */}
-      <div style={{
+      <div className="bj-controls" style={{
         background: "var(--bg-secondary)",
         borderTop: "1px solid var(--border-color)",
         padding: "16px 20px",

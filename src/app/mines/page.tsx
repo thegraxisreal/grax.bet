@@ -376,10 +376,10 @@ export default function MinesPage() {
   }, [bet, pendingBet]);
 
   return (
-    <div style={{ height: "100%", display: "flex", overflow: "hidden" }}>
+    <div className="game-layout" style={{ height: "100%", display: "flex", overflow: "hidden" }}>
 
       {/* ── LEFT PANEL ── */}
-      <div style={{
+      <div className="game-panel" style={{
         width: "210px",
         flexShrink: 0,
         display: "flex",
@@ -667,7 +667,7 @@ export default function MinesPage() {
       </div>
 
       {/* ── GRID AREA ── */}
-      <div style={{
+      <div className="game-board" style={{
         flex: 1,
         display: "flex",
         flexDirection: "column",

@@ -772,14 +772,14 @@ export default function PlinkoPage() {
   }, []);
 
   return (
-    <div style={{
+    <div className="game-layout" style={{
       display: "flex",
       height: "100%",
       overflow: "hidden",
       background: "var(--bg-primary)",
     }}>
       {/* ── Left Panel ────────────────────────────────── */}
-      <div style={{
+      <div className="game-panel" style={{
         width: 240,
         minWidth: 240,
         background: "var(--bg-secondary)",
@@ -1035,7 +1035,7 @@ export default function PlinkoPage() {
       </div>
 
       {/* ── Board ─────────────────────────────────────── */}
-      <div ref={containerRef} style={{
+      <div ref={containerRef} className="game-board" style={{
         flex: 1,
         display: "flex",
         flexDirection: "column",

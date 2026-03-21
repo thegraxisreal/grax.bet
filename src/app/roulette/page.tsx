@@ -426,10 +426,10 @@ export default function RoulettePage() {
   const canSpin = phase === "betting" && betAmount > 0 && selectedBet !== null && betAmount <= balance;
 
   return (
-    <div style={{ height: "100%", display: "flex", overflow: "hidden" }}>
+    <div className="game-layout" style={{ height: "100%", display: "flex", overflow: "hidden" }}>
 
       {/* ── LEFT PANEL ── */}
-      <div style={{
+      <div className="game-panel" style={{
         width: "210px",
         flexShrink: 0,
         display: "flex",
@@ -619,7 +619,7 @@ export default function RoulettePage() {
       </div>
 
       {/* ── MAIN AREA ── */}
-      <div style={{
+      <div className="game-board roulette-main" style={{
         flex: 1,
         display: "flex",
         alignItems: "flex-start",
@@ -631,7 +631,7 @@ export default function RoulettePage() {
       }}>
 
         {/* Wheel */}
-        <div style={{
+        <div className="roulette-wheel-wrap" style={{
           position: "relative",
           display: "flex",
           alignItems: "center",

@@ -578,10 +578,10 @@ export default function CrashPage() {
   const btnDisabled = !canBet && !canCashout;
 
   return (
-    <div style={{ display: "flex", height: "100%", overflow: "hidden", background: "var(--bg-primary)" }}>
+    <div className="game-layout" style={{ display: "flex", height: "100%", overflow: "hidden", background: "var(--bg-primary)" }}>
 
       {/* ── Left Panel ────────────────────────────────────────────────────────── */}
-      <div style={{
+      <div className="game-panel" style={{
         width: 240, minWidth: 240, background: "var(--bg-secondary)",
         borderRight: "1px solid var(--border-color)",
         display: "flex", flexDirection: "column", overflow: "auto",
@@ -714,7 +714,7 @@ export default function CrashPage() {
       </div>
 
       {/* ── Main Area ──────────────────────────────────────────────────────────── */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      <div className="game-board" style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
 
         {/* Canvas */}
         <div ref={containerRef} style={{ flex: 1, position: "relative", overflow: "hidden" }}>
@@ -736,7 +736,7 @@ export default function CrashPage() {
         </div>
 
         {/* ── Bottom bar ───────────────────────────────────────────────────────── */}
-        <div style={{ borderTop: "1px solid var(--border-color)", display: "flex", minHeight: 148 }}>
+        <div className="crash-bottom-bar" style={{ borderTop: "1px solid var(--border-color)", display: "flex", minHeight: 148 }}>
 
           {/* History */}
           <div style={{ flex: 1, padding: "10px 14px", borderRight: "1px solid var(--border-color)", overflow: "hidden" }}>

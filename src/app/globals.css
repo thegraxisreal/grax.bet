@@ -389,3 +389,101 @@ h1, h2, h3, h4, h5, h6 {
     letter-spacing: 0.06em;
   }
 }
+
+/* ── Game layout: horizontal panel+board → vertical on mobile ──────────────
+   All games (Mines, Roulette, Crash, Plinko) use a horizontal flex layout
+   with a left panel (controls) and right board area. On mobile portrait we
+   flip to column: board on top, controls panel scrollable below.
+   ───────────────────────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  /* Flip horizontal game layout to column */
+  .game-layout {
+    flex-direction: column !important;
+  }
+
+  /* Controls panel: below the board, fixed-height scrollable strip */
+  .game-panel {
+    order: 2 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-height: 42vh !important;
+    overflow-y: auto !important;
+    border-right: none !important;
+    border-top: 1px solid var(--border-color) !important;
+    padding: 10px 12px !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* Game board: takes priority — full width on top */
+  .game-board {
+    order: 1 !important;
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+  }
+
+  /* ── Roulette: stack wheel + betting board vertically ── */
+  .roulette-main {
+    flex-direction: column !important;
+    align-items: center !important;
+    padding: 12px 10px !important;
+    gap: 14px !important;
+  }
+
+  /* Scale the wheel SVG down to fit portrait width */
+  .roulette-wheel-wrap svg {
+    width: 220px !important;
+    height: 220px !important;
+  }
+
+  /* ── Crash: shrink history bar to give canvas more room ── */
+  .crash-bottom-bar {
+    min-height: 68px !important;
+    max-height: 80px !important;
+    overflow: hidden !important;
+  }
+
+  /* ── Blackjack: reduce felt table curve + dealer zone padding ── */
+  .bj-felt-table {
+    margin: 8px 8px 0 !important;
+    border-radius: 72px 72px 0 0 !important;
+  }
+
+  .bj-dealer-zone {
+    padding-top: 18px !important;
+    min-height: 110px !important;
+    gap: 6px !important;
+  }
+
+  .bj-controls {
+    padding: 10px 12px !important;
+    gap: 8px !important;
+  }
+
+  /* ── Playing cards: scale down so 3-4 cards fit portrait width ── */
+  .playing-card {
+    zoom: 0.78;
+  }
+}
+
+@media (max-width: 480px) {
+  .game-panel {
+    max-height: 40vh !important;
+  }
+
+  /* Roulette wheel even smaller on small phones */
+  .roulette-wheel-wrap svg {
+    width: 190px !important;
+    height: 190px !important;
+  }
+
+  /* Cards slightly smaller on very small phones */
+  .playing-card {
+    zoom: 0.68;
+  }
+
+  .bj-dealer-zone {
+    padding-top: 10px !important;
+    min-height: 88px !important;
+  }
+}
