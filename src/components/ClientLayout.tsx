@@ -1,11 +1,17 @@
 "use client";
 
+import { useState, useCallback } from "react";
 import { BalanceProvider } from "@/context/BalanceContext";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 import BrokeModal from "@/components/BrokeModal";
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const openSidebar = useCallback(() => setSidebarOpen(true), []);
+  const closeSidebar = useCallback(() => setSidebarOpen(false), []);
+
   return (
     <BalanceProvider>
       <div style={{
@@ -13,7 +19,15 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
         height: "100vh",
         overflow: "hidden",
       }}>
-        <Sidebar />
+        {/* Mobile backdrop overlay */}
+        <div
+          className={`sidebar-overlay${sidebarOpen ? " visible" : ""}`}
+          onClick={closeSidebar}
+          aria-hidden="true"
+        />
+
+        <Sidebar isOpen={sidebarOpen} onClose={closeSidebar} />
+
         <div style={{
           flex: 1,
           display: "flex",
@@ -21,7 +35,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
           overflow: "hidden",
           minWidth: 0,
         }}>
-          <Header />
+          <Header onMenuToggle={openSidebar} />
           <main style={{
             flex: 1,
             overflow: "auto",

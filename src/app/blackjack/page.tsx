@@ -4,6 +4,7 @@ import { useCallback, useEffect, useReducer } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useBalance } from "@/context/BalanceContext";
 import { CasinoChip } from "@/components/CasinoChip";
+import CollapsibleBetSelector from "@/components/CollapsibleBetSelector";
 import PlayingCard from "@/components/PlayingCard";
 import {
   buildDeck, shuffleDeck, handTotal, handLabel, isBlackjack,
@@ -412,7 +413,7 @@ export default function BlackjackPage() {
         minHeight: 0,
       }}>
         {/* Felt table */}
-        <div style={{
+        <div className="bj-felt-table" style={{
           flex: 1,
           margin: "16px 16px 0",
           borderRadius: "160px 160px 0 0",
@@ -465,7 +466,7 @@ export default function BlackjackPage() {
           }} />
 
           {/* DEALER ZONE */}
-          <div style={{
+          <div className="bj-dealer-zone" style={{
             flex: "0 0 auto",
             display: "flex",
             flexDirection: "column",
@@ -710,7 +711,7 @@ export default function BlackjackPage() {
       </div>
 
       {/* Bottom controls */}
-      <div style={{
+      <div className="bj-controls" style={{
         background: "var(--bg-secondary)",
         borderTop: "1px solid var(--border-color)",
         padding: "16px 20px",
@@ -722,28 +723,30 @@ export default function BlackjackPage() {
         {phase === "betting" && (
           <>
             {/* Chips row + Half/All-In */}
-            <div style={{ display: "flex", gap: "16px", alignItems: "center", justifyContent: "center", flexWrap: "wrap" }}>
-              {[1, 5, 10, 25].map(val => (
-                <CasinoChip
-                  key={val}
-                  value={val}
-                  onClick={handleAddBet}
-                  disabled={currentBet >= balance || val > balance - currentBet}
-                />
-              ))}
-            </div>
-            <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
-              <button onClick={() => dispatch({ type: "SET_BET", amount: Math.round(balance / 2 * 100) / 100 })}
-                style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 14px", borderRadius: 6, border: "1px solid rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.06)", color: "var(--text-secondary)", fontFamily: "'Barlow Condensed', sans-serif", fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", cursor: "pointer" }}>
-                <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="13" r="6" fill="var(--text-muted)"/><circle cx="10" cy="13" r="4.5" fill="var(--bg-secondary)"/><circle cx="10" cy="9" r="6" fill="var(--text-secondary)"/><circle cx="10" cy="9" r="4.5" fill="var(--bg-secondary)"/><text x="10" y="10" textAnchor="middle" dominantBaseline="middle" fontSize="5" fill="var(--text-secondary)" fontWeight="800">½</text></svg>
-                Half
-              </button>
-              <button onClick={() => dispatch({ type: "SET_BET", amount: balance })}
-                style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 14px", borderRadius: 6, border: "1px solid rgba(240,180,41,0.3)", background: "rgba(240,180,41,0.08)", color: "var(--accent-gold)", fontFamily: "'Barlow Condensed', sans-serif", fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", cursor: "pointer" }}>
-                <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="15" r="5" fill="#8b6914"/><circle cx="10" cy="15" r="3.5" fill="#0f1923"/><circle cx="10" cy="11" r="5" fill="#b8960c"/><circle cx="10" cy="11" r="3.5" fill="#0f1923"/><circle cx="10" cy="7" r="5" fill="#d4af37"/><circle cx="10" cy="7" r="3.5" fill="#0f1923"/><text x="10" y="8" textAnchor="middle" dominantBaseline="middle" fontSize="4.5" fill="#d4af37" fontWeight="800">MAX</text></svg>
-                All In
-              </button>
-            </div>
+            <CollapsibleBetSelector>
+              <div className="bj-chips" style={{ display: "flex", gap: "16px", alignItems: "center", justifyContent: "center", flexWrap: "wrap" }}>
+                {[1, 5, 10, 25].map(val => (
+                  <CasinoChip
+                    key={val}
+                    value={val}
+                    onClick={handleAddBet}
+                    disabled={currentBet >= balance || val > balance - currentBet}
+                  />
+                ))}
+              </div>
+              <div className="bj-halfall" style={{ display: "flex", gap: 8, justifyContent: "center" }}>
+                <button onClick={() => dispatch({ type: "SET_BET", amount: Math.round(balance / 2 * 100) / 100 })}
+                  style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 14px", borderRadius: 6, border: "1px solid rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.06)", color: "var(--text-secondary)", fontFamily: "'Barlow Condensed', sans-serif", fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", cursor: "pointer" }}>
+                  <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="13" r="6" fill="var(--text-muted)"/><circle cx="10" cy="13" r="4.5" fill="var(--bg-secondary)"/><circle cx="10" cy="9" r="6" fill="var(--text-secondary)"/><circle cx="10" cy="9" r="4.5" fill="var(--bg-secondary)"/><text x="10" y="10" textAnchor="middle" dominantBaseline="middle" fontSize="5" fill="var(--text-secondary)" fontWeight="800">½</text></svg>
+                  Half
+                </button>
+                <button onClick={() => dispatch({ type: "SET_BET", amount: balance })}
+                  style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 14px", borderRadius: 6, border: "1px solid rgba(240,180,41,0.3)", background: "rgba(240,180,41,0.08)", color: "var(--accent-gold)", fontFamily: "'Barlow Condensed', sans-serif", fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", cursor: "pointer" }}>
+                  <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="15" r="5" fill="#8b6914"/><circle cx="10" cy="15" r="3.5" fill="#0f1923"/><circle cx="10" cy="11" r="5" fill="#b8960c"/><circle cx="10" cy="11" r="3.5" fill="#0f1923"/><circle cx="10" cy="7" r="5" fill="#d4af37"/><circle cx="10" cy="7" r="3.5" fill="#0f1923"/><text x="10" y="8" textAnchor="middle" dominantBaseline="middle" fontSize="4.5" fill="#d4af37" fontWeight="800">MAX</text></svg>
+                  All In
+                </button>
+              </div>
+            </CollapsibleBetSelector>
 
             {/* Bet display + deal */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "16px", flexWrap: "wrap" }}>
@@ -811,7 +814,7 @@ export default function BlackjackPage() {
         )}
 
         {phase === "player" && (
-          <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
+          <div className="bj-action-btns" style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
             <motion.button
               className="btn-action"
               onClick={handleHit}

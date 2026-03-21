@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useBalance } from "@/context/BalanceContext";
 import { CasinoChip } from "@/components/CasinoChip";
+import CollapsibleBetSelector from "@/components/CollapsibleBetSelector";
 import { playChipClick } from "@/lib/sound";
 
 // ── Constants ──────────────────────────────────────────────────────────────────
@@ -578,10 +579,10 @@ export default function CrashPage() {
   const btnDisabled = !canBet && !canCashout;
 
   return (
-    <div style={{ display: "flex", height: "100%", overflow: "hidden", background: "var(--bg-primary)" }}>
+    <div className="game-layout" style={{ display: "flex", height: "100%", overflow: "hidden", background: "var(--bg-primary)" }}>
 
       {/* ── Left Panel ────────────────────────────────────────────────────────── */}
-      <div style={{
+      <div className="game-panel" style={{
         width: 240, minWidth: 240, background: "var(--bg-secondary)",
         borderRight: "1px solid var(--border-color)",
         display: "flex", flexDirection: "column", overflow: "auto",
@@ -620,19 +621,21 @@ export default function CrashPage() {
             />
             {bet > 0 && <button onClick={() => setBet(0)} disabled={phase !== "waiting" || hasBet} style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", fontSize: "1rem", padding: 0 }}>×</button>}
           </div>
-          <div style={{ display: "flex", gap: 4, marginTop: 6 }}>
-            {[1, 5, 10, 25].map(v => (
-              <div key={v} style={{ transform: "scale(0.65)", transformOrigin: "top left" }}>
-                <CasinoChip value={v} onClick={addChip} disabled={phase !== "waiting" || hasBet} />
-              </div>
-            ))}
-          </div>
-          <div style={{ display: "flex", gap: 4, marginTop: 4 }}>
-            <button onClick={() => setBet(Math.floor(balance / 2 * 100) / 100)} disabled={phase !== "waiting" || hasBet}
-              style={{ ...pillStyle, flex: 1 }}>½ Half</button>
-            <button onClick={() => setBet(Math.floor(balance * 100) / 100)} disabled={phase !== "waiting" || hasBet}
-              style={{ ...pillStyle, flex: 1, borderColor: "rgba(240,180,41,0.3)", color: "var(--accent-gold)" }}>All In</button>
-          </div>
+          <CollapsibleBetSelector>
+            <div className="crash-chips" style={{ display: "flex", gap: 4, marginTop: 6 }}>
+              {[1, 5, 10, 25].map(v => (
+                <div key={v} style={{ transform: "scale(0.65)", transformOrigin: "top left" }}>
+                  <CasinoChip value={v} onClick={addChip} disabled={phase !== "waiting" || hasBet} />
+                </div>
+              ))}
+            </div>
+            <div className="bet-halfall" style={{ display: "flex", gap: 4, marginTop: 4 }}>
+              <button onClick={() => setBet(Math.floor(balance / 2 * 100) / 100)} disabled={phase !== "waiting" || hasBet}
+                style={{ ...pillStyle, flex: 1 }}>½ Half</button>
+              <button onClick={() => setBet(Math.floor(balance * 100) / 100)} disabled={phase !== "waiting" || hasBet}
+                style={{ ...pillStyle, flex: 1, borderColor: "rgba(240,180,41,0.3)", color: "var(--accent-gold)" }}>All In</button>
+            </div>
+          </CollapsibleBetSelector>
         </div>
 
         {/* Auto Cash Out */}
@@ -705,7 +708,7 @@ export default function CrashPage() {
         </AnimatePresence>
 
         {/* Session P/L */}
-        <div style={{ marginTop: "auto", background: "rgba(0,0,0,0.25)", border: "1px solid var(--border-color)", borderRadius: 6, padding: "8px 10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div className="crash-session-pl" style={{ marginTop: "auto", background: "rgba(0,0,0,0.25)", border: "1px solid var(--border-color)", borderRadius: 6, padding: "8px 10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <span style={{ ...labelStyle, margin: 0, fontSize: "0.7rem" }}>Session P/L</span>
           <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "1rem", color: sessionProfit >= 0 ? "var(--accent-green)" : "var(--lose-color)" }}>
             {sessionProfit >= 0 ? "+" : ""}${sessionProfit.toFixed(2)}
@@ -714,7 +717,7 @@ export default function CrashPage() {
       </div>
 
       {/* ── Main Area ──────────────────────────────────────────────────────────── */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      <div className="game-board" style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
 
         {/* Canvas */}
         <div ref={containerRef} style={{ flex: 1, position: "relative", overflow: "hidden" }}>
@@ -736,7 +739,7 @@ export default function CrashPage() {
         </div>
 
         {/* ── Bottom bar ───────────────────────────────────────────────────────── */}
-        <div style={{ borderTop: "1px solid var(--border-color)", display: "flex", minHeight: 148 }}>
+        <div className="crash-bottom-bar" style={{ borderTop: "1px solid var(--border-color)", display: "flex", minHeight: 148 }}>
 
           {/* History */}
           <div style={{ flex: 1, padding: "10px 14px", borderRight: "1px solid var(--border-color)", overflow: "hidden" }}>

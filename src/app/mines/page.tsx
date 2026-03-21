@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useBalance } from "@/context/BalanceContext";
 import { CasinoChip } from "@/components/CasinoChip";
+import CollapsibleBetSelector from "@/components/CollapsibleBetSelector";
 import { playChipClick, playWin, playLose } from "@/lib/sound";
 
 // ── Constants ──────────────────────────────────────────────────────────────
@@ -376,10 +377,10 @@ export default function MinesPage() {
   }, [bet, pendingBet]);
 
   return (
-    <div style={{ height: "100%", display: "flex", overflow: "hidden" }}>
+    <div className="game-layout" style={{ height: "100%", display: "flex", overflow: "hidden" }}>
 
       {/* ── LEFT PANEL ── */}
-      <div style={{
+      <div className="game-panel" style={{
         width: "210px",
         flexShrink: 0,
         display: "flex",
@@ -423,7 +424,7 @@ export default function MinesPage() {
             {/* Mine count */}
             <div>
               <PanelLabel>Mine Count</PanelLabel>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "5px" }}>
+              <div className="mine-count-row" style={{ display: "flex", flexWrap: "wrap", gap: "5px" }}>
                 {MINE_PRESETS.map(n => (
                   <motion.button
                     key={n}
@@ -491,8 +492,8 @@ export default function MinesPage() {
             </div>
 
             {/* Chips + Half/All-In */}
-            <div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px", justifyItems: "center" }}>
+            <CollapsibleBetSelector>
+              <div className="bet-chips" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px", justifyItems: "center" }}>
                 {[1, 5, 10, 25].map(val => (
                   <CasinoChip
                     key={val}
@@ -502,7 +503,7 @@ export default function MinesPage() {
                   />
                 ))}
               </div>
-              <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
+              <div className="bet-halfall" style={{ display: "flex", gap: 6, marginTop: 8 }}>
                 <button onClick={() => setPendingBet(Math.round(balance / 2 * 100) / 100)}
                   style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 5, padding: "6px 8px", borderRadius: 6, border: "1px solid rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.06)", color: "var(--text-secondary)", fontFamily: "'Barlow Condensed', sans-serif", fontSize: "0.78rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", cursor: "pointer" }}>
                   <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="13" r="6" fill="var(--text-muted)"/><circle cx="10" cy="13" r="4.5" fill="var(--bg-secondary)"/><circle cx="10" cy="9" r="6" fill="var(--text-secondary)"/><circle cx="10" cy="9" r="4.5" fill="var(--bg-secondary)"/><text x="10" y="10" textAnchor="middle" dominantBaseline="middle" fontSize="5" fill="var(--text-secondary)" fontWeight="800">½</text></svg>
@@ -514,7 +515,7 @@ export default function MinesPage() {
                   All In
                 </button>
               </div>
-            </div>
+            </CollapsibleBetSelector>
 
             <PanelDivider />
 
@@ -667,7 +668,7 @@ export default function MinesPage() {
       </div>
 
       {/* ── GRID AREA ── */}
-      <div style={{
+      <div className="game-board" style={{
         flex: 1,
         display: "flex",
         flexDirection: "column",

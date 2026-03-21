@@ -24,7 +24,21 @@ function ChipIcon() {
   );
 }
 
-export default function Header() {
+function HamburgerIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+      <line x1="3" y1="6" x2="19" y2="6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+      <line x1="3" y1="11" x2="19" y2="11" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+      <line x1="3" y1="16" x2="19" y2="16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+    </svg>
+  );
+}
+
+interface HeaderProps {
+  onMenuToggle: () => void;
+}
+
+export default function Header({ onMenuToggle }: HeaderProps) {
   const { balance } = useBalance();
 
   return (
@@ -40,6 +54,15 @@ export default function Header() {
       position: "relative",
       zIndex: 10,
     }}>
+      {/* Mobile hamburger */}
+      <button
+        className="mobile-menu-btn"
+        onClick={onMenuToggle}
+        aria-label="Open navigation menu"
+      >
+        <HamburgerIcon />
+      </button>
+
       {/* Site name */}
       <div style={{ flex: 1 }}>
         <h1 style={{
