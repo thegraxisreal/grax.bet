@@ -722,7 +722,7 @@ export default function BlackjackPage() {
         {phase === "betting" && (
           <>
             {/* Chips row + Half/All-In */}
-            <div style={{ display: "flex", gap: "16px", alignItems: "center", justifyContent: "center", flexWrap: "wrap" }}>
+            <div className="bj-chips" style={{ display: "flex", gap: "16px", alignItems: "center", justifyContent: "center", flexWrap: "wrap" }}>
               {[1, 5, 10, 25].map(val => (
                 <CasinoChip
                   key={val}
@@ -732,7 +732,7 @@ export default function BlackjackPage() {
                 />
               ))}
             </div>
-            <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
+            <div className="bj-halfall" style={{ display: "flex", gap: 8, justifyContent: "center" }}>
               <button onClick={() => dispatch({ type: "SET_BET", amount: Math.round(balance / 2 * 100) / 100 })}
                 style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 14px", borderRadius: 6, border: "1px solid rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.06)", color: "var(--text-secondary)", fontFamily: "'Barlow Condensed', sans-serif", fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", cursor: "pointer" }}>
                 <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="13" r="6" fill="var(--text-muted)"/><circle cx="10" cy="13" r="4.5" fill="var(--bg-secondary)"/><circle cx="10" cy="9" r="6" fill="var(--text-secondary)"/><circle cx="10" cy="9" r="4.5" fill="var(--bg-secondary)"/><text x="10" y="10" textAnchor="middle" dominantBaseline="middle" fontSize="5" fill="var(--text-secondary)" fontWeight="800">½</text></svg>
@@ -811,7 +811,7 @@ export default function BlackjackPage() {
         )}
 
         {phase === "player" && (
-          <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
+          <div className="bj-action-btns" style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
             <motion.button
               className="btn-action"
               onClick={handleHit}

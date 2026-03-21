@@ -847,14 +847,14 @@ export default function PlinkoPage() {
                   cursor: "pointer", fontSize: "1rem", padding: 0, lineHeight: 1 }}>×</button>
             )}
           </div>
-          <div style={{ display: "flex", gap: 4, marginTop: 6 }}>
+          <div className="plinko-chips" style={{ display: "flex", gap: 4, marginTop: 6 }}>
             {[1, 5, 10, 25].map(v => (
               <div key={v} style={{ transform: "scale(0.65)", transformOrigin: "top left" }}>
                 <CasinoChip value={v} onClick={addChip} disabled={phase === "dropping"} />
               </div>
             ))}
           </div>
-          <div style={{ display: "flex", gap: 4, marginTop: 4 }}>
+          <div className="bet-halfall" style={{ display: "flex", gap: 4, marginTop: 4 }}>
             <button onClick={() => setBet(Math.floor((balance / 2 / ballCount) * 100) / 100)}
               disabled={phase === "dropping"}
               style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 4, padding: "5px 6px", borderRadius: 5, border: "1px solid rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.06)", color: "var(--text-secondary)", fontFamily: "'Barlow Condensed', sans-serif", fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", cursor: "pointer" }}>
@@ -1012,7 +1012,7 @@ export default function PlinkoPage() {
         </div>
 
         {/* Session P/L */}
-        <div style={{
+        <div className="plinko-session-pl" style={{
           marginTop: "auto",
           background: "rgba(0,0,0,0.25)",
           border: "1px solid var(--border-color)",

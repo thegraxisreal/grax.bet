@@ -620,14 +620,14 @@ export default function CrashPage() {
             />
             {bet > 0 && <button onClick={() => setBet(0)} disabled={phase !== "waiting" || hasBet} style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", fontSize: "1rem", padding: 0 }}>×</button>}
           </div>
-          <div style={{ display: "flex", gap: 4, marginTop: 6 }}>
+          <div className="crash-chips" style={{ display: "flex", gap: 4, marginTop: 6 }}>
             {[1, 5, 10, 25].map(v => (
               <div key={v} style={{ transform: "scale(0.65)", transformOrigin: "top left" }}>
                 <CasinoChip value={v} onClick={addChip} disabled={phase !== "waiting" || hasBet} />
               </div>
             ))}
           </div>
-          <div style={{ display: "flex", gap: 4, marginTop: 4 }}>
+          <div className="bet-halfall" style={{ display: "flex", gap: 4, marginTop: 4 }}>
             <button onClick={() => setBet(Math.floor(balance / 2 * 100) / 100)} disabled={phase !== "waiting" || hasBet}
               style={{ ...pillStyle, flex: 1 }}>½ Half</button>
             <button onClick={() => setBet(Math.floor(balance * 100) / 100)} disabled={phase !== "waiting" || hasBet}
@@ -705,7 +705,7 @@ export default function CrashPage() {
         </AnimatePresence>
 
         {/* Session P/L */}
-        <div style={{ marginTop: "auto", background: "rgba(0,0,0,0.25)", border: "1px solid var(--border-color)", borderRadius: 6, padding: "8px 10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div className="crash-session-pl" style={{ marginTop: "auto", background: "rgba(0,0,0,0.25)", border: "1px solid var(--border-color)", borderRadius: 6, padding: "8px 10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <span style={{ ...labelStyle, margin: 0, fontSize: "0.7rem" }}>Session P/L</span>
           <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "1rem", color: sessionProfit >= 0 ? "var(--accent-green)" : "var(--lose-color)" }}>
             {sessionProfit >= 0 ? "+" : ""}${sessionProfit.toFixed(2)}

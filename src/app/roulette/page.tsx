@@ -495,13 +495,13 @@ export default function RoulettePage() {
 
             {/* Chips + Half/All-In */}
             <div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px", justifyItems: "center" }}>
+              <div className="bet-chips" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px", justifyItems: "center" }}>
                 {[1, 5, 10, 25].map(val => (
                   <CasinoChip key={val} value={val} onClick={handleAddBet}
                     disabled={betAmount >= balance || val > balance - betAmount} />
                 ))}
               </div>
-              <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
+              <div className="bet-halfall" style={{ display: "flex", gap: 6, marginTop: 8 }}>
                 <button onClick={() => setBetAmount(Math.round(balance / 2 * 100) / 100)}
                   style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 5, padding: "6px 8px", borderRadius: 6, border: "1px solid rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.06)", color: "var(--text-secondary)", fontFamily: "'Barlow Condensed', sans-serif", fontSize: "0.78rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", cursor: "pointer" }}>
                   <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="13" r="6" fill="var(--text-muted)"/><circle cx="10" cy="13" r="4.5" fill="var(--bg-secondary)"/><circle cx="10" cy="9" r="6" fill="var(--text-secondary)"/><circle cx="10" cy="9" r="4.5" fill="var(--bg-secondary)"/><text x="10" y="10" textAnchor="middle" dominantBaseline="middle" fontSize="5" fill="var(--text-secondary)" fontWeight="800">½</text></svg>
@@ -714,7 +714,7 @@ export default function RoulettePage() {
             }} />
 
             {/* Number grid */}
-            <div style={{
+            <div className="roulette-num-grid" style={{
               display: "grid",
               gridTemplateColumns: "36px repeat(12, 1fr)",
               gridTemplateRows: "repeat(3, 34px)",
@@ -751,7 +751,7 @@ export default function RoulettePage() {
             </div>
 
             {/* Outside bets */}
-            <div style={{ display: "grid", gridTemplateColumns: "36px 1fr 1fr", gap: "2px" }}>
+            <div className="roulette-outside" style={{ display: "grid", gridTemplateColumns: "36px 1fr 1fr", gap: "2px" }}>
               <div />
               <BettingCell betKey="red" label="RED  1:1" color="red"
                 isSelected={selectedBet === "red"}

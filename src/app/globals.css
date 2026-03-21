@@ -487,3 +487,154 @@ h1, h2, h3, h4, h5, h6 {
     min-height: 88px !important;
   }
 }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   GAME-SPECIFIC MOBILE OPTIMISATIONS
+   All rules are inside @media (max-width: 768px) so desktop is untouched.
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+@media (max-width: 768px) {
+
+  /* ── Shared: chips from 2×2 grid → single 4-in-a-row ───────────────── */
+  .bet-chips {
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 4px !important;
+    justify-items: center !important;
+  }
+  /* Apply zoom to chip containers inside .bet-chips */
+  .bet-chips .chip-container {
+    zoom: 0.72;
+  }
+
+  /* ── Shared: Half / All-In buttons fill row evenly ──────────────────── */
+  .bet-halfall {
+    gap: 6px !important;
+  }
+  .bet-halfall > button {
+    flex: 1 !important;
+    padding: 8px 6px !important;
+    font-size: 0.82rem !important;
+    justify-content: center !important;
+  }
+
+  /* ── Mines: mine-count selector scrolls horizontally ───────────────── */
+  .mine-count-row {
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding-bottom: 2px !important;
+    gap: 5px !important;
+    scrollbar-width: none !important;
+  }
+  .mine-count-row::-webkit-scrollbar { display: none; }
+  .mine-count-row > button {
+    flex-shrink: 0 !important;
+    padding: 6px 12px !important;
+    font-size: 0.95rem !important;
+    touch-action: manipulation;
+  }
+
+  /* ── Roulette: bigger touch targets on the number grid ──────────────── */
+  .roulette-num-grid {
+    grid-template-rows: repeat(3, 46px) !important;
+    /* let columns size naturally to fill available width */
+    grid-template-columns: 30px repeat(12, 1fr) !important;
+    gap: 2px !important;
+  }
+  .roulette-outside {
+    grid-template-columns: 30px 1fr 1fr !important;
+    gap: 2px !important;
+  }
+  /* Number cells: bigger font & minimum touch-target height */
+  .roulette-num-grid button,
+  .roulette-outside button {
+    font-size: 0.85rem !important;
+    min-height: 36px !important;
+    touch-action: manipulation;
+  }
+  /* RED/BLACK outside-bet cells: taller and more readable */
+  .roulette-outside button {
+    height: 44px !important;
+    font-size: 0.78rem !important;
+  }
+
+  /* ── Crash: chips row — fix layout-size blowout from transform: scale ─ */
+  .crash-chips {
+    height: 52px !important;        /* contain the transform-scaled 72px chips */
+    overflow: hidden !important;
+    justify-content: space-around !important;
+    gap: 0 !important;
+    margin-top: 4px !important;
+  }
+  .crash-chips > div {
+    flex: 1 !important;
+    display: flex !important;
+    justify-content: center !important;
+    transform-origin: top center !important;
+  }
+  /* Hide session P/L on mobile to save vertical space */
+  .crash-session-pl {
+    display: none !important;
+  }
+
+  /* ── Plinko: same chip-row fix as crash ─────────────────────────────── */
+  .plinko-chips {
+    height: 52px !important;
+    overflow: hidden !important;
+    justify-content: space-around !important;
+    gap: 0 !important;
+    margin-top: 4px !important;
+  }
+  .plinko-chips > div {
+    flex: 1 !important;
+    display: flex !important;
+    justify-content: center !important;
+    transform-origin: top center !important;
+  }
+  /* Session P/L not critical on mobile */
+  .plinko-session-pl {
+    display: none !important;
+  }
+
+  /* ── Blackjack: chips as a single compact row ───────────────────────── */
+  .bj-chips {
+    gap: 10px !important;
+    flex-wrap: nowrap !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+  }
+  .bj-chips .chip-container {
+    zoom: 0.7;
+  }
+
+  .bj-halfall {
+    gap: 8px !important;
+    justify-content: center !important;
+  }
+  .bj-halfall > button {
+    padding: 7px 14px !important;
+    font-size: 0.82rem !important;
+  }
+
+  /* Blackjack action buttons: 2×2 grid for easy thumb reach ──────────── */
+  .bj-action-btns {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+    max-width: 360px !important;
+    margin: 0 auto !important;
+  }
+  .bj-action-btns > * {
+    min-width: 0 !important;
+    width: 100% !important;
+    padding: 14px 8px !important;
+    font-size: 1.05rem !important;
+    touch-action: manipulation;
+  }
+
+  /* ── Reduce plinko / crash panel section gaps to save space ─────────── */
+  .game-panel > div {
+    gap: 8px !important;
+  }
+}
