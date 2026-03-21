@@ -4,6 +4,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useBalance } from "@/context/BalanceContext";
 import { CasinoChip } from "@/components/CasinoChip";
+import CollapsibleBetSelector from "@/components/CollapsibleBetSelector";
 import {
   playWheelSpin,
   playBallClatter,
@@ -494,7 +495,7 @@ export default function RoulettePage() {
             </div>
 
             {/* Chips + Half/All-In */}
-            <div>
+            <CollapsibleBetSelector>
               <div className="bet-chips" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px", justifyItems: "center" }}>
                 {[1, 5, 10, 25].map(val => (
                   <CasinoChip key={val} value={val} onClick={handleAddBet}
@@ -513,7 +514,7 @@ export default function RoulettePage() {
                   All In
                 </button>
               </div>
-            </div>
+            </CollapsibleBetSelector>
 
             {/* Selected bet display */}
             <div style={{

@@ -488,6 +488,11 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
+/* ── CollapsibleBetSelector: desktop always-open base styles ───────────── */
+.bet-selector-toggle { display: none; }
+/* On desktop the body is always visible regardless of collapsed class */
+.bet-selector-body.collapsed { max-height: none !important; opacity: 1 !important; overflow: visible !important; }
+
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    GAME-SPECIFIC MOBILE OPTIMISATIONS
    All rules are inside @media (max-width: 768px) so desktop is untouched.
@@ -636,5 +641,50 @@ h1, h2, h3, h4, h5, h6 {
   /* ── Reduce plinko / crash panel section gaps to save space ─────────── */
   .game-panel > div {
     gap: 8px !important;
+  }
+
+  /* ── Collapsible bet selector (mobile only) ─────────────────────────── */
+  .bet-selector-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .bet-selector-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 6px 4px;
+    background: none;
+    border: none;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    color: var(--text-muted);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    touch-action: manipulation;
+    margin-bottom: 0;
+  }
+  .bet-selector-chevron {
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+  }
+  .bet-selector-chevron.open {
+    transform: rotate(180deg);
+  }
+  .bet-selector-body {
+    overflow: hidden;
+    max-height: 200px;
+    transition: max-height 0.22s ease, opacity 0.18s ease;
+    opacity: 1;
+    padding-top: 6px;
+  }
+  .bet-selector-body.collapsed {
+    max-height: 0 !important;
+    opacity: 0;
+    padding-top: 0;
   }
 }

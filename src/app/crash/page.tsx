@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useBalance } from "@/context/BalanceContext";
 import { CasinoChip } from "@/components/CasinoChip";
+import CollapsibleBetSelector from "@/components/CollapsibleBetSelector";
 import { playChipClick } from "@/lib/sound";
 
 // ── Constants ──────────────────────────────────────────────────────────────────
@@ -620,19 +621,21 @@ export default function CrashPage() {
             />
             {bet > 0 && <button onClick={() => setBet(0)} disabled={phase !== "waiting" || hasBet} style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", fontSize: "1rem", padding: 0 }}>×</button>}
           </div>
-          <div className="crash-chips" style={{ display: "flex", gap: 4, marginTop: 6 }}>
-            {[1, 5, 10, 25].map(v => (
-              <div key={v} style={{ transform: "scale(0.65)", transformOrigin: "top left" }}>
-                <CasinoChip value={v} onClick={addChip} disabled={phase !== "waiting" || hasBet} />
-              </div>
-            ))}
-          </div>
-          <div className="bet-halfall" style={{ display: "flex", gap: 4, marginTop: 4 }}>
-            <button onClick={() => setBet(Math.floor(balance / 2 * 100) / 100)} disabled={phase !== "waiting" || hasBet}
-              style={{ ...pillStyle, flex: 1 }}>½ Half</button>
-            <button onClick={() => setBet(Math.floor(balance * 100) / 100)} disabled={phase !== "waiting" || hasBet}
-              style={{ ...pillStyle, flex: 1, borderColor: "rgba(240,180,41,0.3)", color: "var(--accent-gold)" }}>All In</button>
-          </div>
+          <CollapsibleBetSelector>
+            <div className="crash-chips" style={{ display: "flex", gap: 4, marginTop: 6 }}>
+              {[1, 5, 10, 25].map(v => (
+                <div key={v} style={{ transform: "scale(0.65)", transformOrigin: "top left" }}>
+                  <CasinoChip value={v} onClick={addChip} disabled={phase !== "waiting" || hasBet} />
+                </div>
+              ))}
+            </div>
+            <div className="bet-halfall" style={{ display: "flex", gap: 4, marginTop: 4 }}>
+              <button onClick={() => setBet(Math.floor(balance / 2 * 100) / 100)} disabled={phase !== "waiting" || hasBet}
+                style={{ ...pillStyle, flex: 1 }}>½ Half</button>
+              <button onClick={() => setBet(Math.floor(balance * 100) / 100)} disabled={phase !== "waiting" || hasBet}
+                style={{ ...pillStyle, flex: 1, borderColor: "rgba(240,180,41,0.3)", color: "var(--accent-gold)" }}>All In</button>
+            </div>
+          </CollapsibleBetSelector>
         </div>
 
         {/* Auto Cash Out */}

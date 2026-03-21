@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useBalance } from "@/context/BalanceContext";
 import { CasinoChip } from "@/components/CasinoChip";
+import CollapsibleBetSelector from "@/components/CollapsibleBetSelector";
 import { playChipClick, playWin, playLose } from "@/lib/sound";
 
 // ── Constants ──────────────────────────────────────────────────────────────
@@ -491,7 +492,7 @@ export default function MinesPage() {
             </div>
 
             {/* Chips + Half/All-In */}
-            <div>
+            <CollapsibleBetSelector>
               <div className="bet-chips" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px", justifyItems: "center" }}>
                 {[1, 5, 10, 25].map(val => (
                   <CasinoChip
@@ -514,7 +515,7 @@ export default function MinesPage() {
                   All In
                 </button>
               </div>
-            </div>
+            </CollapsibleBetSelector>
 
             <PanelDivider />
 
