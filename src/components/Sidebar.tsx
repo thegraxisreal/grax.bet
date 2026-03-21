@@ -11,6 +11,11 @@ interface NavItem {
   icon: React.ReactNode;
 }
 
+interface SidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
 function HomeIcon() {
   return (
     <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
@@ -134,6 +139,15 @@ function LockIcon() {
   );
 }
 
+function CloseIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <line x1="4" y1="4" x2="14" y2="14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+      <line x1="14" y1="4" x2="4" y2="14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+    </svg>
+  );
+}
+
 const NAV_ITEMS: NavItem[] = [
   { label: "Home",      href: "/",          icon: <HomeIcon /> },
   { label: "Blackjack", href: "/blackjack", icon: <BlackjackIcon /> },
@@ -145,15 +159,17 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Plinko",    href: "/plinko",    icon: <PlinkoIcon /> },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar${isOpen ? " open" : ""}`}>
       {/* Logo area */}
       <div style={{
         padding: "20px 16px 16px",
         borderBottom: "1px solid var(--border-color)",
+        display: "flex",
+        alignItems: "center",
       }}>
         <div style={{
           fontFamily: "'Barlow Condensed', sans-serif",
@@ -162,11 +178,21 @@ export default function Sidebar() {
           letterSpacing: "0.08em",
           textTransform: "uppercase",
           lineHeight: 1.2,
+          flex: 1,
         }}>
           <span style={{ color: "var(--accent-gold)" }}>thegraxisreal</span>
           <br />
           <span style={{ color: "var(--text-secondary)", fontSize: "0.75rem", fontWeight: 500 }}>gamble</span>
         </div>
+
+        {/* Mobile close button */}
+        <button
+          className="sidebar-close-btn"
+          onClick={onClose}
+          aria-label="Close navigation menu"
+        >
+          <CloseIcon />
+        </button>
       </div>
 
       {/* Section label */}
@@ -212,6 +238,7 @@ export default function Sidebar() {
               key={item.label}
               href={item.href}
               className={`sidebar-item ${isActive ? "active" : ""}`}
+              onClick={onClose}
             >
               {item.icon}
               <span>{item.label}</span>
