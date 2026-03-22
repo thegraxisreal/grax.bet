@@ -48,17 +48,22 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       return { success: false, error: "Username must be 3–16 characters: letters, numbers, underscores only." };
     }
 
-    const available = await checkUsernameAvailable(name);
-    if (!available) {
-      return { success: false, error: "That username is already taken." };
+    try {
+      const available = await checkUsernameAvailable(name);
+      if (!available) {
+        return { success: false, error: "That username is already taken." };
+      }
+
+      await createUser(name, 50);
+      localStorage.setItem(USERNAME_KEY, name);
+      setUsername(name);
+      setNeedsUsername(false);
+
+      return { success: true };
+    } catch (err) {
+      console.error("saveUsername error:", err);
+      return { success: false, error: "Could not connect to the server. Please try again." };
     }
-
-    await createUser(name, 50);
-    localStorage.setItem(USERNAME_KEY, name);
-    setUsername(name);
-    setNeedsUsername(false);
-
-    return { success: true };
   }
 
   return (

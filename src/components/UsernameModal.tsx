@@ -14,10 +14,16 @@ export default function UsernameModal() {
     e.preventDefault();
     setError(null);
     setLoading(true);
-    const result = await saveUsername(value.trim());
-    setLoading(false);
-    if (!result.success) {
-      setError(result.error ?? "Something went wrong.");
+    try {
+      const result = await saveUsername(value.trim());
+      if (!result.success) {
+        setError(result.error ?? "Something went wrong.");
+      }
+    } catch (err) {
+      console.error("handleSubmit error:", err);
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
     }
   }
 
