@@ -13,6 +13,41 @@ export interface Matchup {
   startTime: string;
 }
 
+// ─── Minimal ESPN API types ───────────────────────────────────────────────────
+
+interface EspnTeam { displayName?: string; name?: string }
+interface EspnCompetitor {
+  homeAway?: string;
+  team?: EspnTeam;
+  score?: string;
+  winner?: boolean;
+}
+interface EspnNote { headline?: string; text?: string }
+interface EspnSeries { title?: string }
+interface EspnCompetition {
+  id?: string;
+  competitors?: EspnCompetitor[];
+  status?: { type?: { name?: string } };
+  notes?: EspnNote[];
+  series?: EspnSeries;
+}
+interface EspnEvent {
+  id?: string;
+  date?: string;
+  notes?: EspnNote[];
+  competitions?: EspnCompetition[];
+}
+interface EspnMatchup { competitionId?: string; id?: string }
+interface EspnGroup {
+  name?: string;
+  matchups?: EspnMatchup[];
+  competitions?: EspnMatchup[];
+}
+interface EspnRound { groups?: EspnGroup[]; seeds?: EspnGroup[] }
+interface EspnTournament { bracket?: { rounds?: EspnRound[] } }
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 const SCOREBOARD_URL =
   "https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard?groups=100&limit=100";
 const TOURNAMENTS_URL =
@@ -50,16 +85,16 @@ export async function GET() {
     const tournamentMap: Record<string, { round: number; region: string }> = {};
     if (tResult.status === "fulfilled" && tResult.value.ok) {
       try {
-        const tData = await tResult.value.json();
-        const tournaments: any[] = tData.tournaments ?? [];
+        const tData = await tResult.value.json() as { tournaments?: EspnTournament[] };
+        const tournaments: EspnTournament[] = tData.tournaments ?? [];
         for (const t of tournaments) {
-          const rounds: any[] = t.bracket?.rounds ?? [];
-          rounds.forEach((round: any, roundIdx: number) => {
-            const groups: any[] = round.groups ?? round.seeds ?? [];
-            groups.forEach((group: any) => {
+          const rounds: EspnRound[] = t.bracket?.rounds ?? [];
+          rounds.forEach((round: EspnRound, roundIdx: number) => {
+            const groups: EspnGroup[] = round.groups ?? round.seeds ?? [];
+            groups.forEach((group: EspnGroup) => {
               const regionName: string = group.name ?? "Tournament";
-              const matchups: any[] = group.matchups ?? group.competitions ?? [];
-              matchups.forEach((m: any) => {
+              const matchups: EspnMatchup[] = group.matchups ?? group.competitions ?? [];
+              matchups.forEach((m: EspnMatchup) => {
                 const id = String(m.competitionId ?? m.id ?? "");
                 if (id) {
                   tournamentMap[id] = { round: roundIdx + 1, region: regionName };
@@ -77,20 +112,20 @@ export async function GET() {
       return NextResponse.json({ matchups: [] });
     }
 
-    const sbData = await sbResult.value.json();
-    const events: any[] = sbData.events ?? [];
+    const sbData = await sbResult.value.json() as { events?: EspnEvent[] };
+    const events: EspnEvent[] = sbData.events ?? [];
 
     const matchups: Matchup[] = events
-      .map((event: any): Matchup | null => {
+      .map((event: EspnEvent): Matchup | null => {
         const competition = event.competitions?.[0];
         if (!competition) return null;
-        const competitors: any[] = competition.competitors ?? [];
+        const competitors: EspnCompetitor[] = competition.competitors ?? [];
         if (competitors.length < 2) return null;
 
         const home =
-          competitors.find((c: any) => c.homeAway === "home") ?? competitors[0];
+          competitors.find((c: EspnCompetitor) => c.homeAway === "home") ?? competitors[0];
         const away =
-          competitors.find((c: any) => c.homeAway === "away") ?? competitors[1];
+          competitors.find((c: EspnCompetitor) => c.homeAway === "away") ?? competitors[1];
 
         const gameId = String(event.id);
         const competitionId = String(competition.id ?? gameId);
@@ -101,7 +136,7 @@ export async function GET() {
         if (tournamentMap[competitionId]) {
           ({ round, region } = tournamentMap[competitionId]);
         } else {
-          const notes: any[] = event.notes ?? competition.notes ?? [];
+          const notes: EspnNote[] = event.notes ?? competition.notes ?? [];
           const headline: string =
             notes[0]?.headline ?? notes[0]?.text ?? competition.series?.title ?? "";
           if (headline) {
@@ -123,7 +158,7 @@ export async function GET() {
           status = "in";
 
         // Winner
-        const winnerComp = competitors.find((c: any) => c.winner === true);
+        const winnerComp = competitors.find((c: EspnCompetitor) => c.winner === true);
         const winner: string | null = winnerComp
           ? winnerComp.team?.displayName ?? winnerComp.team?.name ?? null
           : null;

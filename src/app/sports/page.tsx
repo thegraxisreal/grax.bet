@@ -114,7 +114,6 @@ function GameCard({ matchup, bet, selectedChip, onBet, placing, canBet }: GameCa
 
   const betWon = bet?.paid && bet.won === true;
   const betLost = bet?.paid && bet.won === false;
-  const betPending = bet && !bet.paid;
 
   return (
     <motion.div
@@ -422,7 +421,7 @@ export default function SportsPage() {
 
         // Payout pass
         const paid: Record<string, UserBet> = {};
-        let payoutMsg: string[] = [];
+        const payoutMsg: string[] = [];
         for (const [gameId, bet] of Object.entries(bets)) {
           if (bet.paid) {
             paid[gameId] = bet;
@@ -616,7 +615,7 @@ export default function SportsPage() {
             letterSpacing: "0.04em",
           }}
         >
-          Live bracket betting · 1.9× payout · NCAA Men's Tournament
+          Live bracket betting · 1.9× payout · NCAA Men&apos;s Tournament
         </p>
       </div>
 
