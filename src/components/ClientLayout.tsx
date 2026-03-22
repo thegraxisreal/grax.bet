@@ -2,9 +2,11 @@
 
 import { useState, useCallback } from "react";
 import { BalanceProvider } from "@/context/BalanceContext";
+import { UserProvider } from "@/context/UserContext";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 import BrokeModal from "@/components/BrokeModal";
+import UsernameModal from "@/components/UsernameModal";
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -13,6 +15,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   const closeSidebar = useCallback(() => setSidebarOpen(false), []);
 
   return (
+    <UserProvider>
     <BalanceProvider>
       <div style={{
         display: "flex",
@@ -46,6 +49,8 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
         </div>
       </div>
       <BrokeModal />
+      <UsernameModal />
     </BalanceProvider>
+    </UserProvider>
   );
 }
