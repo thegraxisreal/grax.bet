@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import ClientLayout from "@/components/ClientLayout";
+import dynamic from "next/dynamic";
+
+// Disable SSR for the entire client layout — Firebase SDK must only run in the
+// browser; server-side evaluation causes React hydration mismatches (#418/#423/#425).
+const ClientLayout = dynamic(() => import("@/components/ClientLayout"), {
+  ssr: false,
+});
 
 export const metadata: Metadata = {
   title: "thegraxisreal gamble",
