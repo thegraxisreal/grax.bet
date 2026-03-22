@@ -5,7 +5,7 @@ import {
   updateDoc,
   Timestamp,
 } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { getDb } from "@/lib/firebase";
 
 export interface UserDoc {
   username: string;
@@ -16,13 +16,13 @@ export interface UserDoc {
 }
 
 export async function checkUsernameAvailable(username: string): Promise<boolean> {
-  const ref = doc(db, "users", username.toLowerCase());
+  const ref = doc(getDb(), "users", username.toLowerCase());
   const snap = await getDoc(ref);
   return !snap.exists();
 }
 
 export async function createUser(username: string, startingBalance: number): Promise<void> {
-  const ref = doc(db, "users", username.toLowerCase());
+  const ref = doc(getDb(), "users", username.toLowerCase());
   const userDoc: UserDoc = {
     username,
     createdAt: Timestamp.now(),
@@ -34,13 +34,13 @@ export async function createUser(username: string, startingBalance: number): Pro
 }
 
 export async function getUser(username: string): Promise<UserDoc | null> {
-  const ref = doc(db, "users", username.toLowerCase());
+  const ref = doc(getDb(), "users", username.toLowerCase());
   const snap = await getDoc(ref);
   if (!snap.exists()) return null;
   return snap.data() as UserDoc;
 }
 
 export async function updateUserBalance(username: string, balance: number): Promise<void> {
-  const ref = doc(db, "users", username.toLowerCase());
+  const ref = doc(getDb(), "users", username.toLowerCase());
   await updateDoc(ref, { balance });
 }

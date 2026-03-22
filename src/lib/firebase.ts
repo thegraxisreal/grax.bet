@@ -1,5 +1,5 @@
-import { initializeApp, getApps } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
+import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
+import { getFirestore, type Firestore } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBjjaRQEC1HBnucITzXMTJkysvHy9qy30g",
@@ -11,7 +11,13 @@ const firebaseConfig = {
   measurementId: "G-W7SDSZYV7B"
 };
 
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
-const db = getFirestore(app);
+// Lazy singletons — never initialized at module-eval time so SSR stays clean.
+let _db: Firestore | undefined;
 
-export { app, db };
+export function getDb(): Firestore {
+  if (_db) return _db;
+  const app: FirebaseApp =
+    getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+  _db = getFirestore(app);
+  return _db;
+}
