@@ -1,6 +1,7 @@
 "use client";
 
 import { useBalance } from "@/context/BalanceContext";
+import { useUser } from "@/context/UserContext";
 
 function ChipIcon() {
   return (
@@ -40,6 +41,7 @@ interface HeaderProps {
 
 export default function Header({ onMenuToggle }: HeaderProps) {
   const { balance } = useBalance();
+  const { username } = useUser();
 
   return (
     <header style={{
@@ -85,6 +87,18 @@ export default function Header({ onMenuToggle }: HeaderProps) {
           </span>
         </h1>
       </div>
+
+      {/* Username */}
+      {username && (
+        <span style={{
+          color: "var(--text-secondary)",
+          fontSize: "0.85rem",
+          fontWeight: 600,
+          letterSpacing: "0.05em",
+        }}>
+          {username}
+        </span>
+      )}
 
       {/* Balance */}
       <div className="balance-display">
