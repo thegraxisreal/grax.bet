@@ -517,15 +517,14 @@ export default function SportsPage() {
   );
 
   // Group matchups by round, then region
-  const rounds = [...new Set(matchups.map((m) => m.round))].sort((a, b) => a - b);
+  const rounds = Array.from(new Set(matchups.map((m) => m.round))).sort((a, b) => a - b);
 
   const displayed = activeRound
     ? matchups.filter((m) => m.round === activeRound)
     : matchups;
 
-  const regions = [
-    ...new Set(displayed.map((m) => m.region)),
-  ].sort((a, b) => REGION_ORDER.indexOf(a) - REGION_ORDER.indexOf(b));
+  const regions = Array.from(new Set(displayed.map((m) => m.region)))
+    .sort((a, b) => REGION_ORDER.indexOf(a) - REGION_ORDER.indexOf(b));
 
   // Bet summary counts
   const allBets = Object.values(userBets);
@@ -830,7 +829,7 @@ export default function SportsPage() {
               });
             if (regionGames.length === 0) return null;
 
-            const roundsInRegion = [...new Set(regionGames.map((m) => m.round))].sort(
+            const roundsInRegion = Array.from(new Set(regionGames.map((m) => m.round))).sort(
               (a, b) => a - b
             );
 
