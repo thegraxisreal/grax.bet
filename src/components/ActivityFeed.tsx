@@ -81,51 +81,53 @@ export default function ActivityFeed() {
       flexDirection: "column",
       gap: 6,
       pointerEvents: "none",
-      maxWidth: 300,
+      maxWidth: 360,
     }}>
       <AnimatePresence>
         {toasts.map(toast => (
           <motion.div
             key={toast.id}
-            initial={{ opacity: 0, x: 48, scale: 0.92 }}
+            initial={{ opacity: 0, x: 60, scale: 0.88 }}
             animate={{ opacity: 1, x: 0, scale: 1 }}
-            exit={{ opacity: 0, x: 48, scale: 0.9 }}
-            transition={{ duration: 0.22, ease: "easeOut" }}
+            exit={{ opacity: 0, x: 60, scale: 0.88 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
             style={{
-              background: "var(--bg-card)",
-              border: `1px solid ${toast.result === "win" ? "rgba(0,230,118,0.28)" : "rgba(244,67,54,0.2)"}`,
-              borderLeft: `3px solid ${toast.result === "win" ? "var(--accent-green)" : "#f44336"}`,
-              borderRadius: 8,
-              padding: "7px 12px",
+              background: toast.result === "win"
+                ? "linear-gradient(135deg, rgba(0,230,118,0.1), var(--bg-card))"
+                : "linear-gradient(135deg, rgba(244,67,54,0.08), var(--bg-card))",
+              border: `1px solid ${toast.result === "win" ? "rgba(0,230,118,0.4)" : "rgba(244,67,54,0.3)"}`,
+              borderLeft: `4px solid ${toast.result === "win" ? "var(--accent-green)" : "#f44336"}`,
+              borderRadius: 10,
+              padding: "12px 16px",
               display: "flex",
               alignItems: "center",
-              gap: 8,
+              gap: 10,
               fontFamily: "'Barlow Condensed', sans-serif",
-              fontSize: "0.88rem",
+              fontSize: "1.05rem",
               letterSpacing: "0.02em",
               pointerEvents: "auto",
               boxShadow: toast.result === "win"
-                ? "0 2px 16px rgba(0,230,118,0.1)"
-                : "0 2px 16px rgba(0,0,0,0.35)",
+                ? "0 4px 24px rgba(0,230,118,0.18), 0 2px 8px rgba(0,0,0,0.4)"
+                : "0 4px 24px rgba(244,67,54,0.12), 0 2px 8px rgba(0,0,0,0.4)",
               whiteSpace: "nowrap",
               overflow: "hidden",
               cursor: "pointer",
             }}
             onClick={() => dismiss(toast.id)}
           >
-            <span style={{ fontSize: "1rem", flexShrink: 0 }}>
+            <span style={{ fontSize: "1.4rem", flexShrink: 0 }}>
               {GAME_ICONS[toast.game] ?? "🎰"}
             </span>
             <span style={{ color: "var(--text-secondary)", overflow: "hidden", textOverflow: "ellipsis" }}>
-              <span style={{ color: "var(--text-primary)", fontWeight: 700 }}>
+              <span style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: "1.1rem" }}>
                 {toast.username}
               </span>
               {" "}
-              <span style={{ color: toast.result === "win" ? "var(--accent-green)" : "#f44336", fontWeight: 600 }}>
+              <span style={{ color: toast.result === "win" ? "var(--accent-green)" : "#f44336", fontWeight: 700 }}>
                 {toast.result === "win" ? "won" : "lost"}
               </span>
               {" "}
-              <span style={{ color: toast.result === "win" ? "var(--accent-gold)" : "var(--text-secondary)", fontWeight: 700 }}>
+              <span style={{ color: toast.result === "win" ? "var(--accent-gold)" : "#ff6b6b", fontWeight: 800, fontSize: "1.1rem" }}>
                 ${toast.amount.toLocaleString()}
               </span>
               {" on "}
