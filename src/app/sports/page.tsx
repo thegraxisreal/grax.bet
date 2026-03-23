@@ -17,6 +17,7 @@ import {
   onSnapshot,
 } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
+import { fmtMoney } from "@/lib/format";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -847,7 +848,7 @@ function GameCard({
                 whiteSpace: "nowrap",
               }}
             >
-              +${(bet.amount * PAYOUT).toFixed(2)}
+              +${fmtMoney(bet.amount * PAYOUT)}
             </span>
           )}
         </div>
@@ -941,7 +942,7 @@ export default function SportsPage() {
         } else if (bet.team === scoringTeam) {
           payout = Math.round(bet.amount * PAYOUT * 100) / 100;
           addBalance(payout);
-          toastMsg = `⚡ Next score WIN! +$${payout.toFixed(2)}`;
+          toastMsg = `⚡ Next score WIN! +$${fmtMoney(payout)}`;
           setNextScoreWin({ team: bet.team, payout });
         } else {
           toastMsg = `⚡ Next score lost — ${scoringTeam} scored.`;
@@ -1040,7 +1041,7 @@ export default function SportsPage() {
           if (won) {
             const payout = Math.round(bet.amount * PAYOUT * 100) / 100;
             addBalance(payout);
-            payoutMsg.push(`+$${payout.toFixed(2)} — ${bet.team}`);
+            payoutMsg.push(`+$${fmtMoney(payout)} — ${bet.team}`);
             const userRef = doc(db, "users", uid);
             const userSnap = await getDoc(userRef);
             if (userSnap.exists()) {
@@ -1378,7 +1379,7 @@ export default function SportsPage() {
                 lineHeight: 1,
                 marginBottom: 28,
               }}>
-                +${nextScoreWin.payout.toFixed(2)}
+                +${fmtMoney(nextScoreWin.payout)}
               </div>
               <button
                 onClick={() => {
@@ -1632,7 +1633,7 @@ export default function SportsPage() {
                   letterSpacing: "0.06em",
                   textTransform: "uppercase",
                 }}>
-                  to win ${(confirmBet.amount * PAYOUT).toFixed(2)}
+                  to win ${fmtMoney(confirmBet.amount * PAYOUT)}
                 </span>
               </div>
 
@@ -1754,7 +1755,7 @@ export default function SportsPage() {
             <span style={{ color: "rgba(255,255,255,0.15)" }}>|</span>
             <span>
               <span style={{ color: "var(--accent-gold)", fontWeight: 700 }}>
-                ${communityTotal.toFixed(0)}
+                ${fmtMoney(communityTotal)}
               </span>{" "}
               wagered total
             </span>
@@ -1864,13 +1865,13 @@ export default function SportsPage() {
               label: "Won",
               value: won.length,
               color: "var(--accent-green)",
-              detail: won.length > 0 ? `+$${totalWon.toFixed(2)}` : "$0",
+              detail: won.length > 0 ? `+$${fmtMoney(totalWon)}` : "$0",
             },
             {
               label: "Lost",
               value: lost.length,
               color: "#ef4444",
-              detail: lost.length > 0 ? `-$${totalLost.toFixed(2)}` : "$0",
+              detail: lost.length > 0 ? `-$${fmtMoney(totalLost)}` : "$0",
             },
           ].map(({ label, value, color, detail }) => (
             <div
@@ -2219,10 +2220,10 @@ export default function SportsPage() {
                       }}
                     >
                       {betWon
-                        ? `+$${(bet.amount * PAYOUT).toFixed(2)}`
+                        ? `+$${fmtMoney(bet.amount * PAYOUT)}`
                         : betLost
-                        ? `-$${bet.amount.toFixed(2)}`
-                        : `$${bet.amount} pending`}
+                        ? `-$${fmtMoney(bet.amount)}`
+                        : `$${fmtMoney(bet.amount)} pending`}
                     </div>
                   </div>
                 );

@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useBalance } from "@/context/BalanceContext";
 import { useUser } from "@/context/UserContext";
 import { logFeedEvent } from "@/lib/feed";
+import { fmtMoney } from "@/lib/format";
 import { CasinoChip } from "@/components/CasinoChip";
 import CollapsibleBetSelector from "@/components/CollapsibleBetSelector";
 import { playChipClick } from "@/lib/sound";
@@ -921,7 +922,7 @@ export default function PlinkoPage() {
             fontSize: "1.05rem",
             color: totalBet > balance ? "var(--lose-color)" : "var(--accent-gold)",
           }}>
-            ${totalBet.toFixed(2)}
+            ${fmtMoney(totalBet)}
           </span>
         </div>
         {totalBet > balance && (
@@ -1016,12 +1017,12 @@ export default function PlinkoPage() {
           ) : (
             <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)", display: "flex", flexDirection: "column", gap: 3 }}>
               <div>Rounds: <b style={{ color: "var(--text-primary)" }}>{autoStats.rounds}</b></div>
-              <div>Wagered: <b style={{ color: "var(--accent-gold)" }}>${autoStats.wagered.toFixed(2)}</b></div>
-              <div>Won: <b style={{ color: "var(--accent-green)" }}>${autoStats.won.toFixed(2)}</b></div>
+              <div>Wagered: <b style={{ color: "var(--accent-gold)" }}>${fmtMoney(autoStats.wagered)}</b></div>
+              <div>Won: <b style={{ color: "var(--accent-green)" }}>${fmtMoney(autoStats.won)}</b></div>
               <div>Net: <b style={{ color: autoStats.won - autoStats.wagered >= 0 ? "var(--accent-green)" : "var(--lose-color)" }}>
-                ${(autoStats.won - autoStats.wagered).toFixed(2)}
+                ${fmtMoney(autoStats.won - autoStats.wagered)}
               </b></div>
-              <div>Best: <b style={{ color: "var(--accent-gold)" }}>${autoStats.biggestWin.toFixed(2)}</b></div>
+              <div>Best: <b style={{ color: "var(--accent-gold)" }}>${fmtMoney(autoStats.biggestWin)}</b></div>
             </div>
           )}
         </div>
@@ -1044,7 +1045,7 @@ export default function PlinkoPage() {
             fontSize: "1rem",
             color: sessionProfit >= 0 ? "var(--accent-green)" : "var(--lose-color)",
           }}>
-            {sessionProfit >= 0 ? "+" : ""}${sessionProfit.toFixed(2)}
+            {sessionProfit >= 0 ? "+" : ""}${fmtMoney(sessionProfit)}
           </span>
         </div>
       </div>
@@ -1087,7 +1088,7 @@ export default function PlinkoPage() {
             >
               <div className={`result-banner ${totalResult.net >= 0 ? "win" : "lose"}`}
                 style={{ fontSize: "1.6rem", padding: "10px 24px" }}>
-                {totalResult.net >= 0 ? "+" : ""}${totalResult.net.toFixed(2)}
+                {totalResult.net >= 0 ? "+" : ""}${fmtMoney(totalResult.net)}
               </div>
             </motion.div>
           )}
@@ -1132,7 +1133,7 @@ export default function PlinkoPage() {
                   color: r.payout >= bet ? "var(--accent-green)" : "var(--lose-color)",
                   fontWeight: 700,
                 }}>
-                  {r.payout >= bet ? "+" : ""}${(r.payout - bet).toFixed(2)}
+                  {r.payout >= bet ? "+" : ""}${fmtMoney(r.payout - bet)}
                 </span>
               </motion.div>
             ))}
@@ -1167,7 +1168,7 @@ export default function PlinkoPage() {
             }}>
               <span style={{ color: "var(--text-muted)", fontWeight: 600 }}>Total Payout</span>
               <span style={{ color: "var(--accent-gold)", fontWeight: 800 }}>
-                ${totalResult.totalPayout.toFixed(2)}
+                ${fmtMoney(totalResult.totalPayout)}
               </span>
             </div>
             <div style={{
@@ -1181,7 +1182,7 @@ export default function PlinkoPage() {
                 color: totalResult.net >= 0 ? "var(--accent-green)" : "var(--lose-color)",
                 fontWeight: 800,
               }}>
-                {totalResult.net >= 0 ? "+" : ""}${totalResult.net.toFixed(2)}
+                {totalResult.net >= 0 ? "+" : ""}${fmtMoney(totalResult.net)}
               </span>
             </div>
           </div>

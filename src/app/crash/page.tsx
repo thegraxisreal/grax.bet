@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useBalance } from "@/context/BalanceContext";
 import { useUser } from "@/context/UserContext";
 import { logFeedEvent } from "@/lib/feed";
+import { fmtMoney } from "@/lib/format";
 import { CasinoChip } from "@/components/CasinoChip";
 import CollapsibleBetSelector from "@/components/CollapsibleBetSelector";
 import { playChipClick } from "@/lib/sound";
@@ -579,7 +580,7 @@ export default function CrashPage() {
 
   const btnLabel = () => {
     if (phase === "waiting") return hasBet ? "✓ Bet Placed" : "Place Bet";
-    if (canCashout) return `Cash Out  $${(bet * multiplier).toFixed(2)}`;
+    if (canCashout) return `Cash Out  $${fmtMoney(bet * multiplier)}`;
     if (phase === "running") return "Waiting…";
     return "Crashed";
   };
@@ -703,7 +704,7 @@ export default function CrashPage() {
           <div style={{ background: "rgba(0,0,0,0.25)", border: "1px solid var(--border-color)", borderRadius: 6, padding: "8px 10px", display: "flex", justifyContent: "space-between" }}>
             <span style={{ ...labelStyle, margin: 0 }}>Potential</span>
             <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "1rem", color: multColor(multiplier) }}>
-              ${(bet * multiplier).toFixed(2)}
+              ${fmtMoney(bet * multiplier)}
             </span>
           </div>
         )}
@@ -718,7 +719,7 @@ export default function CrashPage() {
                 {lastResult.net >= 0 ? `CASHED OUT @ ${lastResult.mult.toFixed(2)}×` : "BUSTED"}
               </div>
               <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: "1.1rem", color: lastResult.net >= 0 ? "var(--win-color)" : "var(--lose-color)" }}>
-                {lastResult.net >= 0 ? "+" : ""}${lastResult.net.toFixed(2)}
+                {lastResult.net >= 0 ? "+" : ""}${fmtMoney(lastResult.net)}
               </div>
             </motion.div>
           )}
@@ -728,7 +729,7 @@ export default function CrashPage() {
         <div className="crash-session-pl" style={{ marginTop: "auto", background: "rgba(0,0,0,0.25)", border: "1px solid var(--border-color)", borderRadius: 6, padding: "8px 10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <span style={{ ...labelStyle, margin: 0, fontSize: "0.7rem" }}>Session P/L</span>
           <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "1rem", color: sessionProfit >= 0 ? "var(--accent-green)" : "var(--lose-color)" }}>
-            {sessionProfit >= 0 ? "+" : ""}${sessionProfit.toFixed(2)}
+            {sessionProfit >= 0 ? "+" : ""}${fmtMoney(sessionProfit)}
           </span>
         </div>
       </div>

@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useBalance } from "@/context/BalanceContext";
 import { useUser } from "@/context/UserContext";
 import { logFeedEvent } from "@/lib/feed";
+import { fmtMoney } from "@/lib/format";
 import { CasinoChip } from "@/components/CasinoChip";
 import CollapsibleBetSelector from "@/components/CollapsibleBetSelector";
 import { playChipClick, playWin, playLose } from "@/lib/sound";
@@ -552,7 +553,7 @@ export default function MinesPage() {
             <div style={{ textAlign: "center", marginTop: "auto" }}>
               <span style={{ fontSize: "0.68rem", color: "var(--text-muted)",
                 fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.08em" }}>
-                Balance: <strong style={{ color: "var(--text-secondary)" }}>${balance.toFixed(2)}</strong>
+                Balance: <strong style={{ color: "var(--text-secondary)" }}>${fmtMoney(balance)}</strong>
               </span>
             </div>
           </>
@@ -566,8 +567,8 @@ export default function MinesPage() {
                 <BigStat label="Multiplier" value={`${mult.toFixed(2)}×`} accent="gold" />
                 <PanelDivider />
                 <SmallStat label="Next Tile" value={`${nextMult.toFixed(2)}×`} accent="green" />
-                <SmallStat label="Profit" value={`+$${profit.toFixed(2)}`} accent="green" />
-                <SmallStat label="Cashout" value={`$${cashoutTotal.toFixed(2)}`} />
+                <SmallStat label="Profit" value={`+$${fmtMoney(profit)}`} accent="green" />
+                <SmallStat label="Cashout" value={`$${fmtMoney(cashoutTotal)}`} />
               </>
             ) : (
               <div style={{
@@ -584,7 +585,7 @@ export default function MinesPage() {
             )}
 
             <PanelDivider />
-            <SmallStat label="Bet" value={`$${bet.toFixed(2)}`} />
+            <SmallStat label="Bet" value={`$${fmtMoney(bet)}`} />
             <SmallStat label="Mines" value={String(mineCount)} />
             <SmallStat
               label="Remaining"
@@ -607,7 +608,7 @@ export default function MinesPage() {
                 letterSpacing: "0.06em",
               }}
             >
-              {safeRevealed === 0 ? "PICK A TILE" : `CASH OUT\n$${cashoutTotal.toFixed(2)}`}
+              {safeRevealed === 0 ? "PICK A TILE" : `CASH OUT\n$${fmtMoney(cashoutTotal)}`}
             </motion.button>
           </>
         )}
@@ -640,8 +641,8 @@ export default function MinesPage() {
                 lineHeight: 1,
               }}>
                 {phase === "cashout"
-                  ? `+$${(finalPayout - bet).toFixed(2)}`
-                  : `-$${bet.toFixed(2)}`}
+                  ? `+$${fmtMoney(finalPayout - bet)}`
+                  : `-$${fmtMoney(bet)}`}
               </div>
             </motion.div>
 
@@ -650,13 +651,13 @@ export default function MinesPage() {
             {phase === "cashout" && (
               <>
                 <SmallStat label="Multiplier" value={`${mult.toFixed(2)}×`} accent="gold" />
-                <SmallStat label="Payout" value={`$${finalPayout.toFixed(2)}`} />
+                <SmallStat label="Payout" value={`$${fmtMoney(finalPayout)}`} />
                 <SmallStat label="Tiles Found" value={`${safeRevealed} / ${TOTAL - mineCount}`} accent="green" />
               </>
             )}
             {phase === "dead" && (
               <>
-                <SmallStat label="Bet Lost" value={`$${bet.toFixed(2)}`} />
+                <SmallStat label="Bet Lost" value={`$${fmtMoney(bet)}`} />
                 <SmallStat label="Tiles Found" value={String(safeRevealed)} />
                 <SmallStat label="Mines" value={String(mineCount)} />
               </>
@@ -711,8 +712,8 @@ export default function MinesPage() {
               <div className={`result-banner ${phase === "cashout" ? "win" : "lose"}`}
                 style={{ fontSize: "1.5rem", padding: "9px 24px" }}>
                 {phase === "cashout"
-                  ? `CASHED OUT  +$${(finalPayout - bet).toFixed(2)}`
-                  : `MINE!  Lost $${bet.toFixed(2)}`}
+                  ? `CASHED OUT  +$${fmtMoney(finalPayout - bet)}`
+                  : `MINE!  Lost $${fmtMoney(bet)}`}
               </div>
             </motion.div>
           )}

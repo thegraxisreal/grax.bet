@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useBalance } from "@/context/BalanceContext";
 import { useUser } from "@/context/UserContext";
 import { logFeedEvent } from "@/lib/feed";
+import { fmtMoney } from "@/lib/format";
 import { CasinoChip } from "@/components/CasinoChip";
 import CollapsibleBetSelector from "@/components/CollapsibleBetSelector";
 import PlayingCard from "@/components/PlayingCard";
@@ -625,7 +626,7 @@ export default function BlackjackPage() {
                         fontWeight: 600,
                         letterSpacing: "0.05em",
                       }}>
-                        Bet: ${(hand.doubled ? hand.bet * 2 : hand.bet).toFixed(2)}
+                        Bet: ${fmtMoney(hand.doubled ? hand.bet * 2 : hand.bet)}
                       </div>
 
                       {/* Result banner */}
@@ -642,8 +643,8 @@ export default function BlackjackPage() {
                             {hand.result !== "push" && hand.result !== "bust" && (
                               <div style={{ fontSize: "0.9rem", marginTop: "2px", opacity: 0.85 }}>
                                 {hand.result === "blackjack" || hand.result === "win"
-                                  ? `+$${(computePayout(hand) - (hand.doubled ? hand.bet * 2 : hand.bet)).toFixed(2)}`
-                                  : `-$${(hand.doubled ? hand.bet * 2 : hand.bet).toFixed(2)}`
+                                  ? `+$${fmtMoney(computePayout(hand) - (hand.doubled ? hand.bet * 2 : hand.bet))}`
+                                  : `-$${fmtMoney(hand.doubled ? hand.bet * 2 : hand.bet)}`
                                 }
                               </div>
                             )}
@@ -702,7 +703,7 @@ export default function BlackjackPage() {
                 </div>
                 <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", marginBottom: "20px" }}>
                   Dealer shows Ace. Insurance pays 2:1.<br />
-                  Cost: ${(lastBet / 2).toFixed(2)}
+                  Cost: ${fmtMoney(lastBet / 2)}
                 </p>
                 <div style={{ display: "flex", gap: "12px", justifyContent: "center" }}>
                   <button
@@ -818,7 +819,7 @@ export default function BlackjackPage() {
                   onClick={() => dispatch({ type: "SET_BET", amount: Math.min(lastBet, balance) })}
                   style={{ fontSize: "0.8rem" }}
                 >
-                  Rebet ${lastBet.toFixed(2)}
+                  Rebet ${fmtMoney(lastBet)}
                 </button>
               )}
             </div>

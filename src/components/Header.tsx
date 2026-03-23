@@ -2,6 +2,7 @@
 
 import { useBalance } from "@/context/BalanceContext";
 import { useUser } from "@/context/UserContext";
+import { fmtDollar } from "@/lib/format";
 
 function GraxLogo({ height = 28 }: { height?: number }) {
   const w = height * 3.6;
@@ -115,7 +116,7 @@ export default function Header({ onMenuToggle }: HeaderProps) {
       {/* Balance */}
       <div className="balance-display">
         <ChipIcon />
-        <span>${balance.toFixed(2)}</span>
+        <span>{fmtDollar(balance)}</span>
       </div>
     </header>
   );

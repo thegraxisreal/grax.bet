@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useBalance } from "@/context/BalanceContext";
 import { useUser } from "@/context/UserContext";
 import { logFeedEvent } from "@/lib/feed";
+import { fmtMoney } from "@/lib/format";
 import { CasinoChip } from "@/components/CasinoChip";
 import CollapsibleBetSelector from "@/components/CollapsibleBetSelector";
 import {
@@ -562,7 +563,7 @@ export default function RoulettePage() {
 
             <div style={{ textAlign: "center", marginTop: "auto" }}>
               <span style={{ fontSize: "0.68rem", color: "var(--text-muted)", fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.08em" }}>
-                Balance: <strong style={{ color: "var(--text-secondary)" }}>${balance.toFixed(2)}</strong>
+                Balance: <strong style={{ color: "var(--text-secondary)" }}>${fmtMoney(balance)}</strong>
               </span>
             </div>
           </>
@@ -582,7 +583,7 @@ export default function RoulettePage() {
               Spinning...
             </div>
             <PanelDivider />
-            <SmallStat label="Bet" value={`$${betAmount.toFixed(2)}`} />
+            <SmallStat label="Bet" value={`$${fmtMoney(betAmount)}`} />
             <SmallStat label="On" value={selectedBet ? betLabel(selectedBet) : "—"} />
           </div>
         )}
@@ -606,14 +607,14 @@ export default function RoulettePage() {
                 {winningColor?.toUpperCase()}
               </div>
               <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: "2rem", color: lastResult.won ? "var(--accent-green)" : "#f87171", lineHeight: 1 }}>
-                {lastResult.won ? `+$${netResult.toFixed(2)}` : `-$${betAmount.toFixed(2)}`}
+                {lastResult.won ? `+$${fmtMoney(netResult)}` : `-$${fmtMoney(betAmount)}`}
               </div>
             </motion.div>
 
             <PanelDivider />
             <SmallStat label="Bet on" value={selectedBet ? betLabel(selectedBet) : "—"} />
             <SmallStat label="Result" value={lastResult.won ? "WIN" : "LOSE"} accent={lastResult.won ? "green" : "red"} />
-            {lastResult.won && <SmallStat label="Payout" value={`$${lastResult.payout.toFixed(2)}`} accent="gold" />}
+            {lastResult.won && <SmallStat label="Payout" value={`$${fmtMoney(lastResult.payout)}`} accent="gold" />}
 
             <div style={{ flex: 1 }} />
 
@@ -690,8 +691,8 @@ export default function RoulettePage() {
                 <div className={`result-banner ${lastResult.won ? "win" : "lose"}`}
                   style={{ fontSize: "1.2rem", padding: "8px 20px", textAlign: "center" }}>
                   {lastResult.won
-                    ? `${winningSlot} ${winningColor?.toUpperCase()}  +$${netResult.toFixed(2)}`
-                    : `${winningSlot} ${winningColor?.toUpperCase()}  -$${betAmount.toFixed(2)}`}
+                    ? `${winningSlot} ${winningColor?.toUpperCase()}  +$${fmtMoney(netResult)}`
+                    : `${winningSlot} ${winningColor?.toUpperCase()}  -$${fmtMoney(betAmount)}`}
                 </div>
               </motion.div>
             )}
