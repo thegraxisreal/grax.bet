@@ -14,6 +14,8 @@ interface BalanceContextValue {
   subtractBalance: (n: number) => void;
   resetBalance: () => void;
   isBroke: boolean;
+  registerBet: () => void;
+  unregisterBet: () => void;
 }
 
 const BalanceContext = createContext<BalanceContextValue | null>(null);
@@ -22,6 +24,7 @@ export function BalanceProvider({ children }: { children: React.ReactNode }) {
   const { username } = useUser();
   const [balance, setBalanceState] = useState<number>(STARTING_BALANCE);
   const [hydrated, setHydrated] = useState(false);
+  const [activeBets, setActiveBets] = useState(0);
   const syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -71,7 +74,15 @@ export function BalanceProvider({ children }: { children: React.ReactNode }) {
     persistBalance(STARTING_BALANCE);
   }, [persistBalance]);
 
-  const isBroke = hydrated && balance <= 0;
+  const registerBet = useCallback(() => {
+    setActiveBets(n => n + 1);
+  }, []);
+
+  const unregisterBet = useCallback(() => {
+    setActiveBets(n => Math.max(0, n - 1));
+  }, []);
+
+  const isBroke = hydrated && balance <= 0 && activeBets === 0;
 
   return (
     <BalanceContext.Provider
@@ -82,6 +93,8 @@ export function BalanceProvider({ children }: { children: React.ReactNode }) {
         subtractBalance,
         resetBalance,
         isBroke,
+        registerBet,
+        unregisterBet,
       }}
     >
       {children}

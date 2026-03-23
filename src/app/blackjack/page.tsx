@@ -265,7 +265,7 @@ function computePayout(hand: Hand): number {
 // ── Main Component ─────────────────────────────────────────────────────────
 
 export default function BlackjackPage() {
-  const { balance, addBalance, subtractBalance } = useBalance();
+  const { balance, addBalance, subtractBalance, registerBet, unregisterBet } = useBalance();
   const { username } = useUser();
   const [state, dispatch] = useReducer(reducer, undefined, initialState);
 
@@ -300,9 +300,10 @@ export default function BlackjackPage() {
   const handleDeal = useCallback(() => {
     if (currentBet <= 0 || currentBet > balance) return;
     subtractBalance(currentBet);
+    registerBet();
     dispatch({ type: "DEAL", balance });
     playCardDeal();
-  }, [currentBet, balance, subtractBalance]);
+  }, [currentBet, balance, subtractBalance, registerBet]);
 
   // Add bet (chip click)
   const handleAddBet = useCallback((amount: number) => {
@@ -357,8 +358,9 @@ export default function BlackjackPage() {
       if (net > 0) logFeedEvent(username, "Blackjack", net, "win");
       else if (net < 0) logFeedEvent(username, "Blackjack", Math.abs(net), "loss");
     }
+    unregisterBet();
     dispatch({ type: "NEW_HAND" });
-  }, [phase, playerHands, dealerHand, insuranceBet, addBalance, username]);
+  }, [phase, playerHands, dealerHand, insuranceBet, addBalance, unregisterBet, username]);
 
   const handleTakeInsurance = useCallback(() => {
     const insAmt = Math.round((lastBet / 2) * 100) / 100;

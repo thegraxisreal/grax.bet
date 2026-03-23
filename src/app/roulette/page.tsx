@@ -302,7 +302,7 @@ function BettingCell({ betKey, label, color, isSelected, isWinner, onClick, disa
 type Phase = "betting" | "spinning" | "result";
 
 export default function RoulettePage() {
-  const { balance, addBalance, subtractBalance } = useBalance();
+  const { balance, addBalance, subtractBalance, registerBet, unregisterBet } = useBalance();
   const { username } = useUser();
 
   const [phase, setPhase] = useState<Phase>("betting");
@@ -339,6 +339,7 @@ export default function RoulettePage() {
   const handleSpin = useCallback(() => {
     if (phase !== "betting" || betAmount <= 0 || !selectedBet || betAmount > balance) return;
     subtractBalance(betAmount);
+    registerBet();
     setPhase("spinning");
 
     const slotIndex = Math.floor(Math.random() * WHEEL_ORDER.length);
@@ -392,6 +393,7 @@ export default function RoulettePage() {
     spinTimeoutRef.current = setTimeout(() => {
       setWinningSlot(winner);
       setPhase("result");
+      unregisterBet();
 
       const won = selectedBet ? betMatches(selectedBet, winner) : false;
       let payout = 0;
@@ -406,7 +408,7 @@ export default function RoulettePage() {
       }
       setLastResult({ won, payout });
     }, dur * 1000 + 300);
-  }, [phase, betAmount, selectedBet, balance, subtractBalance, addBalance, spinDeg, username]);
+  }, [phase, betAmount, selectedBet, balance, subtractBalance, addBalance, registerBet, unregisterBet, spinDeg, username]);
 
   const handleNewRound = useCallback(() => {
     setWinningSlot(null);

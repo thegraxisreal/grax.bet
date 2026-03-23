@@ -285,7 +285,7 @@ function SmallStat({ label, value, accent }: { label: string; value: string; acc
 // ── Main Page ──────────────────────────────────────────────────────────────
 
 export default function MinesPage() {
-  const { balance, addBalance, subtractBalance } = useBalance();
+  const { balance, addBalance, subtractBalance, registerBet, unregisterBet } = useBalance();
   const { username } = useUser();
 
   const [phase, setPhase] = useState<Phase>("idle");
@@ -325,6 +325,7 @@ export default function MinesPage() {
   const handleStartGame = useCallback(() => {
     if (pendingBet <= 0 || pendingBet > balance) return;
     subtractBalance(pendingBet);
+    registerBet();
     setBet(pendingBet);
     setMinePositions(placeMines(mineCount));
     setRevealed(Array(TOTAL).fill(false));
@@ -332,7 +333,7 @@ export default function MinesPage() {
     setHitMineIdx(null);
     setFinalPayout(0);
     setPhase("playing");
-  }, [pendingBet, balance, mineCount, subtractBalance]);
+  }, [pendingBet, balance, mineCount, subtractBalance, registerBet]);
 
   const handleTileClick = useCallback((index: number) => {
     if (phase !== "playing" || revealed[index]) return;
@@ -342,6 +343,7 @@ export default function MinesPage() {
 
     if (minePositions[index]) {
       setHitMineIdx(index);
+      unregisterBet();
       setPhase("dead");
       setFinalPayout(0);
       if (username) logFeedEvent(username, "Mines", bet, "loss");
@@ -355,21 +357,23 @@ export default function MinesPage() {
         const payout = Math.round(bet * finalMult * 100) / 100;
         addBalance(payout);
         setFinalPayout(payout);
+        unregisterBet();
         setPhase("cashout");
         if (username) logFeedEvent(username, "Mines", payout - bet, "win");
         playWin();
       }
     }
-  }, [phase, revealed, minePositions, safeRevealed, mineCount, bet, addBalance, username]);
+  }, [phase, revealed, minePositions, safeRevealed, mineCount, bet, addBalance, unregisterBet, username]);
 
   const handleCashout = useCallback(() => {
     if (phase !== "playing" || safeRevealed === 0) return;
     addBalance(cashoutTotal);
     setFinalPayout(cashoutTotal);
+    unregisterBet();
     setPhase("cashout");
     if (username) logFeedEvent(username, "Mines", cashoutTotal - bet, "win");
     playWin();
-  }, [phase, safeRevealed, cashoutTotal, addBalance, bet, username]);
+  }, [phase, safeRevealed, cashoutTotal, addBalance, unregisterBet, bet, username]);
 
   const handlePlayAgain = useCallback(() => {
     setPendingBet(bet > 0 ? bet : pendingBet);

@@ -218,7 +218,7 @@ interface BucketFlash {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function PlinkoPage() {
-  const { balance, addBalance, subtractBalance } = useBalance();
+  const { balance, addBalance, subtractBalance, registerBet, unregisterBet } = useBalance();
   const { username } = useUser();
   const usernameRef = useRef<string | null>(null);
   usernameRef.current = username ?? null;
@@ -621,6 +621,7 @@ export default function PlinkoPage() {
               const net = Math.round((dc.totalPayout - dc.totalBet) * 100) / 100;
               const roundedPayout = Math.round(dc.totalPayout * 100) / 100;
               addBalance(roundedPayout);
+              unregisterBet();
               setTotalResult({ net, totalPayout: roundedPayout });
               setSessionProfit(prev => Math.round((prev + net) * 100) / 100);
               setPhase("result");
@@ -672,7 +673,7 @@ export default function PlinkoPage() {
       running = false;
       cancelAnimationFrame(animFrameRef.current);
     };
-  }, [canvasSize, addBalance]);
+  }, [canvasSize, addBalance, unregisterBet]);
 
   // ── Drop ──────────────────────────────────────────────────────────────────
 
@@ -680,6 +681,7 @@ export default function PlinkoPage() {
     if (totalBet > balance || totalBet <= 0) return;
 
     subtractBalance(totalBet);
+    registerBet();
     setPhase("dropping");
     setBallResults([]);
     setTotalResult(null);
@@ -714,7 +716,7 @@ export default function PlinkoPage() {
       };
       ballsRef.current.push(ball);
     }
-  }, [totalBet, balance, ballCount, subtractBalance]);
+  }, [totalBet, balance, ballCount, subtractBalance, registerBet]);
 
   // ── Auto-drop ─────────────────────────────────────────────────────────────
 

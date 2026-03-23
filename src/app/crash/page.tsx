@@ -144,7 +144,7 @@ const pillStyle: React.CSSProperties = {
 // ── Component ──────────────────────────────────────────────────────────────────
 
 export default function CrashPage() {
-  const { balance, addBalance, subtractBalance } = useBalance();
+  const { balance, addBalance, subtractBalance, registerBet, unregisterBet } = useBalance();
   const { username } = useUser();
 
   const [phase, setPhase] = useState<Phase>("waiting");
@@ -194,12 +194,13 @@ export default function CrashPage() {
     setCashedOutAt(m);
     const payout = Math.round(betRef.current * m * 100) / 100;
     addBalance(payout);
+    unregisterBet();
     const net = Math.round((payout - betRef.current) * 100) / 100;
     setLastResult({ net, mult: m });
     setSessionProfit(p => Math.round((p + net) * 100) / 100);
     if (username) logFeedEvent(username, "Crash", net, "win");
     playCashout();
-  }, [addBalance, username]);
+  }, [addBalance, unregisterBet, username]);
 
   // ── Main loop ─────────────────────────────────────────────────────────────────
 
@@ -504,6 +505,9 @@ export default function CrashPage() {
 
           setTimeout(() => {
             if (!alive) return;
+            if (hasBetRef.current && !cashedOutRef.current) {
+              unregisterBet();
+            }
             hasBetRef.current = false;
             setHasBet(false);
             phaseRef.current = "waiting";
@@ -543,7 +547,7 @@ export default function CrashPage() {
       cancelAnimationFrame(animRef.current);
       stopEngine();
     };
-  }, [doCashout]);
+  }, [doCashout, unregisterBet]);
 
   // Log crash loss when game crashes with an unrecovered bet
   useEffect(() => {
@@ -558,9 +562,10 @@ export default function CrashPage() {
   const placeBet = useCallback(() => {
     if (phase !== "waiting" || hasBet || bet <= 0 || bet > balance) return;
     subtractBalance(bet);
+    registerBet();
     hasBetRef.current = true;
     setHasBet(true);
-  }, [phase, hasBet, bet, balance, subtractBalance]);
+  }, [phase, hasBet, bet, balance, subtractBalance, registerBet]);
 
   const handleAction = useCallback(() => {
     if (phase === "waiting") placeBet();
