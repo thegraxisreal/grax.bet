@@ -137,6 +137,21 @@ function PlinkoIcon() {
   );
 }
 
+function LeaderboardIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+      {/* Center podium — 1st place */}
+      <rect x="8.5" y="7" width="5" height="12" rx="1" fill="currentColor"/>
+      {/* Left podium — 2nd place */}
+      <rect x="2" y="11" width="5.5" height="8" rx="1" fill="currentColor" opacity="0.65"/>
+      {/* Right podium — 3rd place */}
+      <rect x="14.5" y="13" width="5.5" height="6" rx="1" fill="currentColor" opacity="0.45"/>
+      {/* Trophy on top of center */}
+      <path d="M10 4.5h2v1.8a1 1 0 01-2 0V4.5z" stroke="currentColor" strokeWidth="1" fill="currentColor" opacity="0.9"/>
+    </svg>
+  );
+}
+
 function LockIcon() {
   return (
     <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor" opacity="0.7">
@@ -185,8 +200,9 @@ function SidebarLogo() {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { label: "Home",      href: "/",          icon: <HomeIcon /> },
-  { label: "Blackjack", href: "/blackjack", icon: <BlackjackIcon /> },
+  { label: "Home",         href: "/",            icon: <HomeIcon /> },
+  { label: "Leaderboard",  href: "/leaderboard", icon: <LeaderboardIcon /> },
+  { label: "Blackjack",    href: "/blackjack",   icon: <BlackjackIcon /> },
   { label: "Slots",     href: "/slots",     icon: <SlotsIcon />,   locked: true },
   { label: "Roulette",  href: "/roulette",  icon: <RouletteIcon /> },
   { label: "Crash",     href: "/crash",     icon: <CrashIcon /> },
