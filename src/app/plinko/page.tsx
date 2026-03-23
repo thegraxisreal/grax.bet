@@ -7,7 +7,6 @@ import { useUser } from "@/context/UserContext";
 import { logFeedEvent } from "@/lib/feed";
 import { fmtMoney } from "@/lib/format";
 import { CasinoChip } from "@/components/CasinoChip";
-import CollapsibleBetSelector from "@/components/CollapsibleBetSelector";
 import { playChipClick } from "@/lib/sound";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -21,7 +20,6 @@ type Phase = "idle" | "dropping" | "result";
 const MULTIPLIERS = [150, 20, 8, 3, 2, 1.2, 0.6, 0.3, 0.2, 0.3, 0.6, 1.2, 2, 3, 8, 20, 150];
 
 const BALL_COUNTS = [1, 3, 5, 10];
-const SPEED_LABELS: Record<string, number> = { Slow: 0.6, Normal: 1, Fast: 2 };
 
 function bucketColor(mult: number): string {
   if (mult >= 10) return "#f0b429";
@@ -227,17 +225,7 @@ export default function PlinkoPage() {
   const [phase, setPhase] = useState<Phase>("idle");
   const [bet, setBet] = useState(1);
   const [ballCount, setBallCount] = useState(1);
-  const [speed, setSpeed] = useState("Normal");
   const [sessionProfit, setSessionProfit] = useState(0);
-
-  // Auto-drop
-  const [autoMode, setAutoMode] = useState(false);
-  const [autoStopWin, setAutoStopWin] = useState("");
-  const [autoStopLoss, setAutoStopLoss] = useState("");
-  const [autoStopRounds, setAutoStopRounds] = useState("");
-  const [autoStats, setAutoStats] = useState({ rounds: 0, wagered: 0, won: 0, biggestWin: 0 });
-  const autoModeRef = useRef(false);
-  const autoStatsRef = useRef(autoStats);
 
   // Results
   const [ballResults, setBallResults] = useState<BallResult[]>([]);
@@ -255,7 +243,6 @@ export default function PlinkoPage() {
   const ballIdRef = useRef(0);
   const phaseRef = useRef<Phase>("idle");
   const betRef = useRef(bet);
-  const speedRef = useRef(SPEED_LABELS[speed]);
   const dropContextRef = useRef<{
     totalBet: number;
     ballCount: number;
@@ -266,7 +253,6 @@ export default function PlinkoPage() {
 
   phaseRef.current = phase;
   betRef.current = bet;
-  speedRef.current = SPEED_LABELS[speed];
 
   const totalBet = bet * ballCount;
 
@@ -489,7 +475,7 @@ export default function PlinkoPage() {
       if (!running) return;
       const rawDt = Math.min((now - lastTime) / 1000, 0.05); // cap at 50ms
       lastTime = now;
-      const dt = rawDt * speedRef.current;
+      const dt = rawDt * 1;
 
       const balls = ballsRef.current;
       const gravity = 1200;
@@ -640,15 +626,6 @@ export default function PlinkoPage() {
                 playPlinkoLose();
               }
 
-              if (autoModeRef.current) {
-                autoStatsRef.current = {
-                  rounds: autoStatsRef.current.rounds + 1,
-                  wagered: Math.round((autoStatsRef.current.wagered + dc.totalBet) * 100) / 100,
-                  won: Math.round((autoStatsRef.current.won + roundedPayout) * 100) / 100,
-                  biggestWin: Math.max(autoStatsRef.current.biggestWin, roundedPayout),
-                };
-                setAutoStats({ ...autoStatsRef.current });
-              }
             }
           }
         }
@@ -718,63 +695,6 @@ export default function PlinkoPage() {
       ballsRef.current.push(ball);
     }
   }, [totalBet, balance, ballCount, subtractBalance, registerBet]);
-
-  // ── Auto-drop ─────────────────────────────────────────────────────────────
-
-  const autoDropInterval = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const startAutoMode = useCallback(() => {
-    autoModeRef.current = true;
-    autoStatsRef.current = { rounds: 0, wagered: 0, won: 0, biggestWin: 0 };
-    setAutoStats(autoStatsRef.current);
-    setAutoMode(true);
-  }, []);
-
-  const stopAutoMode = useCallback(() => {
-    autoModeRef.current = false;
-    setAutoMode(false);
-    if (autoDropInterval.current) {
-      clearTimeout(autoDropInterval.current);
-      autoDropInterval.current = null;
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!autoMode) return;
-    if (phase === "dropping") return;
-
-    const stats = autoStatsRef.current;
-    const netProfit = stats.won - stats.wagered;
-    const stopWin = autoStopWin ? parseFloat(autoStopWin) : Infinity;
-    const stopLoss = autoStopLoss ? parseFloat(autoStopLoss) : -Infinity;
-    const stopRounds = autoStopRounds ? parseInt(autoStopRounds) : Infinity;
-
-    if (netProfit >= stopWin || netProfit <= -Math.abs(stopLoss) || stats.rounds >= stopRounds) {
-      stopAutoMode();
-      return;
-    }
-    if (totalBet > balance || totalBet <= 0) {
-      stopAutoMode();
-      return;
-    }
-
-    const delay = speed === "Fast" ? 300 : speed === "Slow" ? 2000 : 1000;
-    autoDropInterval.current = setTimeout(() => {
-      if (autoModeRef.current && phaseRef.current !== "dropping") {
-        dropBalls();
-      }
-    }, delay);
-
-    return () => {
-      if (autoDropInterval.current) clearTimeout(autoDropInterval.current);
-    };
-  }, [autoMode, phase, dropBalls, balance, totalBet, speed, autoStopWin, autoStopLoss, autoStopRounds, stopAutoMode]);
-
-  useEffect(() => {
-    return () => {
-      if (autoDropInterval.current) clearTimeout(autoDropInterval.current);
-    };
-  }, []);
 
   // ── Render ────────────────────────────────────────────────────────────────
 
@@ -861,29 +781,25 @@ export default function PlinkoPage() {
                   cursor: "pointer", fontSize: "1rem", padding: 0, lineHeight: 1 }}>×</button>
             )}
           </div>
-          <CollapsibleBetSelector>
-            <div className="plinko-chips" style={{ display: "flex", gap: 4, marginTop: 6 }}>
-              {[1, 5, 10, 25].map(v => (
-                <div key={v} style={{ transform: "scale(0.65)", transformOrigin: "top left" }}>
-                  <CasinoChip value={v} onClick={addChip} disabled={phase === "dropping"} />
-                </div>
-              ))}
-            </div>
-            <div className="bet-halfall" style={{ display: "flex", gap: 4, marginTop: 4 }}>
+          <div style={{ display: "flex", gap: 4, marginTop: 6 }}>
+            {[1, 5, 10, 25].map(v => (
+              <div key={v} style={{ transform: "scale(0.65)", transformOrigin: "top left" }}>
+                <CasinoChip value={v} onClick={addChip} disabled={phase === "dropping"} />
+              </div>
+            ))}
+          </div>
+          <div style={{ display: "flex", gap: 4, marginTop: 4 }}>
             <button onClick={() => setBet(Math.floor((balance / 2 / ballCount) * 100) / 100)}
               disabled={phase === "dropping"}
-              style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 4, padding: "5px 6px", borderRadius: 5, border: "1px solid rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.06)", color: "var(--text-secondary)", fontFamily: "'Barlow Condensed', sans-serif", fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", cursor: "pointer" }}>
-              <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="13" r="6" fill="var(--text-muted)"/><circle cx="10" cy="13" r="4.5" fill="var(--bg-secondary)"/><circle cx="10" cy="9" r="6" fill="var(--text-secondary)"/><circle cx="10" cy="9" r="4.5" fill="var(--bg-secondary)"/><text x="10" y="10" textAnchor="middle" dominantBaseline="middle" fontSize="5" fill="var(--text-secondary)" fontWeight="800">½</text></svg>
-              Half
+              style={{ flex: 1, padding: "5px 6px", borderRadius: 5, border: "1px solid rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.06)", color: "var(--text-secondary)", fontFamily: "'Barlow Condensed', sans-serif", fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.06em", cursor: "pointer" }}>
+              ½
             </button>
             <button onClick={() => setBet(Math.floor((balance / ballCount) * 100) / 100)}
               disabled={phase === "dropping"}
-              style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 4, padding: "5px 6px", borderRadius: 5, border: "1px solid rgba(240,180,41,0.3)", background: "rgba(240,180,41,0.08)", color: "var(--accent-gold)", fontFamily: "'Barlow Condensed', sans-serif", fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", cursor: "pointer" }}>
-              <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="15" r="5" fill="#8b6914"/><circle cx="10" cy="15" r="3.5" fill="#0f1923"/><circle cx="10" cy="11" r="5" fill="#b8960c"/><circle cx="10" cy="11" r="3.5" fill="#0f1923"/><circle cx="10" cy="7" r="5" fill="#d4af37"/><circle cx="10" cy="7" r="3.5" fill="#0f1923"/><text x="10" y="8" textAnchor="middle" dominantBaseline="middle" fontSize="4.5" fill="#d4af37" fontWeight="800">MAX</text></svg>
-              All In
+              style={{ flex: 1, padding: "5px 6px", borderRadius: 5, border: "1px solid rgba(240,180,41,0.3)", background: "rgba(240,180,41,0.08)", color: "var(--accent-gold)", fontFamily: "'Barlow Condensed', sans-serif", fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.06em", cursor: "pointer" }}>
+              MAX
             </button>
-            </div>
-          </CollapsibleBetSelector>
+          </div>
         </div>
 
         {/* Ball Count */}
@@ -905,127 +821,23 @@ export default function PlinkoPage() {
           </div>
         </div>
 
-        {/* Total Bet */}
-        <div style={{
-          background: "rgba(0,0,0,0.25)",
-          border: "1px solid var(--border-color)",
-          borderRadius: 6,
-          padding: "8px 10px",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}>
-          <span style={{ ...labelStyle, margin: 0, fontSize: "0.7rem" }}>Total Bet</span>
-          <span style={{
-            fontFamily: "'Barlow Condensed', sans-serif",
-            fontWeight: 700,
-            fontSize: "1.05rem",
-            color: totalBet > balance ? "var(--lose-color)" : "var(--accent-gold)",
-          }}>
-            ${fmtMoney(totalBet)}
-          </span>
-        </div>
         {totalBet > balance && (
-          <div style={{ color: "var(--lose-color)", fontSize: "0.72rem", fontWeight: 600, marginTop: -8 }}>
+          <div style={{ color: "var(--lose-color)", fontSize: "0.72rem", fontWeight: 600 }}>
             Insufficient balance
           </div>
         )}
 
         {/* Drop Button */}
-        {!autoMode ? (
-          <motion.button
-            className="btn-primary"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.97 }}
-            onClick={dropBalls}
-            disabled={!canDrop}
-            style={{ width: "100%", fontSize: "1.15rem", letterSpacing: "0.14em" }}
-          >
-            {phase === "result" ? "DROP AGAIN" : "DROP"}
-          </motion.button>
-        ) : (
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.97 }}
-            onClick={stopAutoMode}
-            style={{
-              width: "100%",
-              padding: "11px 28px",
-              borderRadius: 6,
-              border: "none",
-              background: "linear-gradient(135deg, #f44336, #c62828)",
-              color: "white",
-              fontFamily: "'Barlow Condensed', sans-serif",
-              fontWeight: 700,
-              fontSize: "1.15rem",
-              letterSpacing: "0.14em",
-              textTransform: "uppercase",
-              cursor: "pointer",
-              boxShadow: "0 4px 15px rgba(244,67,54,0.4)",
-            }}
-          >
-            STOP AUTO
-          </motion.button>
-        )}
-
-        {/* Speed */}
-        <div>
-          <label style={labelStyle}>Speed</label>
-          <div style={{ display: "flex", gap: 4 }}>
-            {Object.keys(SPEED_LABELS).map(s => (
-              <button key={s} onClick={() => setSpeed(s)}
-                style={{
-                  ...pillStyle,
-                  flex: 1,
-                  background: speed === s ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.05)",
-                  color: speed === s ? "var(--text-primary)" : "var(--text-muted)",
-                  fontWeight: speed === s ? 700 : 500,
-                }}>
-                {s}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Auto Drop */}
-        <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: 10 }}>
-          <label style={labelStyle}>Auto Drop</label>
-          {!autoMode ? (
-            <>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 8 }}>
-                <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                  <span style={tinyLabelStyle}>Stop win $</span>
-                  <input type="number" value={autoStopWin} onChange={e => setAutoStopWin(e.target.value)}
-                    placeholder="∞" style={inputStyle} />
-                </div>
-                <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                  <span style={tinyLabelStyle}>Stop loss $</span>
-                  <input type="number" value={autoStopLoss} onChange={e => setAutoStopLoss(e.target.value)}
-                    placeholder="∞" style={inputStyle} />
-                </div>
-                <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                  <span style={tinyLabelStyle}>Max rounds</span>
-                  <input type="number" value={autoStopRounds} onChange={e => setAutoStopRounds(e.target.value)}
-                    placeholder="∞" style={inputStyle} />
-                </div>
-              </div>
-              <button onClick={startAutoMode} disabled={!canDrop}
-                className="btn-action" style={{ width: "100%", fontSize: "0.85rem" }}>
-                Start Auto
-              </button>
-            </>
-          ) : (
-            <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)", display: "flex", flexDirection: "column", gap: 3 }}>
-              <div>Rounds: <b style={{ color: "var(--text-primary)" }}>{autoStats.rounds}</b></div>
-              <div>Wagered: <b style={{ color: "var(--accent-gold)" }}>${fmtMoney(autoStats.wagered)}</b></div>
-              <div>Won: <b style={{ color: "var(--accent-green)" }}>${fmtMoney(autoStats.won)}</b></div>
-              <div>Net: <b style={{ color: autoStats.won - autoStats.wagered >= 0 ? "var(--accent-green)" : "var(--lose-color)" }}>
-                ${fmtMoney(autoStats.won - autoStats.wagered)}
-              </b></div>
-              <div>Best: <b style={{ color: "var(--accent-gold)" }}>${fmtMoney(autoStats.biggestWin)}</b></div>
-            </div>
-          )}
-        </div>
+        <motion.button
+          className="btn-primary"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.97 }}
+          onClick={dropBalls}
+          disabled={!canDrop}
+          style={{ width: "100%", fontSize: "1.15rem", letterSpacing: "0.14em" }}
+        >
+          {phase === "result" ? "DROP AGAIN" : "DROP"}
+        </motion.button>
 
         {/* Session P/L */}
         <div className="plinko-session-pl" style={{
@@ -1230,27 +1042,3 @@ const pillStyle: React.CSSProperties = {
   transition: "all 0.15s ease",
 };
 
-
-const tinyLabelStyle: React.CSSProperties = {
-  fontFamily: "'Barlow Condensed', sans-serif",
-  fontSize: "0.65rem",
-  fontWeight: 600,
-  color: "var(--text-muted)",
-  letterSpacing: "0.06em",
-  width: 72,
-  flexShrink: 0,
-};
-
-const inputStyle: React.CSSProperties = {
-  flex: 1,
-  background: "rgba(0,0,0,0.3)",
-  border: "1px solid var(--border-color)",
-  borderRadius: 4,
-  padding: "4px 8px",
-  color: "var(--text-primary)",
-  fontFamily: "'Barlow Condensed', sans-serif",
-  fontSize: "0.78rem",
-  fontWeight: 600,
-  outline: "none",
-  width: "100%",
-};
