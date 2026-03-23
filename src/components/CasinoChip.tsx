@@ -13,10 +13,12 @@ interface ChipConfig {
 }
 
 const CHIPS: ChipConfig[] = [
-  { value: 1,  outerRing: "#e8e8e8", body: "#ffffff", segments: "#b0b0b0", textColor: "#1a1a1a", glow: "rgba(220,220,220,0.6)" },
-  { value: 5,  outerRing: "#c62828", body: "#ef5350", segments: "#b71c1c", textColor: "#ffffff",  glow: "rgba(239,83,80,0.6)"  },
-  { value: 10, outerRing: "#1565c0", body: "#2196f3", segments: "#0d47a1", textColor: "#ffffff",  glow: "rgba(33,150,243,0.6)" },
-  { value: 25, outerRing: "#2e7d32", body: "#4caf50", segments: "#1b5e20", textColor: "#ffffff",  glow: "rgba(76,175,80,0.6)"  },
+  { value: 1,   outerRing: "#e8e8e8", body: "#ffffff", segments: "#b0b0b0", textColor: "#1a1a1a", glow: "rgba(220,220,220,0.6)" },
+  { value: 5,   outerRing: "#c62828", body: "#ef5350", segments: "#b71c1c", textColor: "#ffffff",  glow: "rgba(239,83,80,0.6)"  },
+  { value: 10,  outerRing: "#1565c0", body: "#2196f3", segments: "#0d47a1", textColor: "#ffffff",  glow: "rgba(33,150,243,0.6)" },
+  { value: 25,  outerRing: "#2e7d32", body: "#4caf50", segments: "#1b5e20", textColor: "#ffffff",  glow: "rgba(76,175,80,0.6)"  },
+  { value: 50,  outerRing: "#6a1199", body: "#9c27b0", segments: "#4a0080", textColor: "#ffffff",  glow: "rgba(156,39,176,0.6)" },
+  { value: 100, outerRing: "#7a5c00", body: "#1a1a1a", segments: "#5a4400", textColor: "#f0b429",  glow: "rgba(240,180,41,0.6)" },
 ];
 
 interface CasinoChipProps {
@@ -84,7 +86,7 @@ function ChipSVG({ config }: { config: ChipConfig }) {
         textAnchor="middle"
         dominantBaseline="middle"
         fill={textColor}
-        fontSize={value >= 10 ? "13" : "14"}
+        fontSize={value >= 100 ? "10" : value >= 10 ? "13" : "14"}
         fontWeight="800"
         fontFamily="'Barlow Condensed', sans-serif"
         letterSpacing="0.05em"

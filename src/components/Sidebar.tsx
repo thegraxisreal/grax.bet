@@ -8,6 +8,7 @@ interface NavItem {
   label: string;
   href: string;
   locked?: boolean;
+  live?: boolean;
   icon: React.ReactNode;
 }
 
@@ -83,9 +84,15 @@ function CrashIcon() {
 function SportsIcon() {
   return (
     <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-      <ellipse cx="11" cy="12" rx="7" ry="5" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-      <ellipse cx="11" cy="12" rx="3.5" ry="2.5" stroke="currentColor" strokeWidth="1" fill="currentColor" opacity="0.4"/>
-      <path d="M4 12 Q7 6 11 5 Q15 6 18 12" stroke="currentColor" strokeWidth="1.2" fill="none" opacity="0.6"/>
+      <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+      {/* Horizontal seam */}
+      <path d="M3 11 Q7 7 11 7 Q15 7 19 11" stroke="currentColor" strokeWidth="1" fill="none" opacity="0.7"/>
+      <path d="M3 11 Q7 15 11 15 Q15 15 19 11" stroke="currentColor" strokeWidth="1" fill="none" opacity="0.7"/>
+      {/* Vertical seam */}
+      <line x1="11" y1="3" x2="11" y2="19" stroke="currentColor" strokeWidth="1" opacity="0.5"/>
+      {/* Cross seams */}
+      <path d="M6 5 Q8 8 6 11 Q8 14 6 17" stroke="currentColor" strokeWidth="0.8" fill="none" opacity="0.4"/>
+      <path d="M16 5 Q14 8 16 11 Q14 14 16 17" stroke="currentColor" strokeWidth="0.8" fill="none" opacity="0.4"/>
     </svg>
   );
 }
@@ -148,13 +155,42 @@ function CloseIcon() {
   );
 }
 
+function SidebarLogo() {
+  return (
+    <svg width="90" height="32" viewBox="0 0 90 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="sb-g1" x1="0" y1="0" x2="90" y2="32" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#f0b429" />
+          <stop offset="55%" stopColor="#fffbe6" />
+          <stop offset="100%" stopColor="#f0b429" />
+        </linearGradient>
+        <linearGradient id="sb-dot" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#f97316" />
+          <stop offset="100%" stopColor="#ef4444" />
+        </linearGradient>
+      </defs>
+      {/* G mark */}
+      <circle cx="14" cy="16" r="11" fill="rgba(240,180,41,0.1)" stroke="#f0b429" strokeWidth="1.3"/>
+      <path d="M19 12 Q14 9 10 12 Q7 15 9 19 Q11 23 16 22 L16 18 L19 18" stroke="#f0b429" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+      {/* GRAX */}
+      <text x="30" y="22" fontFamily="'Barlow Condensed', Arial Black, sans-serif" fontWeight="900" fontSize="18" letterSpacing="0.5" fill="url(#sb-g1)">GRAX</text>
+      {/* .bet */}
+      <text x="70" y="22" fontFamily="'Barlow Condensed', Arial Black, sans-serif" fontWeight="500" fontSize="13" fill="rgba(255,255,255,0.4)">.bet</text>
+      {/* pulse dot */}
+      <circle cx="87" cy="8" r="3" fill="url(#sb-dot)">
+        <animate attributeName="opacity" values="1;0.3;1" dur="1.8s" repeatCount="indefinite"/>
+      </circle>
+    </svg>
+  );
+}
+
 const NAV_ITEMS: NavItem[] = [
   { label: "Home",      href: "/",          icon: <HomeIcon /> },
   { label: "Blackjack", href: "/blackjack", icon: <BlackjackIcon /> },
   { label: "Slots",     href: "/slots",     icon: <SlotsIcon />,   locked: true },
   { label: "Roulette",  href: "/roulette",  icon: <RouletteIcon /> },
   { label: "Crash",     href: "/crash",     icon: <CrashIcon /> },
-  { label: "March Madness", href: "/sports",    icon: <SportsIcon /> },
+  { label: "March Madness", href: "/sports",    icon: <SportsIcon />, live: true },
   { label: "Mines",     href: "/mines",     icon: <MinesIcon /> },
   { label: "Plinko",    href: "/plinko",    icon: <PlinkoIcon /> },
 ];
@@ -171,18 +207,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         display: "flex",
         alignItems: "center",
       }}>
-        <div style={{
-          fontFamily: "'Barlow Condensed', sans-serif",
-          fontWeight: 800,
-          fontSize: "1.1rem",
-          letterSpacing: "0.08em",
-          textTransform: "uppercase",
-          lineHeight: 1.2,
-          flex: 1,
-        }}>
-          <span style={{ color: "var(--accent-gold)" }}>thegraxisreal</span>
-          <br />
-          <span style={{ color: "var(--text-secondary)", fontSize: "0.75rem", fontWeight: 500 }}>gamble</span>
+        <div style={{ flex: 1 }}>
+          <SidebarLogo />
         </div>
 
         {/* Mobile close button */}
@@ -242,6 +268,23 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             >
               {item.icon}
               <span>{item.label}</span>
+              {item.live && !isActive && (
+                <span className="live-bets-badge" style={{
+                  background: "linear-gradient(135deg, #f97316, #ef4444)",
+                  borderRadius: "10px",
+                  padding: "1px 7px",
+                  fontSize: "0.55rem",
+                  letterSpacing: "0.08em",
+                  color: "white",
+                  fontWeight: 700,
+                  marginLeft: "auto",
+                  boxShadow: "0 0 8px rgba(249,115,22,0.6), 0 0 20px rgba(239,68,68,0.3)",
+                  animation: "glow-pulse 2s ease-in-out infinite",
+                  textTransform: "uppercase",
+                }}>
+                  Live Bets
+                </span>
+              )}
               {isActive && (
                 <span style={{
                   background: "var(--accent-green)",

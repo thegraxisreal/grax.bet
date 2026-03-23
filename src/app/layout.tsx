@@ -9,7 +9,7 @@ const ClientLayout = dynamic(() => import("@/components/ClientLayout"), {
 });
 
 export const metadata: Metadata = {
-  title: "thegraxisreal gamble",
+  title: "grax.bet",
   description: "Premium fake money casino — for fun with friends",
 };
 

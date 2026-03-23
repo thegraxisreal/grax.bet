@@ -3,6 +3,36 @@
 import { useBalance } from "@/context/BalanceContext";
 import { useUser } from "@/context/UserContext";
 
+function GraxLogo({ height = 28 }: { height?: number }) {
+  const w = height * 3.6;
+  return (
+    <svg width={w} height={height} viewBox="0 0 130 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="hdr-g1" x1="0" y1="0" x2="130" y2="36" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#f0b429" />
+          <stop offset="50%" stopColor="#ffffff" />
+          <stop offset="100%" stopColor="#f0b429" />
+        </linearGradient>
+        <linearGradient id="hdr-dot" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#f97316" />
+          <stop offset="100%" stopColor="#ef4444" />
+        </linearGradient>
+      </defs>
+      {/* G icon mark */}
+      <circle cx="18" cy="18" r="13" fill="rgba(240,180,41,0.1)" stroke="#f0b429" strokeWidth="1.5" />
+      <path d="M24 14 Q18 10 13 14 Q9 17 11 22 Q13 27 19 26 L19 21 L23 21" stroke="#f0b429" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+      {/* GRAX wordmark */}
+      <text x="37" y="25" fontFamily="'Barlow Condensed', Arial Black, sans-serif" fontWeight="900" fontSize="22" letterSpacing="1" fill="url(#hdr-g1)" textDecoration="none">GRAX</text>
+      {/* .bet */}
+      <text x="94" y="25" fontFamily="'Barlow Condensed', Arial Black, sans-serif" fontWeight="500" fontSize="16" letterSpacing="0.5" fill="rgba(255,255,255,0.45)">.bet</text>
+      {/* Live dot */}
+      <circle cx="126" cy="9" r="3.5" fill="url(#hdr-dot)">
+        <animate attributeName="opacity" values="1;0.4;1" dur="1.8s" repeatCount="indefinite"/>
+      </circle>
+    </svg>
+  );
+}
+
 function ChipIcon() {
   return (
     <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
@@ -67,25 +97,7 @@ export default function Header({ onMenuToggle }: HeaderProps) {
 
       {/* Site name */}
       <div style={{ flex: 1 }}>
-        <h1 style={{
-          fontFamily: "'Barlow Condensed', sans-serif",
-          fontWeight: 800,
-          fontSize: "1.5rem",
-          letterSpacing: "0.08em",
-          textTransform: "uppercase",
-          lineHeight: 1,
-        }}>
-          <span className="shimmer-text">thegraxisreal</span>
-          <span style={{
-            color: "var(--text-secondary)",
-            fontSize: "0.9rem",
-            fontWeight: 500,
-            marginLeft: "8px",
-            letterSpacing: "0.1em",
-          }}>
-            GAMBLE
-          </span>
-        </h1>
+        <GraxLogo height={28} />
       </div>
 
       {/* Username */}

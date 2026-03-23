@@ -292,58 +292,55 @@ function SportsArt() {
     <svg viewBox="0 0 200 150" fill="none" style={{ width: "100%", height: "100%" }}>
       <defs>
         <radialGradient id="ball-grad" cx="35%" cy="30%" r="65%">
-          <stop offset="0%" stopColor="#f8fafc" />
-          <stop offset="100%" stopColor="#cbd5e1" />
+          <stop offset="0%" stopColor="#f97316" />
+          <stop offset="100%" stopColor="#9a3412" />
         </radialGradient>
         <filter id="sports-glow">
-          <feGaussianBlur stdDeviation="5" result="blur" />
+          <feGaussianBlur stdDeviation="6" result="blur" />
           <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
         </filter>
       </defs>
-      {/* Stadium arc light streaks */}
-      {[[-20,150],[0,140],[20,145]].map(([dx,dy],i)=>(
-        <line key={i} x1={100+dx} y1={0} x2={100+dx} y2={dy} stroke="rgba(255,255,255,0.04)" strokeWidth="30" />
-      ))}
-      {/* Goal net background */}
-      <g opacity="0.25">
-        {[0,10,20,30,40,50,60,70].map(x=><line key={x} x1={130+x} y1={20} x2={130+x} y2={80} stroke="white" strokeWidth="0.6"/>)}
-        {[20,30,40,50,60,70,80].map(y=><line key={y} x1={130} y1={y} x2={200} y2={y} stroke="white" strokeWidth="0.6"/>)}
-        <rect x="130" y="20" width="70" height="60" fill="none" stroke="white" strokeWidth="1.2" />
+      {/* Court lines background */}
+      <g opacity="0.12">
+        <rect x="30" y="20" width="140" height="110" rx="4" stroke="white" strokeWidth="1.5" fill="none"/>
+        <circle cx="100" cy="75" r="25" stroke="white" strokeWidth="1" fill="none"/>
+        <line x1="100" y1="20" x2="100" y2="130" stroke="white" strokeWidth="1"/>
       </g>
-      {/* Motion trail */}
-      <ellipse cx="62" cy="92" rx="28" ry="10" fill="rgba(255,255,255,0.08)" />
-      <ellipse cx="72" cy="90" rx="20" ry="7" fill="rgba(255,255,255,0.1)" />
-      {/* Soccer ball */}
+      {/* Bounce shadow */}
+      <ellipse cx="100" cy="130" rx="30" ry="6" fill="rgba(249,115,22,0.15)" />
+      {/* Basketball */}
       <g filter="url(#sports-glow)">
-        <circle cx="100" cy="80" r="42" fill="url(#ball-grad)" />
-        {/* Pentagon patches */}
-        <g fill="#1e293b">
-          {/* Center pentagon */}
-          {Array.from({length:6}).map((_,i)=>{
-            const a = i*60*Math.PI/180 - Math.PI/2;
-            const r=15;
-            return <polygon key={i} points={Array.from({length:5}).map((_,j)=>{
-              const pa = a + j*72*Math.PI/180;
-              return `${100+r*Math.cos(pa)},${80+r*Math.sin(pa)}`;
-            }).join(' ')} fill={i===0?"#0f172a":"none"} stroke="#0f172a" strokeWidth="1.5" />;
-          })}
-          {/* Outer patches */}
-          {[0,60,120,180,240,300].map((deg,i)=>{
-            const r = 28;
-            const rad = deg*Math.PI/180;
-            const cx2 = 100+r*Math.cos(rad);
-            const cy2 = 80+r*Math.sin(rad);
-            return <circle key={i} cx={cx2} cy={cy2} r="7" fill="#0f172a" opacity="0.85" />;
-          })}
-        </g>
-        {/* Ball shine */}
-        <ellipse cx="88" cy="65" rx="10" ry="6" fill="rgba(255,255,255,0.45)" transform="rotate(-25 88 65)" />
+        <circle cx="100" cy="75" r="40" fill="url(#ball-grad)" />
+        {/* Ball texture - pebble dots */}
+        {[
+          [88,58],[95,62],[108,60],[115,68],[85,72],[112,78],
+          [90,85],[105,90],[95,95],[110,95],[88,100],[100,68],
+        ].map(([x,y],i)=>(
+          <circle key={`d${i}`} cx={x} cy={y} r="1.2" fill="rgba(0,0,0,0.15)" />
+        ))}
+        {/* Horizontal seam */}
+        <path d="M60 75 Q80 60 100 60 Q120 60 140 75" stroke="#1a0a00" strokeWidth="1.8" fill="none" opacity="0.6"/>
+        <path d="M60 75 Q80 90 100 90 Q120 90 140 75" stroke="#1a0a00" strokeWidth="1.8" fill="none" opacity="0.6"/>
+        {/* Vertical seam */}
+        <line x1="100" y1="35" x2="100" y2="115" stroke="#1a0a00" strokeWidth="1.8" opacity="0.6"/>
+        {/* Side seams */}
+        <path d="M78 42 Q72 55 72 75 Q72 95 78 108" stroke="#1a0a00" strokeWidth="1.2" fill="none" opacity="0.4"/>
+        <path d="M122 42 Q128 55 128 75 Q128 95 122 108" stroke="#1a0a00" strokeWidth="1.2" fill="none" opacity="0.4"/>
+        {/* Shine */}
+        <ellipse cx="86" cy="58" rx="12" ry="8" fill="rgba(255,255,255,0.3)" transform="rotate(-30 86 58)" />
       </g>
-      {/* Score badge */}
+      {/* Bracket badge */}
       <g>
-        <rect x="14" y="14" width="52" height="28" rx="6" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
-        <text x="40" y="22" textAnchor="middle" fontSize="7" fontWeight="600" fill="rgba(255,255,255,0.5)" fontFamily="'Barlow Condensed',sans-serif" letterSpacing="0.1em">MATCH</text>
-        <text x="40" y="36" textAnchor="middle" fontSize="14" fontWeight="800" fill="white" fontFamily="'Barlow Condensed',sans-serif">2 — 1</text>
+        <rect x="10" y="10" width="60" height="28" rx="6" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
+        <text x="40" y="19" textAnchor="middle" fontSize="6.5" fontWeight="600" fill="rgba(255,255,255,0.5)" fontFamily="'Barlow Condensed',sans-serif" letterSpacing="0.1em">MARCH</text>
+        <text x="40" y="32" textAnchor="middle" fontSize="11" fontWeight="800" fill="white" fontFamily="'Barlow Condensed',sans-serif" letterSpacing="0.05em">MADNESS</text>
+      </g>
+      {/* Live indicator */}
+      <g>
+        <circle cx="170" cy="22" r="4" fill="#ef4444" opacity="0.8">
+          <animate attributeName="opacity" values="0.8;0.3;0.8" dur="1.5s" repeatCount="indefinite"/>
+        </circle>
+        <text x="170" y="34" textAnchor="middle" fontSize="6" fontWeight="700" fill="#ef4444" fontFamily="'Barlow Condensed',sans-serif" letterSpacing="0.1em">LIVE</text>
       </g>
     </svg>
   );
@@ -486,9 +483,8 @@ export default function Home() {
           lineHeight: 1.1,
           marginBottom: "10px",
         }}>
-          <span className="shimmer-text">thegraxisreal</span>
-          {" "}
-          <span style={{ color: "var(--text-muted)", fontSize: "0.55em", fontWeight: 500 }}>GAMBLE</span>
+          <span className="shimmer-text">GRAX</span>
+          <span style={{ color: "rgba(255,255,255,0.35)", fontSize: "0.6em", fontWeight: 500, letterSpacing: "0.05em" }}>.bet</span>
         </h1>
         <p style={{
           color: "var(--text-secondary)",
@@ -595,7 +591,7 @@ export default function Home() {
                   color: "rgba(255,255,255,0.45)",
                   textTransform: "uppercase",
                 }}>
-                  THEGRAXISREAL
+                  GRAX.BET
                 </div>
               </div>
 

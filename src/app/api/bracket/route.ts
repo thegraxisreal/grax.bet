@@ -4,6 +4,8 @@ export interface Matchup {
   gameId: string;
   team1: string;
   team2: string;
+  team1Logo: string;
+  team2Logo: string;
   team1Score: number;
   team2Score: number;
   winner: string | null;
@@ -15,7 +17,7 @@ export interface Matchup {
 
 // ─── Minimal ESPN API types ───────────────────────────────────────────────────
 
-interface EspnTeam { displayName?: string; name?: string }
+interface EspnTeam { id?: string; displayName?: string; name?: string; logo?: string }
 interface EspnCompetitor {
   homeAway?: string;
   team?: EspnTeam;
@@ -77,8 +79,8 @@ function parseRegion(text: string): string {
 export async function GET() {
   try {
     const [sbResult, tResult] = await Promise.allSettled([
-      fetch(SCOREBOARD_URL, { next: { revalidate: 60 } }),
-      fetch(TOURNAMENTS_URL, { next: { revalidate: 60 } }),
+      fetch(SCOREBOARD_URL, { cache: "no-store" }),
+      fetch(TOURNAMENTS_URL, { next: { revalidate: 300 } }),
     ]);
 
     // Build round/region map from tournament bracket endpoint
@@ -163,10 +165,18 @@ export async function GET() {
           ? winnerComp.team?.displayName ?? winnerComp.team?.name ?? null
           : null;
 
+        const logoUrl = (team: EspnTeam | undefined) =>
+          team?.logo ??
+          (team?.id
+            ? `https://a.espncdn.com/i/teamlogos/ncaa/500/${team.id}.png`
+            : "");
+
         return {
           gameId,
           team1: home.team?.displayName ?? home.team?.name ?? "TBD",
           team2: away.team?.displayName ?? away.team?.name ?? "TBD",
+          team1Logo: logoUrl(home.team),
+          team2Logo: logoUrl(away.team),
           team1Score: parseInt(home.score ?? "0", 10) || 0,
           team2Score: parseInt(away.score ?? "0", 10) || 0,
           winner,
