@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useBalance } from "@/context/BalanceContext";
 import { useUser } from "@/context/UserContext";
 import { logFeedEvent } from "@/lib/feed";
+import { fmtMoney } from "@/lib/format";
 import { CasinoChip } from "@/components/CasinoChip";
 import CollapsibleBetSelector from "@/components/CollapsibleBetSelector";
 import { playChipClick } from "@/lib/sound";
@@ -144,7 +145,7 @@ const pillStyle: React.CSSProperties = {
 // ── Component ──────────────────────────────────────────────────────────────────
 
 export default function CrashPage() {
-  const { balance, addBalance, subtractBalance } = useBalance();
+  const { balance, addBalance, subtractBalance, registerBet, unregisterBet } = useBalance();
   const { username } = useUser();
 
   const [phase, setPhase] = useState<Phase>("waiting");
@@ -194,12 +195,13 @@ export default function CrashPage() {
     setCashedOutAt(m);
     const payout = Math.round(betRef.current * m * 100) / 100;
     addBalance(payout);
+    unregisterBet();
     const net = Math.round((payout - betRef.current) * 100) / 100;
     setLastResult({ net, mult: m });
     setSessionProfit(p => Math.round((p + net) * 100) / 100);
     if (username) logFeedEvent(username, "Crash", net, "win");
     playCashout();
-  }, [addBalance, username]);
+  }, [addBalance, unregisterBet, username]);
 
   // ── Main loop ─────────────────────────────────────────────────────────────────
 
@@ -504,6 +506,9 @@ export default function CrashPage() {
 
           setTimeout(() => {
             if (!alive) return;
+            if (hasBetRef.current && !cashedOutRef.current) {
+              unregisterBet();
+            }
             hasBetRef.current = false;
             setHasBet(false);
             phaseRef.current = "waiting";
@@ -543,7 +548,7 @@ export default function CrashPage() {
       cancelAnimationFrame(animRef.current);
       stopEngine();
     };
-  }, [doCashout]);
+  }, [doCashout, unregisterBet]);
 
   // Log crash loss when game crashes with an unrecovered bet
   useEffect(() => {
@@ -558,9 +563,10 @@ export default function CrashPage() {
   const placeBet = useCallback(() => {
     if (phase !== "waiting" || hasBet || bet <= 0 || bet > balance) return;
     subtractBalance(bet);
+    registerBet();
     hasBetRef.current = true;
     setHasBet(true);
-  }, [phase, hasBet, bet, balance, subtractBalance]);
+  }, [phase, hasBet, bet, balance, subtractBalance, registerBet]);
 
   const handleAction = useCallback(() => {
     if (phase === "waiting") placeBet();
@@ -574,7 +580,7 @@ export default function CrashPage() {
 
   const btnLabel = () => {
     if (phase === "waiting") return hasBet ? "✓ Bet Placed" : "Place Bet";
-    if (canCashout) return `Cash Out  $${(bet * multiplier).toFixed(2)}`;
+    if (canCashout) return `Cash Out  $${fmtMoney(bet * multiplier)}`;
     if (phase === "running") return "Waiting…";
     return "Crashed";
   };
@@ -698,7 +704,7 @@ export default function CrashPage() {
           <div style={{ background: "rgba(0,0,0,0.25)", border: "1px solid var(--border-color)", borderRadius: 6, padding: "8px 10px", display: "flex", justifyContent: "space-between" }}>
             <span style={{ ...labelStyle, margin: 0 }}>Potential</span>
             <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "1rem", color: multColor(multiplier) }}>
-              ${(bet * multiplier).toFixed(2)}
+              ${fmtMoney(bet * multiplier)}
             </span>
           </div>
         )}
@@ -713,7 +719,7 @@ export default function CrashPage() {
                 {lastResult.net >= 0 ? `CASHED OUT @ ${lastResult.mult.toFixed(2)}×` : "BUSTED"}
               </div>
               <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: "1.1rem", color: lastResult.net >= 0 ? "var(--win-color)" : "var(--lose-color)" }}>
-                {lastResult.net >= 0 ? "+" : ""}${lastResult.net.toFixed(2)}
+                {lastResult.net >= 0 ? "+" : ""}${fmtMoney(lastResult.net)}
               </div>
             </motion.div>
           )}
@@ -723,7 +729,7 @@ export default function CrashPage() {
         <div className="crash-session-pl" style={{ marginTop: "auto", background: "rgba(0,0,0,0.25)", border: "1px solid var(--border-color)", borderRadius: 6, padding: "8px 10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <span style={{ ...labelStyle, margin: 0, fontSize: "0.7rem" }}>Session P/L</span>
           <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "1rem", color: sessionProfit >= 0 ? "var(--accent-green)" : "var(--lose-color)" }}>
-            {sessionProfit >= 0 ? "+" : ""}${sessionProfit.toFixed(2)}
+            {sessionProfit >= 0 ? "+" : ""}${fmtMoney(sessionProfit)}
           </span>
         </div>
       </div>
