@@ -360,7 +360,7 @@ export default function MinesPage() {
         playWin();
       }
     }
-  }, [phase, revealed, minePositions, safeRevealed, mineCount, bet, addBalance]);
+  }, [phase, revealed, minePositions, safeRevealed, mineCount, bet, addBalance, username]);
 
   const handleCashout = useCallback(() => {
     if (phase !== "playing" || safeRevealed === 0) return;

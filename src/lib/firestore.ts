@@ -2,7 +2,6 @@ import {
   doc,
   getDoc,
   setDoc,
-  updateDoc,
   Timestamp,
 } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";

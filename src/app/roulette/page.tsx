@@ -406,7 +406,7 @@ export default function RoulettePage() {
       }
       setLastResult({ won, payout });
     }, dur * 1000 + 300);
-  }, [phase, betAmount, selectedBet, balance, subtractBalance, addBalance, spinDeg]);
+  }, [phase, betAmount, selectedBet, balance, subtractBalance, addBalance, spinDeg, username]);
 
   const handleNewRound = useCallback(() => {
     setWinningSlot(null);
