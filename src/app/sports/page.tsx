@@ -79,6 +79,36 @@ function avatarColor(username: string): string {
   return AVATAR_PALETTE[h % AVATAR_PALETTE.length];
 }
 
+// ─── Persisted result queue (survives reload) ─────────────────────────────────
+
+type NSResult =
+  | { type: "win"; team: string; payout: number }
+  | { type: "loss"; scoringTeam: string; amount: number };
+
+const NS_RESULTS_KEY = "grax_ns_results";
+
+function loadNSResults(): NSResult[] {
+  if (typeof window === "undefined") return [];
+  try { return JSON.parse(localStorage.getItem(NS_RESULTS_KEY) ?? "[]") as NSResult[]; }
+  catch { return []; }
+}
+function saveNSResults(arr: NSResult[]) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(NS_RESULTS_KEY, JSON.stringify(arr));
+}
+function enqueueNSResult(r: NSResult) {
+  const arr = loadNSResults();
+  arr.push(r);
+  saveNSResults(arr);
+}
+function dequeueNSResult(): NSResult | null {
+  const arr = loadNSResults();
+  if (arr.length === 0) return null;
+  const [first, ...rest] = arr;
+  saveNSResults(rest);
+  return first;
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function fmtTime(iso: string) {
@@ -463,7 +493,7 @@ interface GameCardProps {
   bet: UserBet | undefined;
   betAmount: number;
   onBet: (gameId: string, team: string, teamLogo: string, opponent: string) => void;
-  onNextScore: (gameId: string, team: string) => void;
+  onNextScore: (gameId: string, team: string, t1: number, t2: number) => void;
   placing: boolean;
   canBet: boolean;
   publicBets: PublicBet[];
@@ -733,7 +763,7 @@ function GameCard({
               ].map(({ name, logo }) => (
                 <button
                   key={name}
-                  onClick={() => onNextScore(gameId, name)}
+                  onClick={() => onNextScore(gameId, name, team1Score, team2Score)}
                   disabled={betAmount <= 0}
                   style={{
                     flex: 1,
@@ -864,9 +894,9 @@ export default function SportsPage() {
   const [notification, setNotification] = useState<string | null>(null);
   const [nextScoreWin, setNextScoreWin] = useState<{ team: string; payout: number } | null>(null);
   const [nextScoreLoss, setNextScoreLoss] = useState<{ scoringTeam: string; amount: number } | null>(null);
-  const [nextScoreBets, setNextScoreBets] = useState<Record<string, { team: string; amount: number; timestamp: number }>>({});
+  const [nextScoreBets, setNextScoreBets] = useState<Record<string, { team: string; amount: number; timestamp: number; t1AtBet?: number; t2AtBet?: number }>>({});
   const prevScoresRef = useRef<Record<string, { t1: number; t2: number }>>({});
-  const nextScoreBetsRef = useRef<Record<string, { team: string; amount: number; timestamp: number }>>({});
+  const nextScoreBetsRef = useRef<Record<string, { team: string; amount: number; timestamp: number; t1AtBet?: number; t2AtBet?: number }>>({});
   const usernameRef = useRef<string | null>(null);
   const [confirmBet, setConfirmBet] = useState<{
     gameId: string;
@@ -913,11 +943,9 @@ export default function SportsPage() {
           addBalance(payout);
           toastMsg = `⚡ Next score WIN! +$${payout.toFixed(2)}`;
           setNextScoreWin({ team: bet.team, payout });
-          setTimeout(() => setNextScoreWin(null), 4000);
         } else {
           toastMsg = `⚡ Next score lost — ${scoringTeam} scored.`;
           setNextScoreLoss({ scoringTeam: scoringTeam!, amount: bet.amount });
-          setTimeout(() => setNextScoreLoss(null), 4000);
         }
         delete updatedNSBets[m.gameId];
         // Settle in Firestore
@@ -1027,13 +1055,59 @@ export default function SportsPage() {
           setTimeout(() => setNotification(null), 6000);
         }
 
-        // Load next-score bets
+        // Load next-score bets + settle any that scored while user was away
         const nsSnap = await getDocs(collection(db, "users", uid, "next_score_bets"));
-        const nsBets: Record<string, { team: string; amount: number; timestamp: number }> = {};
+        const nsBets: Record<string, { team: string; amount: number; timestamp: number; t1AtBet?: number; t2AtBet?: number }> = {};
         nsSnap.forEach((d) => {
-          nsBets[d.id] = d.data() as { team: string; amount: number; timestamp: number };
+          nsBets[d.id] = d.data() as { team: string; amount: number; timestamp: number; t1AtBet?: number; t2AtBet?: number };
         });
-        setNextScoreBets(nsBets);
+
+        // Away settlement: check each loaded bet against current scores
+        const activeBets: typeof nsBets = {};
+        for (const [gameId, nsBet] of Object.entries(nsBets)) {
+          const m = matchups.find((mx) => mx.gameId === gameId);
+          // Only try to settle if we have score snapshots and a live game
+          if (!m || m.status !== "in" || nsBet.t1AtBet == null || nsBet.t2AtBet == null) {
+            activeBets[gameId] = nsBet;
+            continue;
+          }
+          const t1Scored = m.team1Score > nsBet.t1AtBet;
+          const t2Scored = m.team2Score > nsBet.t2AtBet;
+          if (!t1Scored && !t2Scored) {
+            activeBets[gameId] = nsBet;
+            continue;
+          }
+          // Score changed while away — settle
+          const scoringTeam = t1Scored && t2Scored ? null : t1Scored ? m.team1 : m.team2;
+          let awayPayout = 0;
+          if (scoringTeam === null) {
+            awayPayout = nsBet.amount;
+            addBalance(awayPayout);
+          } else if (nsBet.team === scoringTeam) {
+            awayPayout = Math.round(nsBet.amount * PAYOUT * 100) / 100;
+            addBalance(awayPayout);
+            enqueueNSResult({ type: "win", team: nsBet.team, payout: awayPayout });
+          } else {
+            enqueueNSResult({ type: "loss", scoringTeam: scoringTeam!, amount: nsBet.amount });
+          }
+          await deleteDoc(doc(db, "users", uid, "next_score_bets", gameId));
+          if (awayPayout > 0) {
+            const userRef2 = doc(db, "users", uid);
+            const userSnap2 = await getDoc(userRef2);
+            if (userSnap2.exists()) {
+              const cur2 = (userSnap2.data().balance as number) ?? 0;
+              await updateDoc(userRef2, { balance: Math.round((cur2 + awayPayout) * 100) / 100 });
+            }
+          }
+        }
+        setNextScoreBets(activeBets);
+
+        // Show any queued away results (win or loss popups)
+        const pending0 = dequeueNSResult();
+        if (pending0) {
+          if (pending0.type === "win") setNextScoreWin({ team: pending0.team, payout: pending0.payout });
+          else setNextScoreLoss({ scoringTeam: pending0.scoringTeam, amount: pending0.amount });
+        }
       } catch (err) {
         console.error("loadAndPay error:", err);
       }
@@ -1107,17 +1181,17 @@ export default function SportsPage() {
   );
 
   const placeNextScoreBet = useCallback(
-    async (gameId: string, team: string) => {
+    async (gameId: string, team: string, t1AtBet: number, t2AtBet: number) => {
       if (!username || betAmount <= 0 || balance < betAmount || nextScoreBets[gameId]) return;
       subtractBalance(betAmount);
-      const entry = { team, amount: betAmount, timestamp: Date.now() };
+      const entry = { team, amount: betAmount, timestamp: Date.now(), t1AtBet, t2AtBet };
       setNextScoreBets((prev) => ({ ...prev, [gameId]: entry }));
       setNotification(`⚡ $${betAmount} on ${team} to score next!`);
       setTimeout(() => setNotification(null), 3000);
       try {
         const db = getDb();
         const uid = username.toLowerCase();
-        await setDoc(doc(db, "users", uid, "next_score_bets", gameId), { gameId, team, amount: betAmount, timestamp: Date.now() });
+        await setDoc(doc(db, "users", uid, "next_score_bets", gameId), { gameId, team, amount: betAmount, timestamp: Date.now(), t1AtBet, t2AtBet });
         const userRef = doc(db, "users", uid);
         const userSnap = await getDoc(userRef);
         if (userSnap.exists()) {
@@ -1213,7 +1287,7 @@ export default function SportsPage() {
         )}
       </AnimatePresence>
 
-      {/* ── Bet confirmation modal ── */}
+      {/* ── Win / Loss overlays ── */}
       <AnimatePresence>
         {nextScoreWin && (
           <motion.div
@@ -1221,6 +1295,16 @@ export default function SportsPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            onClick={() => {
+              setNextScoreWin(null);
+              setTimeout(() => {
+                const next = dequeueNSResult();
+                if (next) {
+                  if (next.type === "win") setNextScoreWin({ team: next.team, payout: next.payout });
+                  else setNextScoreLoss({ scoringTeam: next.scoringTeam, amount: next.amount });
+                }
+              }, 350);
+            }}
             style={{
               position: "fixed",
               inset: 0,
@@ -1228,7 +1312,8 @@ export default function SportsPage() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              pointerEvents: "none",
+              pointerEvents: "auto",
+              cursor: "pointer",
             }}
           >
             {/* Green glow flood */}
@@ -1249,14 +1334,16 @@ export default function SportsPage() {
               animate={{ scale: 1, y: 0, opacity: 1 }}
               exit={{ scale: 0.7, opacity: 0 }}
               transition={{ type: "spring", stiffness: 380, damping: 22 }}
+              onClick={(e) => e.stopPropagation()}
               style={{
                 background: "linear-gradient(145deg, #061a0e, #0a2414)",
                 border: "2px solid var(--accent-green)",
                 borderRadius: 24,
-                padding: "40px 48px",
+                padding: "40px 48px 32px",
                 textAlign: "center",
                 boxShadow: "0 0 60px rgba(0,230,118,0.5), 0 0 120px rgba(0,230,118,0.2), 0 24px 60px rgba(0,0,0,0.8)",
                 position: "relative",
+                cursor: "default",
               }}
             >
               <div style={{ fontSize: "3.5rem", marginBottom: 8 }}>⚡</div>
@@ -1289,9 +1376,38 @@ export default function SportsPage() {
                 letterSpacing: "0.03em",
                 textShadow: "0 0 30px rgba(0,230,118,0.9)",
                 lineHeight: 1,
+                marginBottom: 28,
               }}>
                 +${nextScoreWin.payout.toFixed(2)}
               </div>
+              <button
+                onClick={() => {
+                  setNextScoreWin(null);
+                  setTimeout(() => {
+                    const next = dequeueNSResult();
+                    if (next) {
+                      if (next.type === "win") setNextScoreWin({ team: next.team, payout: next.payout });
+                      else setNextScoreLoss({ scoringTeam: next.scoringTeam, amount: next.amount });
+                    }
+                  }, 350);
+                }}
+                style={{
+                  background: "var(--accent-green)",
+                  color: "#061a0e",
+                  border: "none",
+                  borderRadius: 10,
+                  padding: "12px 40px",
+                  fontFamily: "'Barlow Condensed', sans-serif",
+                  fontWeight: 900,
+                  fontSize: "1rem",
+                  letterSpacing: "0.12em",
+                  textTransform: "uppercase",
+                  cursor: "pointer",
+                  boxShadow: "0 0 20px rgba(0,230,118,0.5)",
+                }}
+              >
+                GOT IT
+              </button>
             </motion.div>
           </motion.div>
         )}
@@ -1302,6 +1418,16 @@ export default function SportsPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            onClick={() => {
+              setNextScoreLoss(null);
+              setTimeout(() => {
+                const next = dequeueNSResult();
+                if (next) {
+                  if (next.type === "win") setNextScoreWin({ team: next.team, payout: next.payout });
+                  else setNextScoreLoss({ scoringTeam: next.scoringTeam, amount: next.amount });
+                }
+              }, 350);
+            }}
             style={{
               position: "fixed",
               inset: 0,
@@ -1309,7 +1435,8 @@ export default function SportsPage() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              pointerEvents: "none",
+              pointerEvents: "auto",
+              cursor: "pointer",
             }}
           >
             <motion.div
@@ -1327,14 +1454,16 @@ export default function SportsPage() {
               animate={{ scale: 1, y: 0, opacity: 1 }}
               exit={{ scale: 0.7, opacity: 0 }}
               transition={{ type: "spring", stiffness: 380, damping: 22 }}
+              onClick={(e) => e.stopPropagation()}
               style={{
                 background: "linear-gradient(145deg, #1a0606, #240a0a)",
                 border: "2px solid #ef4444",
                 borderRadius: 24,
-                padding: "40px 48px",
+                padding: "40px 48px 32px",
                 textAlign: "center",
                 boxShadow: "0 0 60px rgba(239,68,68,0.5), 0 0 120px rgba(239,68,68,0.2), 0 24px 60px rgba(0,0,0,0.8)",
                 position: "relative",
+                cursor: "default",
               }}
             >
               <div style={{ fontSize: "3.5rem", marginBottom: 8 }}>💀</div>
@@ -1367,9 +1496,38 @@ export default function SportsPage() {
                 letterSpacing: "0.03em",
                 textShadow: "0 0 30px rgba(239,68,68,0.9)",
                 lineHeight: 1,
+                marginBottom: 28,
               }}>
                 -${nextScoreLoss.amount}
               </div>
+              <button
+                onClick={() => {
+                  setNextScoreLoss(null);
+                  setTimeout(() => {
+                    const next = dequeueNSResult();
+                    if (next) {
+                      if (next.type === "win") setNextScoreWin({ team: next.team, payout: next.payout });
+                      else setNextScoreLoss({ scoringTeam: next.scoringTeam, amount: next.amount });
+                    }
+                  }, 350);
+                }}
+                style={{
+                  background: "#ef4444",
+                  color: "#1a0606",
+                  border: "none",
+                  borderRadius: 10,
+                  padding: "12px 40px",
+                  fontFamily: "'Barlow Condensed', sans-serif",
+                  fontWeight: 900,
+                  fontSize: "1rem",
+                  letterSpacing: "0.12em",
+                  textTransform: "uppercase",
+                  cursor: "pointer",
+                  boxShadow: "0 0 20px rgba(239,68,68,0.5)",
+                }}
+              >
+                CLOSE
+              </button>
             </motion.div>
           </motion.div>
         )}
