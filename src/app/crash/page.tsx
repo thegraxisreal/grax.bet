@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useBalance } from "@/context/BalanceContext";
+import { useUser } from "@/context/UserContext";
+import { logFeedEvent } from "@/lib/feed";
 import { CasinoChip } from "@/components/CasinoChip";
 import CollapsibleBetSelector from "@/components/CollapsibleBetSelector";
 import { playChipClick } from "@/lib/sound";
@@ -143,6 +145,7 @@ const pillStyle: React.CSSProperties = {
 
 export default function CrashPage() {
   const { balance, addBalance, subtractBalance } = useBalance();
+  const { username } = useUser();
 
   const [phase, setPhase] = useState<Phase>("waiting");
   const [waitTimer, setWaitTimer] = useState(WAITING_SECS);
@@ -194,8 +197,9 @@ export default function CrashPage() {
     const net = Math.round((payout - betRef.current) * 100) / 100;
     setLastResult({ net, mult: m });
     setSessionProfit(p => Math.round((p + net) * 100) / 100);
+    if (username) logFeedEvent(username, "Crash", net, "win");
     playCashout();
-  }, [addBalance]);
+  }, [addBalance, username]);
 
   // ── Main loop ─────────────────────────────────────────────────────────────────
 
@@ -540,6 +544,14 @@ export default function CrashPage() {
       stopEngine();
     };
   }, [doCashout]);
+
+  // Log crash loss when game crashes with an unrecovered bet
+  useEffect(() => {
+    if (phase === "crashed" && hasBet && !cashedOut && username) {
+      logFeedEvent(username, "Crash", bet, "loss");
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase]);
 
   // ── Place bet ─────────────────────────────────────────────────────────────────
 

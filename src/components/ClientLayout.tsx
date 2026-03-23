@@ -7,6 +7,7 @@ import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 import BrokeModal from "@/components/BrokeModal";
 import UsernameModal from "@/components/UsernameModal";
+import ActivityFeed from "@/components/ActivityFeed";
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -50,6 +51,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       </div>
       <BrokeModal />
       <UsernameModal />
+      <ActivityFeed />
     </BalanceProvider>
     </UserProvider>
   );

@@ -3,6 +3,8 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useBalance } from "@/context/BalanceContext";
+import { useUser } from "@/context/UserContext";
+import { logFeedEvent } from "@/lib/feed";
 import { CasinoChip } from "@/components/CasinoChip";
 import CollapsibleBetSelector from "@/components/CollapsibleBetSelector";
 import {
@@ -301,6 +303,7 @@ type Phase = "betting" | "spinning" | "result";
 
 export default function RoulettePage() {
   const { balance, addBalance, subtractBalance } = useBalance();
+  const { username } = useUser();
 
   const [phase, setPhase] = useState<Phase>("betting");
   const [betAmount, setBetAmount] = useState(0);
@@ -395,8 +398,10 @@ export default function RoulettePage() {
       if (won && selectedBet) {
         payout = betAmount * (betPayout(selectedBet) + 1);
         addBalance(payout);
+        if (username) logFeedEvent(username, "Roulette", payout - betAmount, "win");
         playRouletteWin();
       } else {
+        if (username) logFeedEvent(username, "Roulette", betAmount, "loss");
         playRouletteLose();
       }
       setLastResult({ won, payout });

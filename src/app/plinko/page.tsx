@@ -3,6 +3,8 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useBalance } from "@/context/BalanceContext";
+import { useUser } from "@/context/UserContext";
+import { logFeedEvent } from "@/lib/feed";
 import { CasinoChip } from "@/components/CasinoChip";
 import CollapsibleBetSelector from "@/components/CollapsibleBetSelector";
 import { playChipClick } from "@/lib/sound";
@@ -217,6 +219,9 @@ interface BucketFlash {
 
 export default function PlinkoPage() {
   const { balance, addBalance, subtractBalance } = useBalance();
+  const { username } = useUser();
+  const usernameRef = useRef<string | null>(null);
+  usernameRef.current = username ?? null;
 
   const [phase, setPhase] = useState<Phase>("idle");
   const [bet, setBet] = useState(1);
@@ -619,6 +624,11 @@ export default function PlinkoPage() {
               setTotalResult({ net, totalPayout: roundedPayout });
               setSessionProfit(prev => Math.round((prev + net) * 100) / 100);
               setPhase("result");
+
+              if (usernameRef.current) {
+                if (net > 0) logFeedEvent(usernameRef.current, "Plinko", net, "win");
+                else if (net < 0) logFeedEvent(usernameRef.current, "Plinko", Math.abs(net), "loss");
+              }
 
               if (net > 0) {
                 const maxM = Math.max(...dc.results.map(r => r.multiplier));

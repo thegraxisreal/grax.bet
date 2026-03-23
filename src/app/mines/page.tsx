@@ -3,6 +3,8 @@
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useBalance } from "@/context/BalanceContext";
+import { useUser } from "@/context/UserContext";
+import { logFeedEvent } from "@/lib/feed";
 import { CasinoChip } from "@/components/CasinoChip";
 import CollapsibleBetSelector from "@/components/CollapsibleBetSelector";
 import { playChipClick, playWin, playLose } from "@/lib/sound";
@@ -284,6 +286,7 @@ function SmallStat({ label, value, accent }: { label: string; value: string; acc
 
 export default function MinesPage() {
   const { balance, addBalance, subtractBalance } = useBalance();
+  const { username } = useUser();
 
   const [phase, setPhase] = useState<Phase>("idle");
   const [minePositions, setMinePositions] = useState<boolean[]>(Array(TOTAL).fill(false));
@@ -341,6 +344,7 @@ export default function MinesPage() {
       setHitMineIdx(index);
       setPhase("dead");
       setFinalPayout(0);
+      if (username) logFeedEvent(username, "Mines", bet, "loss");
       playLose();
     } else {
       const newSafe = safeRevealed + 1;
@@ -352,6 +356,7 @@ export default function MinesPage() {
         addBalance(payout);
         setFinalPayout(payout);
         setPhase("cashout");
+        if (username) logFeedEvent(username, "Mines", payout - bet, "win");
         playWin();
       }
     }
@@ -362,8 +367,9 @@ export default function MinesPage() {
     addBalance(cashoutTotal);
     setFinalPayout(cashoutTotal);
     setPhase("cashout");
+    if (username) logFeedEvent(username, "Mines", cashoutTotal - bet, "win");
     playWin();
-  }, [phase, safeRevealed, cashoutTotal, addBalance]);
+  }, [phase, safeRevealed, cashoutTotal, addBalance, bet, username]);
 
   const handlePlayAgain = useCallback(() => {
     setPendingBet(bet > 0 ? bet : pendingBet);

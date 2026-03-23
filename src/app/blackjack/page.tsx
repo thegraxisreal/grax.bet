@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useReducer } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useBalance } from "@/context/BalanceContext";
+import { useUser } from "@/context/UserContext";
+import { logFeedEvent } from "@/lib/feed";
 import { CasinoChip } from "@/components/CasinoChip";
 import CollapsibleBetSelector from "@/components/CollapsibleBetSelector";
 import PlayingCard from "@/components/PlayingCard";
@@ -264,6 +266,7 @@ function computePayout(hand: Hand): number {
 
 export default function BlackjackPage() {
   const { balance, addBalance, subtractBalance } = useBalance();
+  const { username } = useUser();
   const [state, dispatch] = useReducer(reducer, undefined, initialState);
 
   const { phase, playerHands, activeHandIndex, dealerHand, currentBet, lastBet, insuranceBet } = state;
@@ -338,17 +341,24 @@ export default function BlackjackPage() {
   const handleNewHand = useCallback(() => {
     if (phase !== "result") return;
     // Return payout amounts
+    let totalPayout = 0;
+    const totalBet = playerHands.reduce((sum, h) => sum + h.bet, 0);
     for (const hand of playerHands) {
       const payout = computePayout(hand);
-      if (payout > 0) addBalance(payout);
+      if (payout > 0) { addBalance(payout); totalPayout += payout; }
     }
     // Insurance
     const dealerBJ = isBlackjack(dealerHand);
     if (insuranceBet > 0) {
-      if (dealerBJ) addBalance(insuranceBet * 3);
+      if (dealerBJ) { addBalance(insuranceBet * 3); totalPayout += insuranceBet * 3; }
+    }
+    const net = Math.round((totalPayout - totalBet) * 100) / 100;
+    if (username) {
+      if (net > 0) logFeedEvent(username, "Blackjack", net, "win");
+      else if (net < 0) logFeedEvent(username, "Blackjack", Math.abs(net), "loss");
     }
     dispatch({ type: "NEW_HAND" });
-  }, [phase, playerHands, dealerHand, insuranceBet, addBalance]);
+  }, [phase, playerHands, dealerHand, insuranceBet, addBalance, username]);
 
   const handleTakeInsurance = useCallback(() => {
     const insAmt = Math.round((lastBet / 2) * 100) / 100;
