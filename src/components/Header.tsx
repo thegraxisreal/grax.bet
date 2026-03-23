@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useBalance } from "@/context/BalanceContext";
 import { useUser } from "@/context/UserContext";
 import { fmtDollar } from "@/lib/format";
@@ -71,8 +72,9 @@ interface HeaderProps {
 }
 
 export default function Header({ onMenuToggle }: HeaderProps) {
-  const { balance } = useBalance();
+  const { balance, resetBalance } = useBalance();
   const { username } = useUser();
+  const [hovered, setHovered] = useState(false);
 
   return (
     <header style={{
@@ -114,9 +116,51 @@ export default function Header({ onMenuToggle }: HeaderProps) {
       )}
 
       {/* Balance */}
-      <div className="balance-display">
-        <ChipIcon />
-        <span>{fmtDollar(balance)}</span>
+      <div
+        style={{ position: "relative" }}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+      >
+        <div className="balance-display">
+          <ChipIcon />
+          <span>{fmtDollar(balance)}</span>
+        </div>
+        {hovered && (
+          <div style={{
+            position: "absolute",
+            top: "calc(100% + 8px)",
+            right: 0,
+            background: "var(--bg-card)",
+            border: "1px solid var(--border-color)",
+            borderRadius: "8px",
+            padding: "8px",
+            zIndex: 100,
+            minWidth: "140px",
+            boxShadow: "0 4px 16px rgba(0,0,0,0.4)",
+          }}>
+            <button
+              onClick={resetBalance}
+              style={{
+                width: "100%",
+                background: "var(--accent-green)",
+                color: "#000",
+                border: "none",
+                borderRadius: "6px",
+                padding: "8px 12px",
+                fontFamily: "'Barlow Condensed', sans-serif",
+                fontWeight: 700,
+                fontSize: "0.95rem",
+                letterSpacing: "0.05em",
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+              }}
+              onMouseEnter={e => (e.currentTarget.style.background = "var(--accent-green-dark)")}
+              onMouseLeave={e => (e.currentTarget.style.background = "var(--accent-green)")}
+            >
+              Reset to $50.00
+            </button>
+          </div>
+        )}
       </div>
     </header>
   );
