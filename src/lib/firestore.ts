@@ -42,5 +42,5 @@ export async function getUser(username: string): Promise<UserDoc | null> {
 
 export async function updateUserBalance(username: string, balance: number): Promise<void> {
   const ref = doc(getDb(), "users", username.toLowerCase());
-  await updateDoc(ref, { balance });
+  await setDoc(ref, { balance }, { merge: true });
 }
