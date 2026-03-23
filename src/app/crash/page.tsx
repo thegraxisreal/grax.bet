@@ -650,7 +650,7 @@ export default function CrashPage() {
             <div className="bet-halfall" style={{ display: "flex", gap: 4, marginTop: 4 }}>
               <button onClick={() => setBet(Math.floor(balance / 2 * 100) / 100)} disabled={phase !== "waiting" || hasBet}
                 style={{ ...pillStyle, flex: 1 }}>½ Half</button>
-              <button onClick={() => setBet(Math.floor(balance * 100) / 100)} disabled={phase !== "waiting" || hasBet}
+              <button onClick={() => setBet(balance)} disabled={phase !== "waiting" || hasBet}
                 style={{ ...pillStyle, flex: 1, borderColor: "rgba(240,180,41,0.3)", color: "var(--accent-gold)" }}>All In</button>
             </div>
           </CollapsibleBetSelector>
