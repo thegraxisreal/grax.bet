@@ -25,7 +25,8 @@ const TOAST_MS = 5500;
 export default function ActivityFeed() {
   const { username: currentUser } = useUser();
   const [toasts, setToasts] = useState<Toast[]>([]);
-  const isFirst = useRef(true);
+  const seenIds = useRef<Set<string>>(new Set());
+  const initialized = useRef(false);
   const timers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
   const dismiss = (id: string) => {
@@ -57,22 +58,27 @@ export default function ActivityFeed() {
     const q = query(collection(db, "feed"), orderBy("timestamp", "desc"), limit(50));
 
     const unsub = onSnapshot(q, snapshot => {
-      if (isFirst.current) {
-        isFirst.current = false;
+      if (!initialized.current) {
+        // First snapshot (may fire twice: once from cache, once from server).
+        // Stamp all existing doc IDs as pre-existing so we never show them.
+        snapshot.docs.forEach(doc => seenIds.current.add(doc.id));
+        initialized.current = true;
         return;
       }
+      // Subsequent snapshots — only truly new docs appear in docChanges
       snapshot.docChanges().forEach(change => {
-        if (change.type === "added") {
-          const d = change.doc.data();
-          // Skip own events — already shown via local dispatch
-          if (d.username === currentUser) return;
-          addToast(change.doc.id, {
-            username: d.username,
-            game: d.game,
-            amount: d.amount,
-            result: d.result,
-          });
-        }
+        if (change.type !== "added") return;
+        const id = change.doc.id;
+        if (seenIds.current.has(id)) return; // from cache batch, skip
+        seenIds.current.add(id);
+        const d = change.doc.data();
+        if (d.username === currentUser) return; // own — shown via local event
+        addToast(id, {
+          username: d.username,
+          game: d.game,
+          amount: d.amount,
+          result: d.result,
+        });
       });
     });
 
