@@ -756,6 +756,7 @@ function GameCard({
                   }}
                   title={betAmount <= 0 ? "Set a bet amount first" : undefined}
                 >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   {logo && <img src={logo} alt={name} width={16} height={16} style={{ objectFit: "contain", flexShrink: 0 }} />}
                   <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{abbr(name)}</span>
                 </button>
@@ -863,7 +864,7 @@ export default function SportsPage() {
   const [notification, setNotification] = useState<string | null>(null);
   const [nextScoreWin, setNextScoreWin] = useState<{ team: string; payout: number } | null>(null);
   const [nextScoreLoss, setNextScoreLoss] = useState<{ scoringTeam: string; amount: number } | null>(null);
-  const [nextScoreBets, setNextScoreBets] = useState<Record<string, { team: string; amount: number }>>({});
+  const [nextScoreBets, setNextScoreBets] = useState<Record<string, { team: string; amount: number; timestamp: number }>>({});
   const prevScoresRef = useRef<Record<string, { t1: number; t2: number }>>({});
   const nextScoreBetsRef = useRef<Record<string, { team: string; amount: number; timestamp: number }>>({});
   const usernameRef = useRef<string | null>(null);
