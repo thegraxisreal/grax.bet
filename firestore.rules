@@ -1,0 +1,21 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // User documents — readable/writable by anyone (fake-money, no auth)
+    match /users/{userId} {
+      allow read, write: if true;
+
+      // Bets subcollection
+      match /bets/{betId} {
+        allow read, write: if true;
+      }
+    }
+
+    // Bracket games — publicly readable, written only by Cloud Functions
+    match /bracket_games/{gameId} {
+      allow read: if true;
+      allow write: if false;
+    }
+  }
+}

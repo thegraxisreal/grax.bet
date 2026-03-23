@@ -154,7 +154,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Slots",     href: "/slots",     icon: <SlotsIcon />,   locked: true },
   { label: "Roulette",  href: "/roulette",  icon: <RouletteIcon /> },
   { label: "Crash",     href: "/crash",     icon: <CrashIcon /> },
-  { label: "Sports",    href: "/sports",    icon: <SportsIcon />,  locked: true },
+  { label: "March Madness", href: "/sports",    icon: <SportsIcon /> },
   { label: "Mines",     href: "/mines",     icon: <MinesIcon /> },
   { label: "Plinko",    href: "/plinko",    icon: <PlinkoIcon /> },
 ];

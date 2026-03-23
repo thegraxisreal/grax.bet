@@ -444,9 +444,9 @@ const GAMES = [
     art: <CrashArt />,
   },
   {
-    label: "Sports",
+    label: "March Madness",
     href: "/sports",
-    locked: true,
+    locked: false,
     gradient: "linear-gradient(145deg, #2563eb 0%, #1e3a8a 55%, #0f1f5c 100%)",
     art: <SportsArt />,
   },
