@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useReducer } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useBalance } from "@/context/BalanceContext";
@@ -440,7 +441,28 @@ export default function BlackjackPage() {
           overflow: "hidden",
           minHeight: 0,
         }}>
-          {/* Felt grain overlay */}
+          <div style={{ position: "absolute", top: 56, right: 24, zIndex: 8 }}>
+            <Link
+              href="/blackjack-mp"
+              style={{
+                padding: "8px 12px",
+                borderRadius: 10,
+                border: "1px solid rgba(240,180,41,0.35)",
+                background: "rgba(240,180,41,0.08)",
+                color: "var(--accent-gold)",
+                textDecoration: "none",
+                fontFamily: "'Barlow Condensed', sans-serif",
+                fontWeight: 700,
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                fontSize: "0.82rem",
+              }}
+            >
+              Multiplayer →
+            </Link>
+          </div>
+
+        {/* Felt grain overlay */}
           <div style={{
             position: "absolute",
             inset: 0,
