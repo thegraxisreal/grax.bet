@@ -15,6 +15,7 @@ import {
   MP_MIN_BET,
   MP_RESULTS_MS,
   autoBetOrRemove,
+  clearTable,
   getLobbyStatus,
   joinTable,
   leaveTable,
@@ -224,6 +225,20 @@ export default function MultiplayerBlackjackPage() {
     }
   }, [selectedTableId, username]);
 
+  const handleClearTable = useCallback(async () => {
+    if (!selectedTableId) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await clearTable(selectedTableId);
+      setSelectedTableId(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not clear table.");
+    } finally {
+      setBusy(false);
+    }
+  }, [selectedTableId]);
+
   const tableTimer = useMemo(() => {
     if (!selectedTable?.roundStartedAt) return null;
     const elapsed = now - selectedTable.roundStartedAt.toMillis();
@@ -398,6 +413,29 @@ export default function MultiplayerBlackjackPage() {
                     </div>
                   </div>
                 ))}
+              </div>
+              <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px dashed rgba(255,255,255,0.12)" }}>
+                <button
+                  type="button"
+                  onClick={() => void handleClearTable()}
+                  disabled={busy}
+                  title="Emergency reset for stuck users"
+                  style={{
+                    border: "1px dashed rgba(248,113,113,0.45)",
+                    background: "rgba(248,113,113,0.08)",
+                    color: "#fca5a5",
+                    borderRadius: 8,
+                    padding: "6px 10px",
+                    fontSize: "0.75rem",
+                    cursor: "pointer",
+                    fontFamily: "'Barlow Condensed', sans-serif",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                    opacity: 0.85,
+                  }}
+                >
+                  Clear Table
+                </button>
               </div>
             </aside>
           </div>

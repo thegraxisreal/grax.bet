@@ -449,6 +449,29 @@ export async function resetTableForNextRound(tableId: string): Promise<void> {
   });
 }
 
+export async function clearTable(tableId: string): Promise<void> {
+  await runTransaction(getDb(), async (tx) => {
+    const ref = tableRef(tableId);
+    const snap = await tx.get(ref);
+    if (!snap.exists()) return;
+    const table = snap.data() as MpTableDoc;
+
+    tx.set(
+      ref,
+      {
+        ...table,
+        players: {},
+        dealer: emptyDealer(),
+        status: "betting",
+        activePlayer: null,
+        roundStartedAt: null,
+        updatedAt: serverTimestamp(),
+      },
+      { merge: true }
+    );
+  });
+}
+
 export function getLobbyStatus(table: MpTableDoc): "Waiting" | "In Progress" {
   const hasActiveRound = table.status !== "betting" || Object.values(table.players ?? {}).some((player) => player.bet > 0 || player.hand.length > 0);
   return hasActiveRound ? "In Progress" : "Waiting";
