@@ -28,7 +28,7 @@ export const MP_ACTING_MS = 20_000;
 export const MP_RESULTS_MS = 5_000;
 
 export type MpTableStatus = "betting" | "playing" | "resolving" | "results";
-export type MpPlayerStatus = "betting" | "acting" | "stand" | "bust" | "done";
+export type MpPlayerStatus = "betting" | "waiting" | "acting" | "stand" | "bust" | "done";
 
 export interface MpPlayerState {
   bet: number;
@@ -49,6 +49,7 @@ export interface MpTableDoc {
   tableNum: number;
   status: MpTableStatus;
   players: Record<string, MpPlayerState>;
+  activePlayer: string | null;
   dealer: MpDealerState;
   roundStartedAt: Timestamp | null;
   updatedAt?: Timestamp;
@@ -67,6 +68,7 @@ function createTableDoc(tableNum: number): MpTableDoc {
     tableNum,
     status: "betting",
     players: {},
+    activePlayer: null,
     dealer: emptyDealer(),
     roundStartedAt: null,
     updatedAt: Timestamp.now(),
@@ -84,6 +86,20 @@ function drawCard(deck: Card[], faceDown = false): [Card, Card[]] {
 
 function activePlayers(players: Record<string, MpPlayerState>) {
   return Object.entries(players).filter(([, player]) => player.bet > 0);
+}
+
+function nextPlayerToAct(
+  players: Record<string, MpPlayerState>,
+  fromJoinedAt?: Timestamp
+): string | null {
+  const ordered = Object.entries(players)
+    .filter(([, player]) => player.bet > 0 && (player.status === "waiting" || player.status === "acting"))
+    .sort(([, a], [, b]) => a.joinedAt.toMillis() - b.joinedAt.toMillis());
+
+  if (ordered.length === 0) return null;
+  if (!fromJoinedAt) return ordered[0][0];
+
+  return ordered.find(([, player]) => player.joinedAt.toMillis() > fromJoinedAt.toMillis())?.[0] ?? ordered[0][0];
 }
 
 export async function seedMultiplayerTables(): Promise<void> {
@@ -170,8 +186,9 @@ export async function leaveTable(tableId: string, username: string): Promise<voi
       {
         players,
         status: resetRound ? "betting" : table.status,
+        activePlayer: resetRound ? null : (table.activePlayer === username ? nextPlayerToAct(players) : table.activePlayer),
         dealer: resetRound ? emptyDealer() : table.dealer,
-        roundStartedAt: resetRound ? null : table.roundStartedAt,
+        roundStartedAt: resetRound ? null : (table.activePlayer === username ? Timestamp.now() : table.roundStartedAt),
         updatedAt: serverTimestamp(),
       },
       { merge: true }
@@ -239,7 +256,15 @@ export async function startRound(tableId: string): Promise<void> {
         hand,
         handValue: value,
         payout: 0,
-        status: value >= 21 ? (value > 21 ? "bust" : "stand") : "acting",
+        status: value >= 21 ? (value > 21 ? "bust" : "stand") : "waiting",
+      };
+    }
+
+    const firstToAct = nextPlayerToAct(players);
+    if (firstToAct) {
+      players[firstToAct] = {
+        ...players[firstToAct],
+        status: "acting",
       };
     }
 
@@ -258,6 +283,7 @@ export async function startRound(tableId: string): Promise<void> {
           faceDown: true,
         },
         status: "playing",
+        activePlayer: firstToAct,
         roundStartedAt: Timestamp.now(),
         updatedAt: serverTimestamp(),
       },
@@ -286,7 +312,7 @@ export async function playerAction(tableId: string, username: string, action: "h
 
     const players = clonePlayers(table.players);
     const player = players[username];
-    if (!player || player.status !== "acting") return;
+    if (!player || player.status !== "acting" || table.activePlayer !== username) return;
 
     if (action === "stand") {
       players[username] = { ...player, status: "stand" };
@@ -311,8 +337,20 @@ export async function playerAction(tableId: string, username: string, action: "h
         status: value > 21 ? "bust" : value === 21 ? "stand" : "acting",
       };
     }
+    let activePlayer: string | null = table.activePlayer;
+    const current = players[username];
+    if (!current || current.status === "stand" || current.status === "bust") {
+      const currentJoinedAt = current?.joinedAt ?? player.joinedAt;
+      activePlayer = nextPlayerToAct(players, currentJoinedAt);
+      if (activePlayer) {
+        players[activePlayer] = {
+          ...players[activePlayer],
+          status: "acting",
+        };
+      }
+    }
 
-    tx.set(ref, { players, updatedAt: serverTimestamp() }, { merge: true });
+    tx.set(ref, { players, activePlayer, roundStartedAt: activePlayer !== table.activePlayer ? Timestamp.now() : table.roundStartedAt, updatedAt: serverTimestamp() }, { merge: true });
   });
 }
 
@@ -365,6 +403,7 @@ export async function resolveDealer(tableId: string): Promise<void> {
           faceDown: false,
         },
         status: "results",
+        activePlayer: null,
         roundStartedAt: Timestamp.now(),
         updatedAt: serverTimestamp(),
       },
@@ -401,6 +440,30 @@ export async function resetTableForNextRound(tableId: string): Promise<void> {
         players,
         dealer: emptyDealer(),
         status: "betting",
+        activePlayer: null,
+        roundStartedAt: null,
+        updatedAt: serverTimestamp(),
+      },
+      { merge: true }
+    );
+  });
+}
+
+export async function clearTable(tableId: string): Promise<void> {
+  await runTransaction(getDb(), async (tx) => {
+    const ref = tableRef(tableId);
+    const snap = await tx.get(ref);
+    if (!snap.exists()) return;
+    const table = snap.data() as MpTableDoc;
+
+    tx.set(
+      ref,
+      {
+        ...table,
+        players: {},
+        dealer: emptyDealer(),
+        status: "betting",
+        activePlayer: null,
         roundStartedAt: null,
         updatedAt: serverTimestamp(),
       },
