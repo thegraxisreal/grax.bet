@@ -85,19 +85,19 @@ export default function MultiplayerBlackjackPage() {
     if (!selectedTableId || !username || !isSeated) return;
 
     let didLeave = false;
-    const leave = () => {
+    const leaveSafely = () => {
       if (didLeave) return;
       didLeave = true;
-    const leave = () => {
       void leaveTable(selectedTableId, username);
     };
 
-    window.addEventListener("beforeunload", leave);
-    window.addEventListener("pagehide", leave);
+    window.addEventListener("beforeunload", leaveSafely);
+    window.addEventListener("pagehide", leaveSafely);
+
     return () => {
-      leave();
-      window.removeEventListener("beforeunload", leave);
-      window.removeEventListener("pagehide", leave);
+      leaveSafely();
+      window.removeEventListener("beforeunload", leaveSafely);
+      window.removeEventListener("pagehide", leaveSafely);
     };
   }, [isSeated, selectedTableId, username]);
 
@@ -119,40 +119,44 @@ export default function MultiplayerBlackjackPage() {
 
   useEffect(() => {
     if (!selectedTable || !username) return;
-    const player = selectedTable.players?.[username];
-    const started = selectedTable.roundStartedAt?.toMillis() ?? 0;
-    const elapsed = started ? now - started : 0;
 
-    if (selectedTable.status === "betting" && started && elapsed >= MP_BETTING_MS) {
+    const player = selectedTable.players?.[username];
+    const tableId = `table-${selectedTable.tableNum}`;
+    const startedAtMs = selectedTable.roundStartedAt?.toMillis() ?? 0;
+    const elapsed = startedAtMs > 0 ? now - startedAtMs : 0;
+
+    if (selectedTable.status === "betting" && startedAtMs > 0 && elapsed >= MP_BETTING_MS) {
       const activeCount = Object.values(selectedTable.players ?? {}).filter((p) => p.bet > 0).length;
+
       if (player && player.bet <= 0) {
         if (balance >= MP_MIN_BET) {
           subtractBalance(MP_MIN_BET);
-          previousBetRef.current[`table-${selectedTable.tableNum}`] = MP_MIN_BET;
-          void autoBetOrRemove(`table-${selectedTable.tableNum}`, username, true);
+          previousBetRef.current[tableId] = MP_MIN_BET;
+          void autoBetOrRemove(tableId, username, true);
         } else {
-          void autoBetOrRemove(`table-${selectedTable.tableNum}`, username, false);
+          void autoBetOrRemove(tableId, username, false);
         }
       } else if (activeCount > 0) {
-        void startRound(`table-${selectedTable.tableNum}`);
+        void startRound(tableId);
       }
     }
 
     if (selectedTable.status === "playing") {
       if (selectedTable.activePlayer === username && player?.status === "acting" && elapsed >= MP_ACTING_MS) {
-      if (player?.status === "acting" && elapsed >= MP_ACTING_MS) {
-        void playerAction(`table-${selectedTable.tableNum}`, username, "stand");
+        void playerAction(tableId, username, "stand");
       }
+
       const everyoneDone = Object.values(selectedTable.players ?? {})
         .filter((p) => p.bet > 0)
         .every((p) => p.status === "stand" || p.status === "bust" || p.status === "done");
+
       if (everyoneDone) {
-        void resolveDealer(`table-${selectedTable.tableNum}`);
+        void resolveDealer(tableId);
       }
     }
 
-    if (selectedTable.status === "results" && started && elapsed >= MP_RESULTS_MS) {
-      void resetTableForNextRound(`table-${selectedTable.tableNum}`);
+    if (selectedTable.status === "results" && startedAtMs > 0 && elapsed >= MP_RESULTS_MS) {
+      void resetTableForNextRound(tableId);
     }
   }, [balance, now, selectedTable, subtractBalance, username]);
 
