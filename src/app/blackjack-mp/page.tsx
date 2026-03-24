@@ -293,7 +293,7 @@ export default function MultiplayerBlackjackPage() {
                 position: "relative",
                 overflow: "hidden",
               }}>
-                <div style={{ position: "absolute", top: 16, right: 16, display: "flex", gap: 8, zIndex: 5 }}>
+                <div style={{ position: "absolute", top: 56, right: 24, display: "flex", gap: 8, zIndex: 8 }}>
                   {tableTimer && <div style={{ padding: "6px 10px", borderRadius: 999, background: "rgba(240,180,41,0.15)", color: "var(--accent-gold)", fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase" }}>{tableTimer}</div>}
                   <button type="button" onClick={() => void handleLeave()} style={{ padding: "8px 12px", borderRadius: 10, border: "1px solid rgba(248,113,113,0.35)", background: "rgba(248,113,113,0.12)", color: "#fecaca", fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.08em", textTransform: "uppercase", cursor: "pointer" }}>Leave</button>
                 </div>

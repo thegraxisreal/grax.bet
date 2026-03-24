@@ -441,7 +441,7 @@ export default function BlackjackPage() {
           overflow: "hidden",
           minHeight: 0,
         }}>
-          <div style={{ position: "absolute", top: 18, right: 18, zIndex: 5 }}>
+          <div style={{ position: "absolute", top: 56, right: 24, zIndex: 8 }}>
             <Link
               href="/blackjack-mp"
               style={{
