@@ -88,6 +88,7 @@ export default function MultiplayerBlackjackPage() {
     const leave = () => {
       if (didLeave) return;
       didLeave = true;
+    const leave = () => {
       void leaveTable(selectedTableId, username);
     };
 
@@ -139,6 +140,7 @@ export default function MultiplayerBlackjackPage() {
 
     if (selectedTable.status === "playing") {
       if (selectedTable.activePlayer === username && player?.status === "acting" && elapsed >= MP_ACTING_MS) {
+      if (player?.status === "acting" && elapsed >= MP_ACTING_MS) {
         void playerAction(`table-${selectedTable.tableNum}`, username, "stand");
       }
       const everyoneDone = Object.values(selectedTable.players ?? {})
