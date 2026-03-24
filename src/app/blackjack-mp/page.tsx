@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useBalance } from "@/context/BalanceContext";
 import { useUser } from "@/context/UserContext";
+import { CasinoChip } from "@/components/CasinoChip";
+import CollapsibleBetSelector from "@/components/CollapsibleBetSelector";
 import PlayingCard from "@/components/PlayingCard";
 import { fmtMoney } from "@/lib/format";
 import {
@@ -48,7 +50,7 @@ export default function MultiplayerBlackjackPage() {
   const { balance, addBalance, subtractBalance } = useBalance();
   const [tables, setTables] = useState<MpTableDoc[]>([]);
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
-  const [betInput, setBetInput] = useState(String(MP_MIN_BET));
+  const [betInput, setBetInput] = useState<number>(MP_MIN_BET);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -203,6 +205,10 @@ export default function MultiplayerBlackjackPage() {
     }
   }, [addBalance, balance, betInput, me?.bet, selectedTableId, subtractBalance, username]);
 
+  const handleAddBet = useCallback((amount: number) => {
+    setBetInput((current) => Math.max(MP_MIN_BET, Math.round((current + amount) * 100) / 100));
+  }, []);
+
   const handleAction = useCallback(async (action: "hit" | "stand") => {
     if (!selectedTableId || !username) return;
     setBusy(true);
@@ -273,78 +279,102 @@ export default function MultiplayerBlackjackPage() {
             {loading && <p style={{ color: "var(--text-muted)" }}>Loading tables...</p>}
           </>
         ) : selectedTable ? (
-          <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) 320px", gap: 20, alignItems: "start" }}>
-            <div style={{ borderRadius: 24, padding: 24, background: "linear-gradient(180deg, rgba(16,25,35,0.98), rgba(9,15,22,0.98))", border: "1px solid rgba(240,180,41,0.15)", boxShadow: "0 20px 50px rgba(0,0,0,0.38)" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, flexWrap: "wrap", marginBottom: 22 }}>
-                <div>
-                  <div style={{ color: "var(--accent-gold)", fontFamily: "'Barlow Condensed', sans-serif", textTransform: "uppercase", letterSpacing: "0.12em" }}>Table {selectedTable.tableNum}</div>
-                  <div style={{ color: "var(--text-secondary)" }}>{seatedCount(selectedTable)} / {MP_MAX_SEATS} players seated</div>
+          <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) 320px", gap: 20 }}>
+            <div style={{ display: "flex", flexDirection: "column", minHeight: "72vh" }}>
+              <div className="bj-felt-table" style={{
+                flex: 1,
+                borderRadius: "160px 160px 0 0",
+                background: "radial-gradient(ellipse at 50% 20%, #236b3b 0%, #1a5230 40%, #0e3b1c 100%)",
+                border: "2px solid rgba(240,180,41,0.3)",
+                borderBottom: "none",
+                boxShadow: "0 0 60px rgba(0,0,0,0.8) inset, 0 0 30px rgba(0,0,0,0.6)",
+                display: "flex",
+                flexDirection: "column",
+                position: "relative",
+                overflow: "hidden",
+              }}>
+                <div style={{ position: "absolute", top: 16, right: 16, display: "flex", gap: 8, zIndex: 5 }}>
+                  {tableTimer && <div style={{ padding: "6px 10px", borderRadius: 999, background: "rgba(240,180,41,0.15)", color: "var(--accent-gold)", fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase" }}>{tableTimer}</div>}
+                  <button type="button" onClick={() => void handleLeave()} style={{ padding: "8px 12px", borderRadius: 10, border: "1px solid rgba(248,113,113,0.35)", background: "rgba(248,113,113,0.12)", color: "#fecaca", fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.08em", textTransform: "uppercase", cursor: "pointer" }}>Leave</button>
                 </div>
-                <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-                  <div style={{ padding: "8px 12px", borderRadius: 999, background: "rgba(255,255,255,0.06)", fontFamily: "'Barlow Condensed', sans-serif", textTransform: "uppercase", letterSpacing: "0.1em", color: selectedTable.status === "playing" ? "var(--accent-gold)" : "var(--text-secondary)" }}>{selectedTable.status}</div>
-                  {tableTimer && <div style={{ padding: "8px 12px", borderRadius: 999, background: "rgba(240,180,41,0.12)", color: "var(--accent-gold)", fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.12em", textTransform: "uppercase" }}>Timer {tableTimer}</div>}
-                  <button type="button" onClick={() => void handleLeave()} style={{ padding: "10px 14px", borderRadius: 12, border: "1px solid rgba(248,113,113,0.35)", background: "rgba(248,113,113,0.12)", color: "#fecaca", cursor: "pointer", fontFamily: "'Barlow Condensed', sans-serif", textTransform: "uppercase", letterSpacing: "0.08em" }}>Leave</button>
-                </div>
-              </div>
 
-              <div style={{ marginBottom: 28, padding: 20, borderRadius: 20, background: "radial-gradient(circle at center, rgba(24,78,49,0.45), rgba(8,24,16,0.85))", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <div style={{ marginBottom: 10, color: "var(--text-muted)", fontFamily: "'Barlow Condensed', sans-serif", textTransform: "uppercase", letterSpacing: "0.16em" }}>Dealer {selectedTable.dealer.handValue ? `• ${selectedTable.dealer.faceDown ? "?" : selectedTable.dealer.handValue}` : ""}</div>
-                <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                  {selectedTable.dealer.hand.length > 0 ? selectedTable.dealer.hand.map((card, index) => <PlayingCard key={`${card.rank}${card.suit}${index}`} card={card} index={index} faceDown={selectedTable.dealer.faceDown && index === 1} />) : <div style={{ color: "var(--text-muted)" }}>Waiting for bets...</div>}
-                </div>
-              </div>
-
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16 }}>
-                {Object.entries(selectedTable.players ?? {}).map(([playerName, player]) => (
-                  <div key={playerName} style={{ borderRadius: 18, padding: 18, background: playerName === username ? "rgba(240,180,41,0.08)" : "rgba(255,255,255,0.03)", border: playerName === username ? "1px solid rgba(240,180,41,0.35)" : "1px solid rgba(255,255,255,0.08)" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, marginBottom: 12 }}>
-                      <div>
-                        <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "1.15rem", letterSpacing: "0.04em", textTransform: "uppercase" }}>{playerName}</div>
-                        <div style={{ color: "var(--text-secondary)", fontSize: "0.92rem" }}>Bet ${fmtMoney(player.bet)} • {player.handValue || 0}</div>
-                      </div>
-                      <span style={{ color: playerTone(player.status), fontFamily: "'Barlow Condensed', sans-serif", textTransform: "uppercase", letterSpacing: "0.1em" }}>{player.status}</span>
-                    </div>
-                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap", minHeight: 124, alignItems: "center" }}>
-                      {player.hand.length > 0 ? player.hand.map((card, index) => <PlayingCard key={`${playerName}-${card.rank}${card.suit}-${index}`} card={card} index={index} />) : <div style={{ color: "var(--text-muted)" }}>No cards dealt yet.</div>}
-                    </div>
-                    {selectedTable.status === "results" && player.status === "done" && (
-                      <div style={{ marginTop: 12, color: player.payout > 0 ? "var(--accent-green)" : "#fca5a5", fontFamily: "'Barlow Condensed', sans-serif", textTransform: "uppercase", letterSpacing: "0.1em" }}>
-                        Payout: ${fmtMoney(player.payout)}
-                      </div>
-                    )}
+                <div style={{ paddingTop: 48, display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+                  <div style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)", fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.2em", textTransform: "uppercase" }}>
+                    Dealer {selectedTable.dealer.handValue ? `• ${selectedTable.dealer.faceDown ? "?" : selectedTable.dealer.handValue}` : ""}
                   </div>
-                ))}
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center", minHeight: 120 }}>
+                    {selectedTable.dealer.hand.length === 0 ? [0, 1].map((i) => (
+                      <div key={i} style={{ width: 80, height: 120, borderRadius: 8, border: "2px dashed rgba(255,255,255,0.12)", background: "rgba(0,0,0,0.15)" }} />
+                    )) : selectedTable.dealer.hand.map((card, index) => (
+                      <PlayingCard key={`${card.rank}${card.suit}${index}`} card={card} index={index} faceDown={selectedTable.dealer.faceDown && index === 1} />
+                    ))}
+                  </div>
+                </div>
+
+                <div style={{ margin: "12px 60px", height: 1, background: "linear-gradient(90deg, transparent, rgba(240,180,41,0.2), transparent)" }} />
+
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 14, padding: "0 16px 16px" }}>
+                  {Object.entries(selectedTable.players ?? {}).map(([playerName, player]) => (
+                    <div key={playerName} style={{ borderRadius: 12, border: playerName === username ? "2px solid rgba(240,180,41,0.4)" : "1px solid rgba(255,255,255,0.1)", background: playerName === username ? "rgba(240,180,41,0.08)" : "rgba(0,0,0,0.2)", padding: 10 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                        <div style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.06em", textTransform: "uppercase" }}>{playerName}</div>
+                        <div style={{ color: playerTone(player.status), fontSize: "0.85rem", fontFamily: "'Barlow Condensed', sans-serif", textTransform: "uppercase", letterSpacing: "0.08em" }}>{player.status}</div>
+                      </div>
+                      <div style={{ display: "flex", gap: 6, minHeight: 96, flexWrap: "wrap" }}>
+                        {player.hand.length === 0 ? [0, 1].map((i) => (
+                          <div key={i} style={{ width: 64, height: 96, borderRadius: 8, border: "2px dashed rgba(255,255,255,0.12)", background: "rgba(0,0,0,0.15)" }} />
+                        )) : player.hand.map((card, index) => (
+                          <PlayingCard key={`${playerName}-${card.rank}${card.suit}-${index}`} card={card} index={index} />
+                        ))}
+                      </div>
+                      <div style={{ marginTop: 8, color: "var(--text-secondary)", fontSize: "0.9rem" }}>
+                        Bet ${fmtMoney(player.bet)} • {player.handValue || 0}
+                        {selectedTable.status === "results" && player.status === "done" ? ` • Payout $${fmtMoney(player.payout)}` : ""}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               {me && (
-                <div style={{ marginTop: 24, padding: 18, borderRadius: 18, background: "var(--bg-secondary)", border: "1px solid rgba(255,255,255,0.08)" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center", flexWrap: "wrap", marginBottom: 14 }}>
-                    <div>
-                      <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "1.2rem", textTransform: "uppercase", letterSpacing: "0.06em" }}>Your controls</div>
-                      <div style={{ color: "var(--text-secondary)" }}>Auto-bet minimum after 15s. Auto-stand after 20s.</div>
-                    </div>
-                    <div style={{ color: "var(--text-muted)", fontFamily: "'Barlow Condensed', sans-serif", textTransform: "uppercase", letterSpacing: "0.1em" }}>Current bet ${fmtMoney(me.bet)}</div>
-                  </div>
-
+                <div className="bj-controls" style={{ background: "var(--bg-secondary)", borderTop: "1px solid var(--border-color)", padding: "16px 20px", display: "flex", flexDirection: "column", gap: 12 }}>
                   {selectedTable.status === "betting" ? (
-                    <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-                      <input value={betInput} onChange={(e) => setBetInput(e.target.value)} type="number" min={MP_MIN_BET} step="1" style={{ width: 140, padding: "12px 14px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.05)", color: "var(--text-primary)", fontFamily: "'Barlow Condensed', sans-serif", fontSize: "1rem" }} />
-                      <button type="button" disabled={busy} onClick={() => void handlePlaceBet()} style={{ padding: "12px 16px", borderRadius: 12, border: "1px solid rgba(240,180,41,0.45)", background: "rgba(240,180,41,0.12)", color: "var(--accent-gold)", cursor: "pointer", fontFamily: "'Barlow Condensed', sans-serif", textTransform: "uppercase", letterSpacing: "0.08em" }}>Place Bet</button>
-                    </div>
+                    <>
+                      <CollapsibleBetSelector>
+                        <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
+                          {[1, 5, 10, 25].map((value) => (
+                            <CasinoChip key={value} value={value} onClick={handleAddBet} disabled={value > balance} />
+                          ))}
+                        </div>
+                      </CollapsibleBetSelector>
+
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, flexWrap: "wrap" }}>
+                        <div style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: 8, padding: "8px 14px", display: "flex", alignItems: "center", gap: 8, minWidth: 140 }}>
+                          <span style={{ color: "var(--text-muted)", fontSize: "0.75rem", fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.1em" }}>$</span>
+                          <input type="number" min={MP_MIN_BET} step="1" value={betInput || ""} onChange={(e) => setBetInput(Math.max(MP_MIN_BET, Number(e.target.value) || MP_MIN_BET))} style={{ flex: 1, background: "none", border: "none", outline: "none", fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "1.1rem", color: "var(--text-primary)", width: 60 }} />
+                        </div>
+                        <button type="button" className="btn-primary" disabled={busy || betInput > balance} onClick={() => void handlePlaceBet()} style={{ minWidth: 130 }}>PLACE BET</button>
+                      </div>
+                    </>
                   ) : selectedTable.status === "playing" ? (
-                    <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                      <button type="button" disabled={busy || me.status !== "acting"} onClick={() => void handleAction("hit")} style={{ padding: "12px 16px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.06)", color: "var(--text-primary)", cursor: "pointer", fontFamily: "'Barlow Condensed', sans-serif", textTransform: "uppercase", letterSpacing: "0.08em" }}>Hit</button>
-                      <button type="button" disabled={busy || me.status !== "acting"} onClick={() => void handleAction("stand")} style={{ padding: "12px 16px", borderRadius: 12, border: "1px solid rgba(240,180,41,0.45)", background: "rgba(240,180,41,0.12)", color: "var(--accent-gold)", cursor: "pointer", fontFamily: "'Barlow Condensed', sans-serif", textTransform: "uppercase", letterSpacing: "0.08em" }}>Stand</button>
+                    <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+                      <button type="button" className="btn-action" disabled={busy || me.status !== "acting"} onClick={() => void handleAction("hit")} style={{ minWidth: 100 }}>HIT</button>
+                      <button type="button" className="btn-primary" disabled={busy || me.status !== "acting"} onClick={() => void handleAction("stand")} style={{ minWidth: 100 }}>STAND</button>
                     </div>
                   ) : (
-                    <div style={{ color: "var(--text-secondary)" }}>Waiting for the table to cycle to the next betting window.</div>
+                    <div style={{ textAlign: "center", color: "var(--text-secondary)", fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                      Waiting for next betting window...
+                    </div>
                   )}
                 </div>
               )}
             </div>
 
             <aside style={{ borderRadius: 24, padding: 20, background: "var(--bg-secondary)", border: "1px solid rgba(255,255,255,0.08)", position: "sticky", top: 20 }}>
-              <div style={{ marginBottom: 16, fontFamily: "'Barlow Condensed', sans-serif", fontSize: "1.25rem", textTransform: "uppercase", letterSpacing: "0.08em" }}>Players</div>
+              <div style={{ marginBottom: 10, color: "var(--accent-gold)", fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.08em", textTransform: "uppercase", fontSize: "1.1rem" }}>
+                Table {selectedTable.tableNum} • {selectedTable.status}
+              </div>
+              <div style={{ marginBottom: 16, color: "var(--text-secondary)" }}>{seatedCount(selectedTable)} / {MP_MAX_SEATS} players seated</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {Object.entries(selectedTable.players ?? {}).map(([playerName, player]) => (
                   <div key={`sidebar-${playerName}`} style={{ display: "grid", gridTemplateColumns: "42px 1fr", gap: 12, alignItems: "start", padding: 12, borderRadius: 14, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
