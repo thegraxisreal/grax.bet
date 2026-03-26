@@ -9,6 +9,7 @@ interface NavItem {
   href: string;
   locked?: boolean;
   live?: boolean;
+  promo?: string;
   icon: React.ReactNode;
 }
 
@@ -262,7 +263,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Mines",     href: "/mines",     icon: <MinesIcon /> },
   { label: "Plinko",        href: "/plinko",       icon: <PlinkoIcon /> },
   { label: "Horse Racing",  href: "/horse-racing",  icon: <HorseRacingIcon />, locked: true },
-  { label: "Bomb Defuse",   href: "/bomb-defuse",   icon: <BombDefuseIcon /> },
+  { label: "Bomb Defuse",   href: "/bomb-defuse",   icon: <BombDefuseIcon />, promo: "2X MONEY" },
   { label: "Chicken",       href: "/chicken",       icon: <ChickenIcon />,     locked: true },
 ];
 
@@ -354,6 +355,23 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                   textTransform: "uppercase",
                 }}>
                   Live Bets
+                </span>
+              )}
+              {item.promo && !isActive && !item.live && (
+                <span style={{
+                  background: "linear-gradient(135deg, #22c55e, #06b6d4)",
+                  borderRadius: "10px",
+                  padding: "1px 8px",
+                  fontSize: "0.56rem",
+                  letterSpacing: "0.1em",
+                  color: "#04121d",
+                  fontWeight: 800,
+                  marginLeft: "auto",
+                  boxShadow: "0 0 8px rgba(34,197,94,0.55), 0 0 20px rgba(6,182,212,0.3)",
+                  animation: "glow-pulse 1.8s ease-in-out infinite",
+                  textTransform: "uppercase",
+                }}>
+                  {item.promo}
                 </span>
               )}
               {isActive && (
