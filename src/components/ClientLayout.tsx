@@ -8,6 +8,8 @@ import Header from "@/components/Header";
 import BrokeModal from "@/components/BrokeModal";
 import UsernameModal from "@/components/UsernameModal";
 import ActivityFeed from "@/components/ActivityFeed";
+import WinShareButton from "@/components/WinShareButton";
+import SlotsAnnouncementModal from "@/components/SlotsAnnouncementModal";
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -52,6 +54,8 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       <BrokeModal />
       <UsernameModal />
       <ActivityFeed />
+      <WinShareButton />
+      <SlotsAnnouncementModal />
     </BalanceProvider>
     </UserProvider>
   );

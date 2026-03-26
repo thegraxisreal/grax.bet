@@ -6,6 +6,7 @@ import {
   runTransaction,
   serverTimestamp,
   setDoc,
+  updateDoc,
   type Unsubscribe,
 } from "firebase/firestore";
 import {
@@ -26,6 +27,8 @@ export const MP_MAX_SEATS = 5;
 export const MP_BETTING_MS = 15_000;
 export const MP_ACTING_MS = 20_000;
 export const MP_RESULTS_MS = 5_000;
+export const HEARTBEAT_INTERVAL_MS = 8_000;
+export const HEARTBEAT_TIMEOUT_MS = 20_000;
 
 export type MpTableStatus = "betting" | "playing" | "resolving" | "results";
 export type MpPlayerStatus = "betting" | "waiting" | "acting" | "stand" | "bust" | "done";
@@ -37,6 +40,7 @@ export interface MpPlayerState {
   status: MpPlayerStatus;
   payout: number;
   joinedAt: Timestamp;
+  lastHeartbeat?: Timestamp;
 }
 
 export interface MpDealerState {
@@ -486,4 +490,14 @@ export function getRoundTimeRemaining(table: MpTableDoc): number {
 
 export function seatedCount(table: MpTableDoc): number {
   return Object.keys(table.players ?? {}).length;
+}
+
+export async function sendHeartbeat(tableId: string, username: string): Promise<void> {
+  try {
+    await updateDoc(tableRef(tableId), {
+      [`players.${username}.lastHeartbeat`]: serverTimestamp(),
+    });
+  } catch {
+    // Player may have already left — ignore
+  }
 }

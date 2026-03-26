@@ -137,6 +137,16 @@ function PlinkoIcon() {
   );
 }
 
+function ChatIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+      <path d="M3 4.5h16a1 1 0 011 1v9a1 1 0 01-1 1H7.5L3 19V5.5a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinejoin="round"/>
+      <line x1="7" y1="9" x2="15" y2="9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" opacity="0.7"/>
+      <line x1="7" y1="12" x2="12" y2="12" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" opacity="0.5"/>
+    </svg>
+  );
+}
+
 function LeaderboardIcon() {
   return (
     <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
@@ -157,6 +167,47 @@ function LockIcon() {
     <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor" opacity="0.7">
       <rect x="2" y="5.5" width="8" height="5.5" rx="1.5"/>
       <path d="M3.5 5.5V4a2.5 2.5 0 015 0v1.5" stroke="currentColor" strokeWidth="1.2" fill="none"/>
+    </svg>
+  );
+}
+
+function HorseRacingIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+      <ellipse cx="13" cy="13" rx="6" ry="4" stroke="currentColor" strokeWidth="1.4" fill="none"/>
+      <circle cx="7" cy="10" r="2.5" stroke="currentColor" strokeWidth="1.4" fill="none"/>
+      <path d="M9 10 L13 9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+      <path d="M7 17 L7 20" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+      <path d="M10 17 L10 20" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+      <path d="M16 17 L16 20" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+      <path d="M19 17 L19 20" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+      <path d="M7 8 Q8 5 11 5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" fill="none"/>
+    </svg>
+  );
+}
+
+function BombDefuseIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+      <circle cx="11" cy="13" r="6.5" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+      <circle cx="11" cy="13" r="3" fill="currentColor" opacity="0.6"/>
+      <path d="M11 6.5 L11 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+      <path d="M14 5 Q16 3 18 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" fill="none" opacity="0.8"/>
+      <circle cx="18" cy="4" r="1.2" fill="currentColor" opacity="0.9"/>
+      <line x1="8" y1="10" x2="14" y2="10" stroke="currentColor" strokeWidth="1" opacity="0.5" strokeLinecap="round"/>
+    </svg>
+  );
+}
+
+function ChickenIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+      <ellipse cx="11" cy="13" rx="5" ry="4" stroke="currentColor" strokeWidth="1.4" fill="none"/>
+      <circle cx="11" cy="7.5" r="3" stroke="currentColor" strokeWidth="1.4" fill="none"/>
+      <path d="M9 7 L7 6 L8 8" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M8 17 L7 20" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+      <path d="M14 17 L15 20" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+      <path d="M11 10.5 L11 9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
     </svg>
   );
 }
@@ -202,13 +253,17 @@ function SidebarLogo() {
 const NAV_ITEMS: NavItem[] = [
   { label: "Home",         href: "/",            icon: <HomeIcon /> },
   { label: "Leaderboard",  href: "/leaderboard", icon: <LeaderboardIcon /> },
+  { label: "Chat",         href: "/chat",        icon: <ChatIcon /> },
   { label: "Blackjack",    href: "/blackjack",   icon: <BlackjackIcon /> },
-  { label: "Slots",     href: "/slots",     icon: <SlotsIcon />,   locked: true },
+  { label: "Slots",     href: "/slots",     icon: <SlotsIcon /> },
   { label: "Roulette",  href: "/roulette",  icon: <RouletteIcon /> },
   { label: "Crash",     href: "/crash",     icon: <CrashIcon /> },
   { label: "March Madness", href: "/sports",    icon: <SportsIcon />, live: true },
   { label: "Mines",     href: "/mines",     icon: <MinesIcon /> },
-  { label: "Plinko",    href: "/plinko",    icon: <PlinkoIcon /> },
+  { label: "Plinko",        href: "/plinko",       icon: <PlinkoIcon /> },
+  { label: "Horse Racing",  href: "/horse-racing",  icon: <HorseRacingIcon />, locked: true },
+  { label: "Bomb Defuse",   href: "/bomb-defuse",   icon: <BombDefuseIcon />,  locked: true },
+  { label: "Chicken",       href: "/chicken",       icon: <ChickenIcon />,     locked: true },
 ];
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
