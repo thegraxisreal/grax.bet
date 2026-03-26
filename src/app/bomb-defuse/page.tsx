@@ -255,7 +255,7 @@ export default function BombDefusePage() {
         {(state.phase === "dead" || state.phase === "cashout") && (
           <>
             <div style={{ textAlign: "center", paddingTop: 4 }}>
-              <div style={{ ...label, color: state.phase === "cashout" ? "#4ade80" : "#fca5a5" }}>{state.phase === "cashout" ? "Bomb Defused" : "Detonation"}</div>
+              <div style={{ ...labelTextStyle, color: state.phase === "cashout" ? "#4ade80" : "#fca5a5" }}>{state.phase === "cashout" ? "Bomb Defused" : "Detonation"}</div>
               <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "2.1rem", fontWeight: 800, color: state.phase === "cashout" ? "#4ade80" : "#f87171", lineHeight: 1 }}>
                 {state.phase === "cashout" ? `+$${fmtMoney(state.finalPayout - state.bet)}` : `-$${fmtMoney(state.bet)}`}
               </div>
@@ -422,7 +422,7 @@ function ExplosionOverlay() {
 }
 
 function Label({ children }: { children: ReactNode }) {
-  return <div style={label}>{children}</div>;
+  return <div style={labelTextStyle}>{children}</div>;
 }
 
 function PanelDivider() {
@@ -433,7 +433,7 @@ function Stat({ label, value, accent }: { label: string; value: string; accent?:
   const color = accent === "green" ? "#4ade80" : accent === "gold" ? "var(--accent-gold)" : "var(--text-primary)";
   return (
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-      <span style={label}>{label}</span>
+      <span style={labelTextStyle}>{label}</span>
       <span style={{ color, fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.95rem" }}>{value}</span>
     </div>
   );
@@ -495,7 +495,7 @@ const headerBoardStyle: CSSProperties = {
   padding: "0 10px",
 };
 
-const label: CSSProperties = {
+const labelTextStyle: CSSProperties = {
   fontFamily: "'Barlow Condensed', sans-serif",
   fontSize: "0.65rem",
   letterSpacing: "0.16em",
