@@ -54,27 +54,64 @@ export function playWireCut() {
 
 export function playExplosion() {
   try {
-    playTone(92, 0.45, "sawtooth", 0.22);
-    playTone(60, 0.55, "sawtooth", 0.2, 0.03);
-
     const ctx = resumeCtx();
-    const size = Math.floor(ctx.sampleRate * 0.35);
+
+    // Initial blast layers
+    playTone(82, 0.75, "sawtooth", 0.28);
+    playTone(58, 0.85, "sawtooth", 0.24, 0.02);
+    playTone(130, 0.24, "square", 0.16, 0.01);
+
+    // Crack transient
+    const crack = ctx.createOscillator();
+    const crackGain = ctx.createGain();
+    crack.type = "triangle";
+    crack.frequency.setValueAtTime(1800, ctx.currentTime);
+    crack.frequency.exponentialRampToValueAtTime(250, ctx.currentTime + 0.12);
+    crackGain.gain.setValueAtTime(0.22, ctx.currentTime);
+    crackGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.14);
+    crack.connect(crackGain);
+    crackGain.connect(ctx.destination);
+    crack.start();
+    crack.stop(ctx.currentTime + 0.14);
+
+    // Distorted noise burst + short tail
+    const size = Math.floor(ctx.sampleRate * 0.7);
     const buffer = ctx.createBuffer(1, size, ctx.sampleRate);
     const data = buffer.getChannelData(0);
     for (let i = 0; i < size; i++) {
-      data[i] = (Math.random() * 2 - 1) * (1 - i / size);
+      const t = i / size;
+      const env = t < 0.2 ? 1 : Math.pow(1 - t, 1.5);
+      data[i] = (Math.random() * 2 - 1) * env;
     }
 
     const src = ctx.createBufferSource();
     src.buffer = buffer;
-    const lowpass = ctx.createBiquadFilter();
-    lowpass.type = "lowpass";
-    lowpass.frequency.value = 420;
+
+    const hp = ctx.createBiquadFilter();
+    hp.type = "highpass";
+    hp.frequency.value = 80;
+
+    const lp = ctx.createBiquadFilter();
+    lp.type = "lowpass";
+    lp.frequency.value = 900;
+
+    const drive = ctx.createWaveShaper();
+    const curve = new Float32Array(256);
+    for (let i = 0; i < curve.length; i++) {
+      const x = (i / 128) - 1;
+      curve[i] = Math.tanh(2.8 * x);
+    }
+    drive.curve = curve;
+
     const gainNode = ctx.createGain();
-    gainNode.gain.setValueAtTime(0.35, ctx.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
-    src.connect(lowpass);
-    lowpass.connect(gainNode);
+    gainNode.gain.setValueAtTime(0.45, ctx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.08, ctx.currentTime + 0.25);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.7);
+
+    src.connect(hp);
+    hp.connect(lp);
+    lp.connect(drive);
+    drive.connect(gainNode);
     gainNode.connect(ctx.destination);
     src.start();
   } catch { /* silent fail */ }
