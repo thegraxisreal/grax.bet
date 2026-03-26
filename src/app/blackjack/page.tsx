@@ -445,20 +445,24 @@ export default function BlackjackPage() {
             <Link
               href="/blackjack-mp"
               style={{
-                padding: "8px 12px",
-                borderRadius: 10,
-                border: "1px solid rgba(240,180,41,0.35)",
-                background: "rgba(240,180,41,0.08)",
+                padding: "12px 22px",
+                borderRadius: 12,
+                border: "2px solid rgba(240,180,41,0.6)",
+                background: "rgba(240,180,41,0.15)",
                 color: "var(--accent-gold)",
                 textDecoration: "none",
                 fontFamily: "'Barlow Condensed', sans-serif",
                 fontWeight: 700,
-                letterSpacing: "0.08em",
+                letterSpacing: "0.1em",
                 textTransform: "uppercase",
-                fontSize: "0.82rem",
+                fontSize: "1.05rem",
+                boxShadow: "0 0 18px rgba(240,180,41,0.2)",
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
               }}
             >
-              Multiplayer →
+              👥 Multiplayer
             </Link>
           </div>
 

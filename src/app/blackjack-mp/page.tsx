@@ -9,6 +9,8 @@ import CollapsibleBetSelector from "@/components/CollapsibleBetSelector";
 import PlayingCard from "@/components/PlayingCard";
 import { fmtMoney } from "@/lib/format";
 import {
+  HEARTBEAT_INTERVAL_MS,
+  HEARTBEAT_TIMEOUT_MS,
   MP_ACTING_MS,
   MP_BETTING_MS,
   MP_MAX_SEATS,
@@ -25,6 +27,7 @@ import {
   resolveDealer,
   seedMultiplayerTables,
   seatedCount,
+  sendHeartbeat,
   startRound,
   subscribeTables,
   type MpPlayerState,
@@ -100,6 +103,30 @@ export default function MultiplayerBlackjackPage() {
       window.removeEventListener("pagehide", leaveSafely);
     };
   }, [isSeated, selectedTableId, username]);
+
+  // Send a heartbeat to Firestore every HEARTBEAT_INTERVAL_MS while seated
+  useEffect(() => {
+    if (!isSeated || !selectedTableId || !username) return;
+    void sendHeartbeat(selectedTableId, username);
+    const interval = window.setInterval(() => {
+      void sendHeartbeat(selectedTableId, username);
+    }, HEARTBEAT_INTERVAL_MS);
+    return () => window.clearInterval(interval);
+  }, [isSeated, selectedTableId, username]);
+
+  // Evict players whose heartbeat has gone stale (tab closed without firing beforeunload)
+  useEffect(() => {
+    if (!selectedTable || !username) return;
+    const tableId = `table-${selectedTable.tableNum}`;
+    const staleThreshold = Date.now() - HEARTBEAT_TIMEOUT_MS;
+    for (const [playerName, player] of Object.entries(selectedTable.players ?? {})) {
+      if (playerName === username) continue;
+      const lastSeen = player.lastHeartbeat?.toMillis() ?? 0;
+      if (lastSeen > 0 && lastSeen < staleThreshold) {
+        void leaveTable(tableId, playerName);
+      }
+    }
+  }, [now, selectedTable, username]);
 
   useEffect(() => {
     if (!selectedTable || !username || !selectedTableId) return;
@@ -304,8 +331,7 @@ export default function MultiplayerBlackjackPage() {
             {loading && <p style={{ color: "var(--text-muted)" }}>Loading tables...</p>}
           </>
         ) : selectedTable ? (
-          <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) 320px", gap: 20 }}>
-            <div style={{ display: "flex", flexDirection: "column", minHeight: "72vh" }}>
+          <div style={{ display: "flex", flexDirection: "column", minHeight: "72vh" }}>
               <div className="bj-felt-table" style={{
                 flex: 1,
                 borderRadius: "160px 160px 0 0",
@@ -318,8 +344,9 @@ export default function MultiplayerBlackjackPage() {
                 position: "relative",
                 overflow: "hidden",
               }}>
-                <div style={{ position: "absolute", top: 56, right: 24, display: "flex", gap: 8, zIndex: 8 }}>
+                <div style={{ position: "absolute", top: 56, right: 24, display: "flex", gap: 8, zIndex: 8, alignItems: "center" }}>
                   {tableTimer && <div style={{ padding: "6px 10px", borderRadius: 999, background: "rgba(240,180,41,0.15)", color: "var(--accent-gold)", fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase" }}>{selectedTable.status === "playing" ? `Turn ${tableTimer}` : tableTimer}</div>}
+                  <button type="button" onClick={() => void handleClearTable()} disabled={busy} title="Emergency reset for stuck users" style={{ padding: "6px 10px", borderRadius: 8, border: "1px dashed rgba(248,113,113,0.4)", background: "rgba(248,113,113,0.08)", color: "#fca5a5", fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.08em", textTransform: "uppercase", fontSize: "0.75rem", cursor: "pointer", opacity: 0.85 }}>Reset</button>
                   <button type="button" onClick={() => void handleLeave()} style={{ padding: "8px 12px", borderRadius: 10, border: "1px solid rgba(248,113,113,0.35)", background: "rgba(248,113,113,0.12)", color: "#fecaca", fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.08em", textTransform: "uppercase", cursor: "pointer" }}>Leave</button>
                 </div>
 
@@ -393,57 +420,6 @@ export default function MultiplayerBlackjackPage() {
                   )}
                 </div>
               )}
-            </div>
-
-            <aside style={{ borderRadius: 24, padding: 20, background: "var(--bg-secondary)", border: "1px solid rgba(255,255,255,0.08)", position: "sticky", top: 20 }}>
-              <div style={{ marginBottom: 10, color: "var(--accent-gold)", fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.08em", textTransform: "uppercase", fontSize: "1.1rem" }}>
-                Table {selectedTable.tableNum} • {selectedTable.status}
-              </div>
-              {selectedTable.status === "playing" && selectedTable.activePlayer && (
-                <div style={{ marginBottom: 12, color: "var(--accent-gold)", fontFamily: "'Barlow Condensed', sans-serif", textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                  Turn: {selectedTable.activePlayer}
-                </div>
-              )}
-              <div style={{ marginBottom: 16, color: "var(--text-secondary)" }}>{seatedCount(selectedTable)} / {MP_MAX_SEATS} players seated</div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {Object.entries(selectedTable.players ?? {}).map(([playerName, player]) => (
-                  <div key={`sidebar-${playerName}`} style={{ display: "grid", gridTemplateColumns: "42px 1fr", gap: 12, alignItems: "start", padding: 12, borderRadius: 14, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                    <div style={{ width: 42, height: 42, borderRadius: "50%", display: "grid", placeItems: "center", background: playerName === username ? "rgba(240,180,41,0.18)" : "rgba(255,255,255,0.09)", color: playerName === username ? "var(--accent-gold)" : "var(--text-primary)", fontFamily: "'Barlow Condensed', sans-serif", fontSize: "1.1rem", fontWeight: 700 }}>{playerName.slice(0, 1).toUpperCase()}</div>
-                    <div>
-                      <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "center" }}>
-                        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", textTransform: "uppercase", letterSpacing: "0.06em" }}>{playerName}</span>
-                        <span style={{ color: playerTone(player.status), fontFamily: "'Barlow Condensed', sans-serif", textTransform: "uppercase", fontSize: "0.82rem", letterSpacing: "0.08em" }}>{player.status}</span>
-                      </div>
-                      <div style={{ color: "var(--text-secondary)", fontSize: "0.92rem", marginTop: 4 }}>Bet ${fmtMoney(player.bet)}</div>
-                      <div style={{ color: "var(--text-muted)", fontSize: "0.85rem", marginTop: 4 }}>Hand {player.handValue || 0} • {player.hand.length} cards</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px dashed rgba(255,255,255,0.12)" }}>
-                <button
-                  type="button"
-                  onClick={() => void handleClearTable()}
-                  disabled={busy}
-                  title="Emergency reset for stuck users"
-                  style={{
-                    border: "1px dashed rgba(248,113,113,0.45)",
-                    background: "rgba(248,113,113,0.08)",
-                    color: "#fca5a5",
-                    borderRadius: 8,
-                    padding: "6px 10px",
-                    fontSize: "0.75rem",
-                    cursor: "pointer",
-                    fontFamily: "'Barlow Condensed', sans-serif",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.08em",
-                    opacity: 0.85,
-                  }}
-                >
-                  Clear Table
-                </button>
-              </div>
-            </aside>
           </div>
         ) : null}
       </div>

@@ -402,6 +402,316 @@ function PlinkoArt() {
   );
 }
 
+function HorseRacingArt() {
+  return (
+    <svg viewBox="0 0 200 150" fill="none" style={{ width: "100%", height: "100%" }}>
+      <defs>
+        <linearGradient id="track-grad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#2d5a1b" />
+          <stop offset="100%" stopColor="#1a3a0f" />
+        </linearGradient>
+        <linearGradient id="sky-grad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#1e3a5c" />
+          <stop offset="100%" stopColor="#2a5280" />
+        </linearGradient>
+        <filter id="horse-glow">
+          <feGaussianBlur stdDeviation="3" result="blur" />
+          <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+        </filter>
+      </defs>
+
+      {/* Sky */}
+      <rect x="0" y="0" width="200" height="85" fill="url(#sky-grad)" />
+
+      {/* Track */}
+      <rect x="0" y="85" width="200" height="65" fill="url(#track-grad)" />
+      {/* Track rail lines */}
+      <line x1="0" y1="90" x2="200" y2="90" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
+      <line x1="0" y1="120" x2="200" y2="120" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
+
+      {/* Finish post */}
+      <rect x="168" y="72" width="4" height="50" rx="1" fill="#e2e8f0" />
+      <rect x="166" y="72" width="22" height="6" rx="2">
+        <animate attributeName="fill" values="#ef4444;#ffffff;#ef4444" dur="1s" repeatCount="indefinite" />
+      </rect>
+      <text x="178" y="68" textAnchor="middle" fontSize="5.5" fill="rgba(255,255,255,0.5)" fontFamily="'Barlow Condensed',sans-serif" fontWeight="700">FINISH</text>
+
+      {/* Crowd dots in background */}
+      {[20,35,50,65,80,100,115,130,145].map((x,i) => (
+        <circle key={i} cx={x} cy={75 + (i % 3) * 4} r="3.5" fill={`hsl(${200+i*20},40%,55%)`} opacity="0.5" />
+      ))}
+
+      {/* Horse 1 — leading (chestnut) */}
+      <g transform="translate(95, 88)">
+        {/* Shadow */}
+        <ellipse cx="18" cy="26" rx="22" ry="4" fill="rgba(0,0,0,0.3)" />
+        {/* Body */}
+        <ellipse cx="18" cy="14" rx="20" ry="10" fill="#8b4513" />
+        {/* Neck */}
+        <ellipse cx="32" cy="8" rx="6" ry="9" fill="#8b4513" transform="rotate(-20 32 8)" />
+        {/* Head */}
+        <ellipse cx="38" cy="2" rx="7" ry="5" fill="#8b4513" transform="rotate(-10 38 2)" />
+        {/* Eye */}
+        <circle cx="40" cy="0" r="1.5" fill="#1a0a00" />
+        <circle cx="40.5" cy="-0.5" r="0.5" fill="rgba(255,255,255,0.6)" />
+        {/* Nostril */}
+        <ellipse cx="44" cy="3" rx="1.5" ry="1" fill="#5c2a08" />
+        {/* Mane */}
+        <path d="M30 2 Q28 -4 26 -2 Q24 -6 22 -3 Q20 -5 18 -2" stroke="#3d1a08" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+        {/* Legs — galloping pose */}
+        <line x1="8" y1="22" x2="2" y2="34" stroke="#6b3410" strokeWidth="3" strokeLinecap="round" />
+        <line x1="14" y1="23" x2="18" y2="35" stroke="#6b3410" strokeWidth="3" strokeLinecap="round" />
+        <line x1="24" y1="23" x2="12" y2="33" stroke="#6b3410" strokeWidth="3" strokeLinecap="round" />
+        <line x1="30" y1="22" x2="36" y2="32" stroke="#6b3410" strokeWidth="3" strokeLinecap="round" />
+        {/* Tail */}
+        <path d="M0 14 Q-8 10 -6 18 Q-12 16 -8 24" stroke="#5c2a08" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+        {/* Jockey */}
+        <ellipse cx="16" cy="4" rx="6" ry="7" fill="#ef4444" />
+        <circle cx="16" cy="-4" r="5" fill="#fbbf24" />
+        {/* Jockey helmet */}
+        <ellipse cx="16" cy="-7" rx="5.5" ry="3" fill="#ef4444" />
+        {/* Number bib */}
+        <text x="16" y="6" textAnchor="middle" fontSize="6" fontWeight="900" fill="white" fontFamily="'Barlow Condensed',sans-serif">1</text>
+      </g>
+
+      {/* Horse 2 — trailing (grey) */}
+      <g transform="translate(42, 95)" opacity="0.85">
+        <ellipse cx="16" cy="23" rx="18" ry="3.5" fill="rgba(0,0,0,0.25)" />
+        <ellipse cx="16" cy="12" rx="17" ry="9" fill="#9ca3af" />
+        <ellipse cx="28" cy="6" rx="5" ry="8" fill="#9ca3af" transform="rotate(-20 28 6)" />
+        <ellipse cx="34" cy="1" rx="6" ry="4" fill="#9ca3af" transform="rotate(-10 34 1)" />
+        <circle cx="36" cy="-1" r="1.2" fill="#1a1a2e" />
+        <path d="M26 1 Q24 -4 22 -2 Q20 -5 18 -2" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" fill="none" />
+        <line x1="6" y1="20" x2="1" y2="30" stroke="#6b7280" strokeWidth="2.5" strokeLinecap="round" />
+        <line x1="12" y1="21" x2="15" y2="31" stroke="#6b7280" strokeWidth="2.5" strokeLinecap="round" />
+        <line x1="20" y1="21" x2="10" y2="29" stroke="#6b7280" strokeWidth="2.5" strokeLinecap="round" />
+        <line x1="26" y1="20" x2="31" y2="29" stroke="#6b7280" strokeWidth="2.5" strokeLinecap="round" />
+        <path d="M0 12 Q-7 8 -5 15 Q-9 13 -6 20" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" fill="none" />
+        <ellipse cx="14" cy="3" rx="5" ry="6" fill="#3b82f6" />
+        <circle cx="14" cy="-4" r="4.5" fill="#fbbf24" />
+        <ellipse cx="14" cy="-6.5" rx="5" ry="2.5" fill="#3b82f6" />
+        <text x="14" y="5" textAnchor="middle" fontSize="5.5" fontWeight="900" fill="white" fontFamily="'Barlow Condensed',sans-serif">2</text>
+      </g>
+
+      {/* Payout badge */}
+      <g>
+        <rect x="8" y="8" width="52" height="22" rx="5" fill="rgba(240,180,41,0.15)" stroke="rgba(240,180,41,0.5)" strokeWidth="1" />
+        <text x="34" y="14" textAnchor="middle" fontSize="6" fill="rgba(240,180,41,0.7)" fontFamily="'Barlow Condensed',sans-serif" fontWeight="700" letterSpacing="0.1em">WIN UP TO</text>
+        <text x="34" y="25" textAnchor="middle" fontSize="10" fill="#f0b429" fontFamily="'Barlow Condensed',sans-serif" fontWeight="900">8× BET</text>
+      </g>
+    </svg>
+  );
+}
+
+function BombDefuseArt() {
+  return (
+    <svg viewBox="0 0 200 150" fill="none" style={{ width: "100%", height: "100%" }}>
+      <defs>
+        <radialGradient id="bomb-body" cx="35%" cy="30%" r="65%">
+          <stop offset="0%" stopColor="#374151" />
+          <stop offset="100%" stopColor="#111827" />
+        </radialGradient>
+        <radialGradient id="bomb-glow-red" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="rgba(239,68,68,0.4)" />
+          <stop offset="100%" stopColor="rgba(0,0,0,0)" />
+        </radialGradient>
+        <filter id="bomb-shadow">
+          <feDropShadow dx="0" dy="6" stdDeviation="8" floodColor="rgba(0,0,0,0.7)" />
+        </filter>
+        <filter id="wire-glow">
+          <feGaussianBlur stdDeviation="2" result="blur" />
+          <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+        </filter>
+      </defs>
+
+      {/* Danger glow */}
+      <ellipse cx="90" cy="90" rx="70" ry="55" fill="url(#bomb-glow-red)" />
+
+      {/* Bomb body */}
+      <g filter="url(#bomb-shadow)">
+        {/* Spikes */}
+        {Array.from({length:8},(_,i) => {
+          const a = (i/8)*Math.PI*2 - Math.PI/2;
+          return <line key={i} x1={90+34*Math.cos(a)} y1={90+34*Math.sin(a)} x2={90+46*Math.cos(a)} y2={90+46*Math.sin(a)} stroke="#4b5563" strokeWidth="5" strokeLinecap="round" />;
+        })}
+        {/* Outer shell */}
+        <circle cx="90" cy="90" r="36" fill="url(#bomb-body)" />
+        <circle cx="90" cy="90" r="36" fill="none" stroke="#4b5563" strokeWidth="1.5" />
+        {/* Rivet ring */}
+        {Array.from({length:12},(_,i) => {
+          const a = (i/12)*Math.PI*2;
+          return <circle key={i} cx={90+28*Math.cos(a)} cy={90+28*Math.sin(a)} r="1.5" fill="#6b7280" />;
+        })}
+        {/* Danger stripe ring */}
+        <circle cx="90" cy="90" r="22" fill="none" stroke="rgba(239,68,68,0.25)" strokeWidth="1" />
+        {/* Center screen / LED */}
+        <rect x="74" y="78" width="32" height="20" rx="4" fill="#0a0a0a" stroke="#1f2937" strokeWidth="1" />
+        {/* Countdown */}
+        <text x="90" y="92" textAnchor="middle" dominantBaseline="middle" fontSize="13" fontWeight="900" fill="#ef4444" fontFamily="monospace" letterSpacing="1">
+          0:30
+          <animate attributeName="opacity" values="1;0.3;1" dur="0.8s" repeatCount="indefinite" />
+        </text>
+        {/* Shine */}
+        <ellipse cx="74" cy="74" rx="14" ry="9" fill="rgba(255,255,255,0.07)" transform="rotate(-30 74 74)" />
+      </g>
+
+      {/* Fuse */}
+      <path d="M90 54 Q102 42 96 28 Q90 16 100 8" stroke="#92400e" strokeWidth="3" strokeLinecap="round" fill="none" />
+      {/* Fuse spark */}
+      <circle cx="100" cy="8" r="5" fill="#f97316" opacity="0.9">
+        <animate attributeName="r" values="4;6;4" dur="0.4s" repeatCount="indefinite" />
+      </circle>
+      <circle cx="100" cy="8" r="3" fill="#fcd34d" />
+
+      {/* Wires panel */}
+      <g transform="translate(138, 55)">
+        <rect x="0" y="0" width="50" height="72" rx="6" fill="rgba(15,25,35,0.9)" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
+        {/* Wire labels */}
+        {[
+          { y: 14, color: "#ef4444", label: "CUT?" },
+          { y: 30, color: "#3b82f6", label: "SAFE" },
+          { y: 46, color: "#10b981", label: "CUT?" },
+          { y: 62, color: "#f59e0b", label: "CUT?" },
+        ].map((w, i) => (
+          <g key={i}>
+            <line x1="6" y1={w.y} x2="32" y2={w.y} stroke={w.color} strokeWidth="2.5" strokeLinecap="round" filter="url(#wire-glow)" />
+            <text x="36" y={w.y + 4} fontSize="7" fill={w.color} fontFamily="'Barlow Condensed',sans-serif" fontWeight="700" opacity="0.8">{w.label}</text>
+          </g>
+        ))}
+        {/* Wire connector dots */}
+        {[14,30,46,62].map((y,i) => (
+          <circle key={i} cx="6" cy={y} r="3" fill={["#ef4444","#3b82f6","#10b981","#f59e0b"][i]} />
+        ))}
+      </g>
+
+      {/* Payout badge */}
+      <g>
+        <rect x="6" y="8" width="44" height="22" rx="5" fill="rgba(239,68,68,0.15)" stroke="rgba(239,68,68,0.4)" strokeWidth="1" />
+        <text x="28" y="14" textAnchor="middle" fontSize="5.5" fill="rgba(239,68,68,0.7)" fontFamily="'Barlow Condensed',sans-serif" fontWeight="700" letterSpacing="0.08em">DEFUSE</text>
+        <text x="28" y="25" textAnchor="middle" fontSize="10" fill="#ef4444" fontFamily="'Barlow Condensed',sans-serif" fontWeight="900">3× BET</text>
+      </g>
+    </svg>
+  );
+}
+
+function ChickenArt() {
+  return (
+    <svg viewBox="0 0 200 150" fill="none" style={{ width: "100%", height: "100%" }}>
+      <defs>
+        <linearGradient id="road-grad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#374151" />
+          <stop offset="100%" stopColor="#1f2937" />
+        </linearGradient>
+        <linearGradient id="grass-grad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#16a34a" />
+          <stop offset="100%" stopColor="#166534" />
+        </linearGradient>
+        <filter id="car-shadow">
+          <feDropShadow dx="0" dy="3" stdDeviation="4" floodColor="rgba(0,0,0,0.5)" />
+        </filter>
+        <filter id="chick-glow">
+          <feGaussianBlur stdDeviation="4" result="blur" />
+          <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+        </filter>
+      </defs>
+
+      {/* Safe side (left) — grass */}
+      <rect x="0" y="0" width="30" height="150" fill="url(#grass-grad)" />
+      {/* Road */}
+      <rect x="30" y="0" width="140" height="150" fill="url(#road-grad)" />
+      {/* Lane markings */}
+      {[0,1,2,3].map(i => (
+        <g key={i}>
+          <rect x="95" y={8 + i*38} width="10" height="22" rx="2" fill="rgba(255,255,255,0.12)" />
+        </g>
+      ))}
+      {/* Destination (right) — grass */}
+      <rect x="170" y="0" width="30" height="150" fill="url(#grass-grad)" />
+      {/* Road edge lines */}
+      <line x1="30" y1="0" x2="30" y2="150" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" />
+      <line x1="170" y1="0" x2="170" y2="150" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" />
+
+      {/* Car 1 — red sports car going right */}
+      <g transform="translate(50, 28)" filter="url(#car-shadow)">
+        <rect x="0" y="8" width="52" height="22" rx="5" fill="#dc2626" />
+        <rect x="8" y="2" width="34" height="16" rx="4" fill="#b91c1c" />
+        {/* Windows */}
+        <rect x="12" y="4" width="12" height="11" rx="2" fill="#93c5fd" opacity="0.8" />
+        <rect x="26" y="4" width="12" height="11" rx="2" fill="#93c5fd" opacity="0.8" />
+        {/* Headlights */}
+        <circle cx="50" cy="13" r="3" fill="#fde68a" opacity="0.9" />
+        <circle cx="50" cy="21" r="3" fill="#fde68a" opacity="0.9" />
+        {/* Wheels */}
+        <circle cx="10" cy="30" r="6" fill="#111827" /><circle cx="10" cy="30" r="3" fill="#374151" />
+        <circle cx="42" cy="30" r="6" fill="#111827" /><circle cx="42" cy="30" r="3" fill="#374151" />
+        {/* Speed lines */}
+        <line x1="-4" y1="11" x2="-14" y2="11" stroke="rgba(239,68,68,0.5)" strokeWidth="1.5" strokeLinecap="round" />
+        <line x1="-4" y1="16" x2="-18" y2="16" stroke="rgba(239,68,68,0.4)" strokeWidth="1" strokeLinecap="round" />
+        <line x1="-4" y1="21" x2="-12" y2="21" stroke="rgba(239,68,68,0.3)" strokeWidth="1" strokeLinecap="round" />
+      </g>
+
+      {/* Car 2 — blue truck going left */}
+      <g transform="translate(75, 95) scale(-1,1)" filter="url(#car-shadow)">
+        <rect x="0" y="6" width="58" height="26" rx="5" fill="#1d4ed8" />
+        <rect x="6" y="0" width="28" height="18" rx="4" fill="#1e40af" />
+        <rect x="10" y="2" width="20" height="13" rx="2" fill="#93c5fd" opacity="0.7" />
+        <circle cx="54" cy="14" r="4" fill="#fde68a" opacity="0.9" />
+        <circle cx="54" cy="24" r="4" fill="#fde68a" opacity="0.9" />
+        <circle cx="10" cy="32" r="7" fill="#111827" /><circle cx="10" cy="32" r="3.5" fill="#374151" />
+        <circle cx="46" cy="32" r="7" fill="#111827" /><circle cx="46" cy="32" r="3.5" fill="#374151" />
+        <line x1="-4" y1="14" x2="-16" y2="14" stroke="rgba(29,78,216,0.5)" strokeWidth="2" strokeLinecap="round" />
+        <line x1="-4" y1="20" x2="-20" y2="20" stroke="rgba(29,78,216,0.4)" strokeWidth="1.2" strokeLinecap="round" />
+      </g>
+
+      {/* THE CHICKEN — crossing confidently, mid-road */}
+      <g transform="translate(118, 58)" filter="url(#chick-glow)">
+        {/* Glow */}
+        <circle cx="12" cy="18" r="18" fill="rgba(251,191,36,0.15)" />
+        {/* Shadow */}
+        <ellipse cx="12" cy="42" rx="10" ry="3" fill="rgba(0,0,0,0.35)" />
+        {/* Body */}
+        <ellipse cx="12" cy="26" rx="10" ry="12" fill="#fbbf24" />
+        {/* Wing detail */}
+        <ellipse cx="4" cy="28" rx="4" ry="6" fill="#f59e0b" />
+        <ellipse cx="20" cy="28" rx="4" ry="6" fill="#f59e0b" />
+        {/* Feather details */}
+        <path d="M6 22 Q3 18 5 16" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+        <path d="M18 22 Q21 18 19 16" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+        {/* Neck */}
+        <rect x="8" y="13" width="8" height="8" rx="3" fill="#fbbf24" />
+        {/* Head */}
+        <circle cx="12" cy="10" r="9" fill="#fbbf24" />
+        {/* Eye */}
+        <circle cx="15" cy="8" r="3" fill="white" />
+        <circle cx="16" cy="8" r="1.8" fill="#1a0a00" />
+        <circle cx="16.5" cy="7.2" r="0.6" fill="white" />
+        {/* Beak */}
+        <polygon points="18,12 23,10 18,14" fill="#f97316" />
+        {/* Comb */}
+        <path d="M8 2 Q7 -3 10 -1 Q9 -5 12 -3 Q11 -6 14 -4 Q15 -2 14 1" fill="#ef4444" />
+        {/* Wattle */}
+        <ellipse cx="17" cy="16" rx="2.5" ry="3.5" fill="#ef4444" />
+        {/* Legs — mid-stride */}
+        <line x1="8" y1="37" x2="4" y2="46" stroke="#d97706" strokeWidth="2.5" strokeLinecap="round" />
+        <line x1="8" y1="46" x2="1" y2="48" stroke="#d97706" strokeWidth="2" strokeLinecap="round" />
+        <line x1="8" y1="46" x2="4" y2="50" stroke="#d97706" strokeWidth="2" strokeLinecap="round" />
+        <line x1="16" y1="37" x2="20" y2="43" stroke="#d97706" strokeWidth="2.5" strokeLinecap="round" />
+        <line x1="20" y1="43" x2="24" y2="48" stroke="#d97706" strokeWidth="2" strokeLinecap="round" />
+        <line x1="20" y1="43" x2="22" y2="50" stroke="#d97706" strokeWidth="2" strokeLinecap="round" />
+        {/* Sweat drop (nervous!) */}
+        <path d="M22 5 Q24 2 22 0 Q20 2 22 5Z" fill="#60a5fa" opacity="0.8" />
+      </g>
+
+      {/* Multiplier badge */}
+      <g>
+        <rect x="6" y="8" width="52" height="22" rx="5" fill="rgba(251,191,36,0.15)" stroke="rgba(251,191,36,0.5)" strokeWidth="1" />
+        <text x="32" y="14" textAnchor="middle" fontSize="5.5" fill="rgba(251,191,36,0.7)" fontFamily="'Barlow Condensed',sans-serif" fontWeight="700" letterSpacing="0.08em">CASH OUT</text>
+        <text x="32" y="25" textAnchor="middle" fontSize="10" fill="#fbbf24" fontFamily="'Barlow Condensed',sans-serif" fontWeight="900">ANYTIME</text>
+      </g>
+    </svg>
+  );
+}
+
 // ── Game data ─────────────────────────────────────────────────────────────────
 
 const GAMES = [
@@ -429,7 +739,7 @@ const GAMES = [
   {
     label: "Slots",
     href: "/slots",
-    locked: true,
+    locked: false,
     gradient: "linear-gradient(145deg, #0891b2 0%, #155e75 55%, #083344 100%)",
     art: <SlotsArt />,
   },
@@ -453,6 +763,27 @@ const GAMES = [
     locked: false,
     gradient: "linear-gradient(145deg, #8b5cf6 0%, #4c1d95 40%, #2563eb 100%)",
     art: <PlinkoArt />,
+  },
+  {
+    label: "Horse Racing",
+    href: "/horse-racing",
+    locked: true,
+    gradient: "linear-gradient(145deg, #16a34a 0%, #166534 55%, #052e16 100%)",
+    art: <HorseRacingArt />,
+  },
+  {
+    label: "Bomb Defuse",
+    href: "/bomb-defuse",
+    locked: true,
+    gradient: "linear-gradient(145deg, #dc2626 0%, #7f1d1d 55%, #2d0a0a 100%)",
+    art: <BombDefuseArt />,
+  },
+  {
+    label: "Chicken",
+    href: "/chicken",
+    locked: true,
+    gradient: "linear-gradient(145deg, #d97706 0%, #92400e 55%, #451a03 100%)",
+    art: <ChickenArt />,
   },
 ] as const;
 

@@ -178,3 +178,110 @@ export function playRouletteLose() {
     playTone(150, 0.4, "sawtooth", 0.07, 0.48);
   } catch { /* silent fail */ }
 }
+
+// ── Slots sounds ────────────────────────────────────────────────────────────
+
+/** Mechanical whoosh when reels start spinning */
+export function playSlotsReel() {
+  try {
+    const ctx = resumeCtx();
+    // Rising noise burst — like a mechanical lever pull
+    const bufSize = Math.floor(ctx.sampleRate * 0.18);
+    const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < bufSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.pow(i / bufSize, 0.6) * (1 - i / bufSize);
+    }
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    const filter = ctx.createBiquadFilter();
+    filter.type = "bandpass";
+    filter.frequency.value = 1200;
+    filter.Q.value = 0.8;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.22, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
+    src.connect(filter);
+    filter.connect(g);
+    g.connect(ctx.destination);
+    src.start();
+
+    // Add a low mechanical hum underneath
+    const osc = ctx.createOscillator();
+    const oscG = ctx.createGain();
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(80, ctx.currentTime);
+    osc.frequency.linearRampToValueAtTime(140, ctx.currentTime + 0.18);
+    oscG.gain.setValueAtTime(0.04, ctx.currentTime);
+    oscG.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.18);
+    osc.connect(oscG);
+    oscG.connect(ctx.destination);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.2);
+  } catch { /* silent fail */ }
+}
+
+/** Mechanical click/thunk when a reel stops (call once per reel, staggered) */
+export function playReelStop() {
+  try {
+    const ctx = resumeCtx();
+    // Sharp transient: triangle wave thump + noise burst
+    playTone(160, 0.08, "triangle", 0.22);
+    playTone(90, 0.12, "sine", 0.14, 0.01);
+
+    const bufSize = Math.floor(ctx.sampleRate * 0.04);
+    const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < bufSize; i++) {
+      d[i] = (Math.random() * 2 - 1) * (1 - i / bufSize) * 0.6;
+    }
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    const filter = ctx.createBiquadFilter();
+    filter.type = "highpass";
+    filter.frequency.value = 2000;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.18, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.04);
+    src.connect(filter);
+    filter.connect(g);
+    g.connect(ctx.destination);
+    src.start();
+  } catch { /* silent fail */ }
+}
+
+/** Ascending win chime — played on any winning spin */
+export function playSlotsWin() {
+  try {
+    // 4-note ascending arpeggio with triangle wave (bright, bell-like)
+    const notes = [523, 659, 880, 1175];
+    notes.forEach((freq, i) => playTone(freq, 0.35, "triangle", 0.16, i * 0.09));
+    // Follow-up shimmer
+    setTimeout(() => {
+      [1175, 1568].forEach((freq, i) => playTone(freq, 0.25, "sine", 0.1, i * 0.08));
+    }, 450);
+  } catch { /* silent fail */ }
+}
+
+/** Big win celebration horn — played on 5-of-a-kind or jackpot */
+export function playSlotsBigWin() {
+  try {
+    // Fanfare: bold ascending notes
+    const fanfare = [392, 523, 659, 784, 1047, 1319];
+    fanfare.forEach((freq, i) => playTone(freq, 0.4, "sine", 0.2, i * 0.08));
+    // Triumphant follow-up chord
+    setTimeout(() => {
+      [523, 659, 784].forEach((freq, i) => {
+        playTone(freq, 0.6, "triangle", 0.14, i * 0.02);
+      });
+      [1047, 1319, 1568].forEach((freq, i) => {
+        playTone(freq, 0.5, "sine", 0.12, 0.1 + i * 0.03);
+      });
+    }, 580);
+    // Coin rain effect: rapid light ticks
+    for (let k = 0; k < 14; k++) {
+      const t = 0.7 + k * 0.07;
+      playTone(1400 + Math.random() * 400, 0.06, "triangle", 0.06, t);
+    }
+  } catch { /* silent fail */ }
+}
