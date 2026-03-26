@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
+import { useBalance } from "@/context/BalanceContext";
 
 export default function SlotsAnnouncementModal() {
   const [visible, setVisible] = useState(false);
-  const router = useRouter();
   const pathname = usePathname();
+  const { addBalance } = useBalance();
 
   // Show every time the home page is loaded/navigated to
   useEffect(() => {
@@ -19,9 +20,9 @@ export default function SlotsAnnouncementModal() {
     setVisible(false);
   }
 
-  function playNow() {
+  function claimThankYouCash() {
+    addBalance(1000);
     dismiss();
-    router.push("/slots");
   }
 
   if (!visible) return null;
@@ -72,11 +73,11 @@ export default function SlotsAnnouncementModal() {
           0%,100% { transform: translateY(0px); }
           50%      { transform: translateY(-8px); }
         }
-        .slots-play-btn:hover {
+        .thanks-btn:hover {
           transform: translateY(-2px) scale(1.03) !important;
           box-shadow: 0 8px 40px rgba(0,230,118,0.6), 0 0 80px rgba(0,230,118,0.2) !important;
         }
-        .slots-play-btn:active {
+        .thanks-btn:active {
           transform: translateY(1px) scale(0.98) !important;
         }
       `}</style>
@@ -110,12 +111,12 @@ export default function SlotsAnnouncementModal() {
           pointerEvents: "none",
         }} />
 
-        {/* NEW badge */}
+        {/* THANK YOU badge */}
         <div style={{
           position: "absolute",
           top: 18,
           right: 18,
-          background: "linear-gradient(135deg, #f97316, #ef4444)",
+          background: "linear-gradient(135deg, #00c853, #00e676)",
           color: "white",
           fontFamily: "'Barlow Condensed', sans-serif",
           fontWeight: 900,
@@ -126,7 +127,7 @@ export default function SlotsAnnouncementModal() {
           boxShadow: "0 0 12px rgba(249,115,22,0.7)",
           animation: "badgePop 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.8s both",
         }}>
-          NEW
+          THANK YOU
         </div>
 
         {/* Dismiss X */}
@@ -151,9 +152,9 @@ export default function SlotsAnnouncementModal() {
           ✕
         </button>
 
-        {/* Slot machine SVG */}
+        {/* Celebration SVG */}
         <div style={{ animation: "floatReel 3s ease-in-out infinite", marginBottom: 24 }}>
-          <SlotMachineSVG />
+          <CelebrationSVG />
         </div>
 
         {/* Headline */}
@@ -165,14 +166,14 @@ export default function SlotsAnnouncementModal() {
           textTransform: "uppercase",
           lineHeight: 1,
           marginBottom: 8,
-          background: "linear-gradient(90deg, #f0b429 0%, #fffbe6 45%, #f0b429 100%)",
+          background: "linear-gradient(90deg, #00e676 0%, #d6ffe9 45%, #00e676 100%)",
           backgroundSize: "200% auto",
           WebkitBackgroundClip: "text",
           WebkitTextFillColor: "transparent",
           backgroundClip: "text",
           animation: "shimmerBtn 3s linear infinite",
         }}>
-          Slots is Live
+          Thank You
         </div>
 
         {/* Subhead */}
@@ -185,7 +186,7 @@ export default function SlotsAnnouncementModal() {
           marginBottom: 6,
           textTransform: "uppercase",
         }}>
-          5 Reels · 4 Paylines · Jackpots Up to 100×
+          50 users · 40,000+ bets placed
         </div>
 
         {/* Description */}
@@ -198,19 +199,16 @@ export default function SlotsAnnouncementModal() {
           marginLeft: "auto",
           marginRight: "auto",
         }}>
-          Bet anything. Win big. Hit a rare{" "}
-          <span style={{ color: "#ff69b4", fontWeight: 700 }}>💰 or ⭐ jackpot</span>{" "}
-          and walk away with <span style={{ color: "var(--accent-gold)", fontWeight: 700 }}>100× your bet</span>.
-          Generous payouts. Zero waiting.
+          As a solo developer, I truly appreciate every single one of you.
+          Thank you for being here and helping this community hit such an awesome milestone.
         </p>
 
-        {/* Payout pills */}
+        {/* Milestone pills */}
         <div style={{ display: "flex", gap: 8, justifyContent: "center", marginBottom: 28, flexWrap: "wrap" }}>
           {[
-            { label: "3-of-a-kind", value: "2.5×", color: "rgba(255,255,255,0.08)", border: "rgba(255,255,255,0.15)", text: "var(--text-secondary)" },
-            { label: "4-of-a-kind", value: "8×",   color: "rgba(0,230,118,0.08)",  border: "rgba(0,230,118,0.3)",   text: "var(--accent-green)" },
-            { label: "5-of-a-kind", value: "50×",  color: "rgba(240,180,41,0.1)",  border: "rgba(240,180,41,0.4)",  text: "var(--accent-gold)" },
-            { label: "💰⭐ Jackpot",  value: "100×", color: "rgba(255,105,180,0.1)", border: "rgba(255,105,180,0.4)", text: "#ff69b4" },
+            { label: "Community", value: "50 Users", color: "rgba(255,255,255,0.08)", border: "rgba(255,255,255,0.15)", text: "var(--text-secondary)" },
+            { label: "Activity", value: "40,000+", color: "rgba(0,230,118,0.08)", border: "rgba(0,230,118,0.3)", text: "var(--accent-green)" },
+            { label: "Milestone", value: "Bets Placed", color: "rgba(240,180,41,0.1)", border: "rgba(240,180,41,0.4)", text: "var(--accent-gold)" },
           ].map((p) => (
             <div key={p.label} style={{
               background: p.color,
@@ -231,8 +229,8 @@ export default function SlotsAnnouncementModal() {
 
         {/* CTA button */}
         <button
-          className="slots-play-btn"
-          onClick={playNow}
+          className="thanks-btn"
+          onClick={claimThankYouCash}
           style={{
             width: "100%",
             padding: "16px 24px",
@@ -255,10 +253,22 @@ export default function SlotsAnnouncementModal() {
             gap: 10,
           }}
         >
-          <span style={{ fontSize: "1.5rem" }}>🎰</span>
-          Play Slots Now
-          <span style={{ fontSize: "1.5rem" }}>🎰</span>
+          <span style={{ fontSize: "1.5rem" }}>🙏</span>
+          Claim +$1,000
+          <span style={{ fontSize: "1.5rem" }}>🎉</span>
         </button>
+
+        <p
+          style={{
+            marginTop: 10,
+            marginBottom: 0,
+            fontSize: "0.72rem",
+            color: "var(--text-muted)",
+            letterSpacing: "0.04em",
+          }}
+        >
+          Pressing thank you gives you <span style={{ color: "var(--accent-green)", fontWeight: 700 }}>+$1,000 cash</span> (stackable).
+        </p>
 
         {/* Dismiss link */}
         <button
@@ -276,102 +286,70 @@ export default function SlotsAnnouncementModal() {
           onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text-secondary)")}
           onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}
         >
-          Maybe later
+          Close
         </button>
       </div>
     </div>
   );
 }
 
-// ── Slot machine SVG ──────────────────────────────────────────────────────────
+// ── Celebration SVG ───────────────────────────────────────────────────────────
 
-function SlotMachineSVG() {
+function CelebrationSVG() {
   return (
     <svg
-      width="160"
-      height="120"
-      viewBox="0 0 160 120"
+      width="180"
+      height="130"
+      viewBox="0 0 180 130"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       style={{ display: "block", margin: "0 auto" }}
     >
       <defs>
-        <linearGradient id="machineBody" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#1e3a52" />
-          <stop offset="100%" stopColor="#0d1e2e" />
-        </linearGradient>
-        <linearGradient id="goldGrad" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor="#d4920a" />
-          <stop offset="50%" stopColor="#f0b429" />
-          <stop offset="100%" stopColor="#d4920a" />
-        </linearGradient>
-        <linearGradient id="screenGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#061018" />
-          <stop offset="100%" stopColor="#0a1a26" />
-        </linearGradient>
-        <linearGradient id="btnGrad" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0%" stopColor="#00e676" />
-          <stop offset="100%" stopColor="#00a854" />
+          <stop offset="100%" stopColor="#00c853" />
         </linearGradient>
-        <filter id="glow">
-          <feGaussianBlur stdDeviation="2.5" result="blur" />
-          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        <linearGradient id="heartGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#ff7eb6" />
+          <stop offset="100%" stopColor="#ff4d8d" />
+        </linearGradient>
+        <filter id="softGlow">
+          <feGaussianBlur stdDeviation="3" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
         </filter>
-        <clipPath id="screenClip">
-          <rect x="22" y="22" width="116" height="62" rx="6" />
-        </clipPath>
       </defs>
 
-      {/* Machine body */}
-      <rect x="8" y="8" width="144" height="104" rx="14" fill="url(#machineBody)" stroke="url(#goldGrad)" strokeWidth="2"/>
+      {/* outer ring */}
+      <circle cx="90" cy="64" r="50" fill="rgba(0,230,118,0.12)" stroke="url(#ringGrad)" strokeWidth="2.5" />
+      <circle cx="90" cy="64" r="40" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.14)" />
 
-      {/* Top gold rail */}
-      <rect x="8" y="8" width="144" height="10" rx="7" fill="url(#goldGrad)" opacity="0.9"/>
+      {/* heart */}
+      <path
+        d="M90 83C89 82 66 68 66 51C66 42 73 35 82 35C86 35 90 37 90 41C90 37 94 35 98 35C107 35 114 42 114 51C114 68 91 82 90 83Z"
+        fill="url(#heartGrad)"
+        filter="url(#softGlow)"
+      />
 
-      {/* Screen background */}
-      <rect x="22" y="22" width="116" height="62" rx="6" fill="url(#screenGrad)" stroke="rgba(240,180,41,0.4)" strokeWidth="1"/>
+      {/* milestone text */}
+      <text x="90" y="104" textAnchor="middle" fontSize="12" fill="rgba(255,255,255,0.9)" fontFamily="'Barlow Condensed', sans-serif" letterSpacing="1.5" fontWeight="700">
+        THANK YOU
+      </text>
 
-      {/* Reel dividers */}
-      <line x1="60" y1="22" x2="60" y2="84" stroke="rgba(240,180,41,0.25)" strokeWidth="1"/>
-      <line x1="100" y1="22" x2="100" y2="84" stroke="rgba(240,180,41,0.25)" strokeWidth="1"/>
-
-      {/* Symbols — reel 1 */}
-      <text x="41" y="60" textAnchor="middle" fontSize="22" clipPath="url(#screenClip)">🔔</text>
-      {/* Symbols — reel 2 */}
-      <text x="80" y="60" textAnchor="middle" fontSize="22" clipPath="url(#screenClip)">💰</text>
-      {/* Symbols — reel 3 */}
-      <text x="119" y="60" textAnchor="middle" fontSize="22" clipPath="url(#screenClip)">⭐</text>
-
-      {/* Center payline highlight */}
-      <rect x="22" y="46" width="116" height="26" rx="4" fill="rgba(240,180,41,0.07)" stroke="rgba(240,180,41,0.35)" strokeWidth="1"/>
-
-      {/* Screen corner glints */}
-      <circle cx="28" cy="28" r="2" fill="rgba(255,255,255,0.15)"/>
-      <circle cx="132" cy="28" r="1.5" fill="rgba(255,255,255,0.1)"/>
-
-      {/* Bottom strip with GRAX branding */}
-      <rect x="22" y="88" width="116" height="14" rx="4" fill="rgba(240,180,41,0.08)" stroke="rgba(240,180,41,0.2)" strokeWidth="1"/>
-      <text x="80" y="99" textAnchor="middle" fontSize="7" fill="rgba(240,180,41,0.7)" fontFamily="'Barlow Condensed', sans-serif" fontWeight="700" letterSpacing="2">GRAX SLOTS</text>
-
-      {/* Spin lever (right side) */}
-      <circle cx="154" cy="36" r="5" fill="url(#goldGrad)" filter="url(#glow)"/>
-      <rect x="152" y="36" width="4" height="22" rx="2" fill="url(#goldGrad)"/>
-      <circle cx="154" cy="60" r="4" fill="url(#goldGrad)"/>
-
-      {/* Spin button */}
-      <rect x="52" y="97" width="56" height="16" rx="8" fill="url(#btnGrad)" filter="url(#glow)"/>
-      <text x="80" y="109" textAnchor="middle" fontSize="8" fill="#0a1520" fontFamily="'Barlow Condensed', sans-serif" fontWeight="900" letterSpacing="1.5">SPIN</text>
-
-      {/* Coin slot */}
-      <rect x="110" y="100" width="22" height="7" rx="3.5" fill="rgba(0,0,0,0.5)" stroke="rgba(240,180,41,0.4)" strokeWidth="1"/>
-
-      {/* Glow dots on corners */}
-      <circle cx="16" cy="16" r="3" fill="rgba(240,180,41,0.3)">
-        <animate attributeName="opacity" values="0.3;0.8;0.3" dur="2s" repeatCount="indefinite"/>
+      {/* confetti */}
+      <circle cx="42" cy="28" r="3.5" fill="#f0b429">
+        <animate attributeName="cy" values="28;24;28" dur="2.4s" repeatCount="indefinite" />
       </circle>
-      <circle cx="144" cy="16" r="3" fill="rgba(240,180,41,0.3)">
-        <animate attributeName="opacity" values="0.8;0.3;0.8" dur="2s" repeatCount="indefinite"/>
+      <circle cx="135" cy="24" r="3" fill="#00e676">
+        <animate attributeName="cy" values="24;20;24" dur="2.1s" repeatCount="indefinite" />
       </circle>
+      <circle cx="30" cy="62" r="2.5" fill="#ff7eb6" />
+      <circle cx="149" cy="62" r="2.5" fill="#f0b429" />
+      <circle cx="58" cy="104" r="2.5" fill="#00e676" />
+      <circle cx="122" cy="103" r="2.5" fill="#ff7eb6" />
     </svg>
   );
 }
