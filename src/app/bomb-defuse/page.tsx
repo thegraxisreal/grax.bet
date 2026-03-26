@@ -179,7 +179,10 @@ export default function BombDefusePage() {
       <div className="game-panel" style={panelStyle}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <h2 style={{ margin: 0, fontFamily: "'Barlow Condensed', sans-serif", fontSize: "1.05rem", letterSpacing: "0.14em", textTransform: "uppercase" }}>Bomb Defuse</h2>
-          <div style={{ fontSize: "0.62rem", color: "var(--text-muted)", letterSpacing: "0.12em", textTransform: "uppercase" }}>6 wires</div>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 3 }}>
+            <div style={{ fontSize: "0.62rem", color: "var(--text-muted)", letterSpacing: "0.12em", textTransform: "uppercase" }}>6 wires</div>
+            <div style={{ fontSize: "0.58rem", color: "#4ade80", letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 700 }}>2x Money Mode</div>
+          </div>
         </div>
         <PanelDivider />
 
@@ -197,6 +200,8 @@ export default function BombDefusePage() {
             </div>
 
             <PanelDivider />
+
+            <div style={{ fontSize: "0.68rem", color: "#4ade80", fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.11em", textTransform: "uppercase" }}>Promo Payouts: 5x, 15x, 45x...</div>
 
             <div>
               <Label>Bet Amount</Label>

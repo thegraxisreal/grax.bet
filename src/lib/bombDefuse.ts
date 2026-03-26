@@ -11,12 +11,14 @@ export function comb(n: number, k: number): number {
   return result;
 }
 
-export function multiplierAt(bombCount: number, cuts: number): number {
-  if (cuts === 0) return 1;
-  const safeWires = TOTAL_WIRES - bombCount;
-  if (cuts > safeWires) return 0;
-  const raw = comb(TOTAL_WIRES, cuts) / comb(safeWires, cuts);
-  return Math.round(raw * 0.97 * 100) / 100;
+// Promotional high-payout curve:
+// 1st safe cut = 5x, 2nd = 15x, then continues 3x per additional safe cut.
+export function multiplierAt(_bombCount: number, cuts: number): number {
+  if (cuts <= 0) return 1;
+  const maxCuts = TOTAL_WIRES - 1;
+  const normalizedCuts = Math.min(cuts, maxCuts);
+  const mult = 5 * Math.pow(3, normalizedCuts - 1);
+  return Math.round(mult * 100) / 100;
 }
 
 export function placeBombs(count: number): boolean[] {

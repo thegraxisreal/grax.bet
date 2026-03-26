@@ -588,7 +588,7 @@ function BombDefuseArt() {
       <g>
         <rect x="6" y="8" width="44" height="22" rx="5" fill="rgba(239,68,68,0.15)" stroke="rgba(239,68,68,0.4)" strokeWidth="1" />
         <text x="28" y="14" textAnchor="middle" fontSize="5.5" fill="rgba(239,68,68,0.7)" fontFamily="'Barlow Condensed',sans-serif" fontWeight="700" letterSpacing="0.08em">DEFUSE</text>
-        <text x="28" y="25" textAnchor="middle" fontSize="10" fill="#ef4444" fontFamily="'Barlow Condensed',sans-serif" fontWeight="900">3× BET</text>
+        <text x="28" y="25" textAnchor="middle" fontSize="10" fill="#ef4444" fontFamily="'Barlow Condensed',sans-serif" fontWeight="900">2X MONEY</text>
       </g>
     </svg>
   );
