@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+import { useBalance } from "@/context/BalanceContext";
 
 export default function SlotsAnnouncementModal() {
   const [visible, setVisible] = useState(false);
   const pathname = usePathname();
+  const { addBalance } = useBalance();
 
   // Show every time the home page is loaded/navigated to
   useEffect(() => {
@@ -16,6 +18,11 @@ export default function SlotsAnnouncementModal() {
 
   function dismiss() {
     setVisible(false);
+  }
+
+  function claimThankYouCash() {
+    addBalance(1000);
+    dismiss();
   }
 
   if (!visible) return null;
@@ -223,7 +230,7 @@ export default function SlotsAnnouncementModal() {
         {/* CTA button */}
         <button
           className="thanks-btn"
-          onClick={dismiss}
+          onClick={claimThankYouCash}
           style={{
             width: "100%",
             padding: "16px 24px",
@@ -247,9 +254,21 @@ export default function SlotsAnnouncementModal() {
           }}
         >
           <span style={{ fontSize: "1.5rem" }}>🙏</span>
-          Thank You
+          Claim +$1,000
           <span style={{ fontSize: "1.5rem" }}>🎉</span>
         </button>
+
+        <p
+          style={{
+            marginTop: 10,
+            marginBottom: 0,
+            fontSize: "0.72rem",
+            color: "var(--text-muted)",
+            letterSpacing: "0.04em",
+          }}
+        >
+          Pressing thank you gives you <span style={{ color: "var(--accent-green)", fontWeight: 700 }}>+$1,000 cash</span> (stackable).
+        </p>
 
         {/* Dismiss link */}
         <button
