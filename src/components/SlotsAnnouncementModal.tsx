@@ -1,11 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 
 export default function SlotsAnnouncementModal() {
   const [visible, setVisible] = useState(false);
-  const router = useRouter();
   const pathname = usePathname();
 
   // Show every time the home page is loaded/navigated to
@@ -17,11 +16,6 @@ export default function SlotsAnnouncementModal() {
 
   function dismiss() {
     setVisible(false);
-  }
-
-  function playNow() {
-    dismiss();
-    router.push("/slots");
   }
 
   if (!visible) return null;
@@ -72,11 +66,11 @@ export default function SlotsAnnouncementModal() {
           0%,100% { transform: translateY(0px); }
           50%      { transform: translateY(-8px); }
         }
-        .slots-play-btn:hover {
+        .thanks-btn:hover {
           transform: translateY(-2px) scale(1.03) !important;
           box-shadow: 0 8px 40px rgba(0,230,118,0.6), 0 0 80px rgba(0,230,118,0.2) !important;
         }
-        .slots-play-btn:active {
+        .thanks-btn:active {
           transform: translateY(1px) scale(0.98) !important;
         }
       `}</style>
@@ -110,12 +104,12 @@ export default function SlotsAnnouncementModal() {
           pointerEvents: "none",
         }} />
 
-        {/* NEW badge */}
+        {/* THANK YOU badge */}
         <div style={{
           position: "absolute",
           top: 18,
           right: 18,
-          background: "linear-gradient(135deg, #f97316, #ef4444)",
+          background: "linear-gradient(135deg, #00c853, #00e676)",
           color: "white",
           fontFamily: "'Barlow Condensed', sans-serif",
           fontWeight: 900,
@@ -126,7 +120,7 @@ export default function SlotsAnnouncementModal() {
           boxShadow: "0 0 12px rgba(249,115,22,0.7)",
           animation: "badgePop 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.8s both",
         }}>
-          NEW
+          THANK YOU
         </div>
 
         {/* Dismiss X */}
@@ -151,7 +145,7 @@ export default function SlotsAnnouncementModal() {
           ✕
         </button>
 
-        {/* Slot machine SVG */}
+        {/* Celebration SVG */}
         <div style={{ animation: "floatReel 3s ease-in-out infinite", marginBottom: 24 }}>
           <SlotMachineSVG />
         </div>
@@ -172,7 +166,7 @@ export default function SlotsAnnouncementModal() {
           backgroundClip: "text",
           animation: "shimmerBtn 3s linear infinite",
         }}>
-          Slots is Live
+          Thank You
         </div>
 
         {/* Subhead */}
@@ -185,7 +179,7 @@ export default function SlotsAnnouncementModal() {
           marginBottom: 6,
           textTransform: "uppercase",
         }}>
-          5 Reels · 4 Paylines · Jackpots Up to 100×
+          50 users · 40,000+ bets placed
         </div>
 
         {/* Description */}
@@ -198,19 +192,16 @@ export default function SlotsAnnouncementModal() {
           marginLeft: "auto",
           marginRight: "auto",
         }}>
-          Bet anything. Win big. Hit a rare{" "}
-          <span style={{ color: "#ff69b4", fontWeight: 700 }}>💰 or ⭐ jackpot</span>{" "}
-          and walk away with <span style={{ color: "var(--accent-gold)", fontWeight: 700 }}>100× your bet</span>.
-          Generous payouts. Zero waiting.
+          We appreciate every single one of you. Incredibly grateful for this community and
+          excited to keep building with you all.
         </p>
 
-        {/* Payout pills */}
+        {/* Milestone pills */}
         <div style={{ display: "flex", gap: 8, justifyContent: "center", marginBottom: 28, flexWrap: "wrap" }}>
           {[
-            { label: "3-of-a-kind", value: "2.5×", color: "rgba(255,255,255,0.08)", border: "rgba(255,255,255,0.15)", text: "var(--text-secondary)" },
-            { label: "4-of-a-kind", value: "8×",   color: "rgba(0,230,118,0.08)",  border: "rgba(0,230,118,0.3)",   text: "var(--accent-green)" },
-            { label: "5-of-a-kind", value: "50×",  color: "rgba(240,180,41,0.1)",  border: "rgba(240,180,41,0.4)",  text: "var(--accent-gold)" },
-            { label: "💰⭐ Jackpot",  value: "100×", color: "rgba(255,105,180,0.1)", border: "rgba(255,105,180,0.4)", text: "#ff69b4" },
+            { label: "Community", value: "50 Users", color: "rgba(255,255,255,0.08)", border: "rgba(255,255,255,0.15)", text: "var(--text-secondary)" },
+            { label: "Activity", value: "40,000+", color: "rgba(0,230,118,0.08)", border: "rgba(0,230,118,0.3)", text: "var(--accent-green)" },
+            { label: "Milestone", value: "Bets Placed", color: "rgba(240,180,41,0.1)", border: "rgba(240,180,41,0.4)", text: "var(--accent-gold)" },
           ].map((p) => (
             <div key={p.label} style={{
               background: p.color,
@@ -231,8 +222,8 @@ export default function SlotsAnnouncementModal() {
 
         {/* CTA button */}
         <button
-          className="slots-play-btn"
-          onClick={playNow}
+          className="thanks-btn"
+          onClick={dismiss}
           style={{
             width: "100%",
             padding: "16px 24px",
@@ -255,9 +246,9 @@ export default function SlotsAnnouncementModal() {
             gap: 10,
           }}
         >
-          <span style={{ fontSize: "1.5rem" }}>🎰</span>
-          Play Slots Now
-          <span style={{ fontSize: "1.5rem" }}>🎰</span>
+          <span style={{ fontSize: "1.5rem" }}>🙏</span>
+          Thank You
+          <span style={{ fontSize: "1.5rem" }}>🎉</span>
         </button>
 
         {/* Dismiss link */}
@@ -276,7 +267,7 @@ export default function SlotsAnnouncementModal() {
           onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text-secondary)")}
           onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}
         >
-          Maybe later
+          Close
         </button>
       </div>
     </div>
