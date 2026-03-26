@@ -774,7 +774,7 @@ const GAMES = [
   {
     label: "Bomb Defuse",
     href: "/bomb-defuse",
-    locked: true,
+    locked: false,
     gradient: "linear-gradient(145deg, #dc2626 0%, #7f1d1d 55%, #2d0a0a 100%)",
     art: <BombDefuseArt />,
   },

@@ -262,7 +262,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Mines",     href: "/mines",     icon: <MinesIcon /> },
   { label: "Plinko",        href: "/plinko",       icon: <PlinkoIcon /> },
   { label: "Horse Racing",  href: "/horse-racing",  icon: <HorseRacingIcon />, locked: true },
-  { label: "Bomb Defuse",   href: "/bomb-defuse",   icon: <BombDefuseIcon />,  locked: true },
+  { label: "Bomb Defuse",   href: "/bomb-defuse",   icon: <BombDefuseIcon /> },
   { label: "Chicken",       href: "/chicken",       icon: <ChickenIcon />,     locked: true },
 ];
 

@@ -16,7 +16,7 @@ function resumeCtx() {
 }
 
 /** Play a short tone */
-function playTone(
+export function playTone(
   frequency: number,
   duration: number,
   type: OscillatorType = "sine",
@@ -43,6 +43,48 @@ function playTone(
   osc.stop(ctx.currentTime + (startTime ?? 0) + duration);
 }
 
+
+
+export function playWireCut() {
+  try {
+    playTone(1450, 0.08, "triangle", 0.12);
+    playTone(1850, 0.04, "triangle", 0.08, 0.02);
+  } catch { /* silent fail */ }
+}
+
+export function playExplosion() {
+  try {
+    playTone(92, 0.45, "sawtooth", 0.22);
+    playTone(60, 0.55, "sawtooth", 0.2, 0.03);
+
+    const ctx = resumeCtx();
+    const size = Math.floor(ctx.sampleRate * 0.35);
+    const buffer = ctx.createBuffer(1, size, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < size; i++) {
+      data[i] = (Math.random() * 2 - 1) * (1 - i / size);
+    }
+
+    const src = ctx.createBufferSource();
+    src.buffer = buffer;
+    const lowpass = ctx.createBiquadFilter();
+    lowpass.type = "lowpass";
+    lowpass.frequency.value = 420;
+    const gainNode = ctx.createGain();
+    gainNode.gain.setValueAtTime(0.35, ctx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+    src.connect(lowpass);
+    lowpass.connect(gainNode);
+    gainNode.connect(ctx.destination);
+    src.start();
+  } catch { /* silent fail */ }
+}
+
+export function playCashoutWin() {
+  try {
+    [440, 554, 659, 880].forEach((freq, i) => playTone(freq, 0.2, "triangle", 0.15, i * 0.08));
+  } catch { /* silent fail */ }
+}
 export function playCardDeal() {
   // Short papery swish: noise burst
   try {
