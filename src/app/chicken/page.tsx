@@ -25,6 +25,7 @@ interface Car {
 const MAX_JUMPS = 35;
 const LANE_TOTAL = 18;
 const PLAYER_X = 50;
+const PLAYER_WIDTH = 7;
 const SAFE_STEP = 5;
 const CAR_COLORS = ["#ef4444", "#3b82f6", "#f97316", "#a855f7", "#14b8a6", "#eab308"];
 
@@ -144,7 +145,14 @@ export default function ChickenPage() {
 
           const row = jumpsRef.current;
           if (!isSafeLane(row)) {
-            const hit = updated.some((car) => car.lane === row && PLAYER_X >= car.x && PLAYER_X <= car.x + car.width);
+            const playerLeft = PLAYER_X - PLAYER_WIDTH / 2;
+            const playerRight = PLAYER_X + PLAYER_WIDTH / 2;
+            const hit = updated.some((car) => {
+              if (car.lane !== row) return false;
+              const carLeft = car.x + 1.6;
+              const carRight = car.x + car.width - 1.6;
+              return playerLeft < carRight && playerRight > carLeft;
+            });
             if (hit) {
               queueMicrotask(triggerLoss);
             }
@@ -231,6 +239,81 @@ export default function ChickenPage() {
 
   return (
     <div className="game-layout" style={{ height: "100%", display: "flex", overflow: "hidden" }}>
+      <div style={boardWrapStyle} onClick={jump} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === " ") { e.preventDefault(); jump(); } }}>
+        <div style={boardHeaderStyle}>
+          <div style={{ fontWeight: 700 }}>Chicken Run</div>
+          <div style={{ color: "var(--text-muted)", fontSize: "0.78rem" }}>Bet: ${fmtMoney(bet || pendingBet)}</div>
+        </div>
+
+        <div style={boardStyle}>
+          {lanes.slice().reverse().map((lane) => {
+            const isSafe = isSafeLane(lane);
+            const yPct = (lane / LANE_TOTAL) * 100;
+            const rowCars = cars.filter((car) => car.lane === lane);
+            const isPlayerLane = playerRow === lane;
+
+            return (
+              <div
+                key={lane}
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  right: 0,
+                  bottom: `${yPct}%`,
+                  height: `${100 / (LANE_TOTAL + 1)}%`,
+                  background: isSafe
+                    ? "linear-gradient(90deg,#14532d,#166534 35%,#1f7a42 65%,#14532d)"
+                    : "linear-gradient(90deg,#111827,#1f2937 15%,#374151 50%,#1f2937 85%,#111827)",
+                  borderTop: "1px solid rgba(255,255,255,0.08)",
+                }}
+              >
+                {!isSafe && (
+                  <>
+                    <div style={{ position: "absolute", left: 5, top: 0, bottom: 0, width: 3, background: "rgba(253,224,71,0.35)" }} />
+                    <div style={{ position: "absolute", right: 5, top: 0, bottom: 0, width: 3, background: "rgba(253,224,71,0.35)" }} />
+                    {[20, 46, 72].map((left) => (
+                      <div key={left} style={{ position: "absolute", left: `${left}%`, top: "36%", width: "10%", height: 4, background: "rgba(255,255,255,0.26)", borderRadius: 99 }} />
+                    ))}
+                  </>
+                )}
+                {isSafe && lane > 0 && (
+                  <div style={{ position: "absolute", left: 10, top: "26%", fontSize: "0.58rem", color: "#86efac", fontWeight: 700, letterSpacing: "0.12em" }}>
+                    SAFE {lane}×
+                  </div>
+                )}
+
+                {rowCars.map((car) => (
+                  <div
+                    key={car.id}
+                    style={{
+                      position: "absolute",
+                      left: `${car.x}%`,
+                      width: `${car.width}%`,
+                      top: 2,
+                      bottom: 2,
+                    }}
+                  >
+                    <CarIcon color={car.color} dir={car.dir} />
+                  </div>
+                ))}
+
+                {isPlayerLane && (
+                  <motion.div
+                    key={jumps}
+                    initial={{ scale: 0.82, y: 8 }}
+                    animate={{ scale: 1, y: 0 }}
+                    transition={{ type: "spring", stiffness: 280, damping: 16 }}
+                    style={{ position: "absolute", left: "46.5%", width: "7%", top: 0, bottom: 1 }}
+                  >
+                    <ChickenIcon />
+                  </motion.div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
       <div className="game-panel" style={panelStyle}>
         <h2 style={titleStyle}>Chicken</h2>
         <div style={mutedStyle}>Jump to grow your multiplier. Every 5th jump is a safe grass lane.</div>
@@ -260,9 +343,17 @@ export default function ChickenPage() {
                   <CasinoChip key={value} value={value} onClick={addBet} disabled={pendingBet >= balance || value > balance - pendingBet} />
                 ))}
               </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 6, marginTop: 8 }}>
+                <button style={utilityBtnStyle} onClick={() => setPendingBet((prev) => clampMoney(prev / 2))}>
+                  Half
+                </button>
+                <button style={utilityBtnStyle} onClick={() => setPendingBet(clampMoney(balance))}>
+                  All In
+                </button>
+              </div>
             </CollapsibleBetSelector>
 
-            <motion.button className="btn-primary" whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={startRound} disabled={pendingBet <= 0 || pendingBet > balance} style={{ width: "100%", marginTop: "auto", opacity: pendingBet > 0 ? 1 : 0.6 }}>
+            <motion.button className="btn-primary" whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={startRound} disabled={pendingBet <= 0 || pendingBet > balance} style={{ width: "100%", marginTop: 6, opacity: pendingBet > 0 ? 1 : 0.6 }}>
               START RUN
             </motion.button>
           </>
@@ -302,71 +393,6 @@ export default function ChickenPage() {
           </>
         )}
       </div>
-
-      <div style={boardWrapStyle} onClick={jump} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === " ") { e.preventDefault(); jump(); } }}>
-        <div style={boardHeaderStyle}>
-          <div style={{ fontWeight: 700 }}>Chicken Run</div>
-          <div style={{ color: "var(--text-muted)", fontSize: "0.78rem" }}>Bet: ${fmtMoney(bet || pendingBet)}</div>
-        </div>
-
-        <div style={boardStyle}>
-          {lanes.slice().reverse().map((lane) => {
-            const isSafe = isSafeLane(lane);
-            const yPct = (lane / LANE_TOTAL) * 100;
-            const rowCars = cars.filter((car) => car.lane === lane);
-            const isPlayerLane = playerRow === lane;
-
-            return (
-              <div
-                key={lane}
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  right: 0,
-                  bottom: `${yPct}%`,
-                  height: `${100 / (LANE_TOTAL + 1)}%`,
-                  background: isSafe ? "linear-gradient(90deg,#14532d,#166534,#14532d)" : "linear-gradient(90deg,#1f2937,#374151,#1f2937)",
-                  borderTop: "1px solid rgba(255,255,255,0.08)",
-                }}
-              >
-                {!isSafe && <div style={{ position: "absolute", left: "48%", top: "30%", width: 24, height: 5, background: "rgba(255,255,255,0.2)", borderRadius: 99 }} />}
-                {isSafe && lane > 0 && (
-                  <div style={{ position: "absolute", left: 10, top: "26%", fontSize: "0.58rem", color: "#86efac", fontWeight: 700, letterSpacing: "0.12em" }}>
-                    SAFE {lane}×
-                  </div>
-                )}
-
-                {rowCars.map((car) => (
-                  <div
-                    key={car.id}
-                    style={{
-                      position: "absolute",
-                      left: `${car.x}%`,
-                      width: `${car.width}%`,
-                      top: 2,
-                      bottom: 2,
-                    }}
-                  >
-                    <CarIcon color={car.color} dir={car.dir} />
-                  </div>
-                ))}
-
-                {isPlayerLane && (
-                  <motion.div
-                    key={jumps}
-                    initial={{ scale: 0.82, y: 8 }}
-                    animate={{ scale: 1, y: 0 }}
-                    transition={{ type: "spring", stiffness: 280, damping: 16 }}
-                    style={{ position: "absolute", left: "45.5%", width: "9%", top: 0, bottom: 1 }}
-                  >
-                    <ChickenIcon />
-                  </motion.div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
     </div>
   );
 }
@@ -391,7 +417,7 @@ function Stat({ label, value, accent }: { label: string; value: string; accent?:
 
 const panelStyle: React.CSSProperties = {
   width: "min(320px, 100%)",
-  borderRight: "1px solid var(--border-color)",
+  borderLeft: "1px solid var(--border-color)",
   background: "linear-gradient(180deg, rgba(15,25,35,0.95), rgba(12,20,30,0.95))",
   padding: "14px",
   display: "flex",
@@ -436,7 +462,7 @@ const boardWrapStyle: React.CSSProperties = {
   minWidth: 0,
   display: "flex",
   flexDirection: "column",
-  padding: "16px",
+  padding: "16px 8px 16px 16px",
   gap: 10,
 };
 
@@ -457,4 +483,17 @@ const boardStyle: React.CSSProperties = {
   border: "1px solid rgba(255,255,255,0.1)",
   background: "#0b1220",
   boxShadow: "inset 0 0 26px rgba(0,0,0,0.45)",
+};
+
+const utilityBtnStyle: React.CSSProperties = {
+  border: "1px solid rgba(148,163,184,0.28)",
+  background: "rgba(30,41,59,0.8)",
+  color: "var(--text-secondary)",
+  borderRadius: 7,
+  padding: "7px 8px",
+  fontFamily: "'Barlow Condensed', sans-serif",
+  fontWeight: 700,
+  letterSpacing: "0.08em",
+  textTransform: "uppercase",
+  cursor: "pointer",
 };
