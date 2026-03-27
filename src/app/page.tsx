@@ -781,7 +781,7 @@ const GAMES = [
   {
     label: "Chicken",
     href: "/chicken",
-    locked: true,
+    locked: false,
     gradient: "linear-gradient(145deg, #d97706 0%, #92400e 55%, #451a03 100%)",
     art: <ChickenArt />,
   },
