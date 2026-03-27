@@ -26,6 +26,8 @@ const MAX_JUMPS = 35;
 const LANE_TOTAL = 18;
 const PLAYER_X = 50;
 const PLAYER_WIDTH = 7;
+const CHICKEN_COLOR_FILL = 0.64; // yellow body/wing visual width used for collision
+const CAR_COLOR_FILL = 0.86; // painted body region (ignores transparent margins/lights)
 const SAFE_STEP = 5;
 const CAR_COLORS = ["#ef4444", "#3b82f6", "#f97316", "#a855f7", "#14b8a6", "#eab308"];
 
@@ -82,6 +84,7 @@ export default function ChickenPage() {
   const rafRef = useRef<number>(0);
   const lastFrameRef = useRef<number>(0);
   const carIdRef = useRef(0);
+  const jumpGraceUntilRef = useRef(0);
 
   useEffect(() => {
     phaseRef.current = phase;
@@ -99,6 +102,7 @@ export default function ChickenPage() {
     jumpsRef.current = 0;
     setCars([]);
     cooldownRef.current = Array.from({ length: LANE_TOTAL + 1 }, () => Math.random() * 0.9);
+    jumpGraceUntilRef.current = 0;
   }, []);
 
   const triggerLoss = useCallback(() => {
@@ -144,14 +148,17 @@ export default function ChickenPage() {
           }
 
           const row = jumpsRef.current;
-          if (!isSafeLane(row)) {
-            const playerLeft = PLAYER_X - PLAYER_WIDTH / 2;
-            const playerRight = PLAYER_X + PLAYER_WIDTH / 2;
+          if (!isSafeLane(row) && ts >= jumpGraceUntilRef.current) {
+            const playerColorHalf = (PLAYER_WIDTH * CHICKEN_COLOR_FILL) / 2;
+            const playerLeft = PLAYER_X - playerColorHalf;
+            const playerRight = PLAYER_X + playerColorHalf;
             const hit = updated.some((car) => {
               if (car.lane !== row) return false;
-              const carLeft = car.x + 1.6;
-              const carRight = car.x + car.width - 1.6;
-              return playerLeft < carRight && playerRight > carLeft;
+              const colorInset = ((1 - CAR_COLOR_FILL) * car.width) / 2;
+              const carLeft = car.x + colorInset;
+              const carRight = car.x + car.width - colorInset;
+              const overlap = Math.min(playerRight, carRight) - Math.max(playerLeft, carLeft);
+              return overlap > 0.7;
             });
             if (hit) {
               queueMicrotask(triggerLoss);
@@ -204,6 +211,7 @@ export default function ChickenPage() {
 
   const jump = useCallback(() => {
     if (phaseRef.current !== "playing") return;
+    jumpGraceUntilRef.current = performance.now() + 130;
     setJumps((prev) => {
       const next = Math.min(MAX_JUMPS, prev + 1);
       if (next > bestJump) setBestJump(next);
