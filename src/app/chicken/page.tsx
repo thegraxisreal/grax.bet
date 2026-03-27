@@ -24,6 +24,7 @@ interface Car {
 
 const MAX_JUMPS = 35;
 const LANE_TOTAL = 18;
+const CAMERA_ANCHOR_ROW = 4; // keep chicken near lower part once climbing high
 const PLAYER_X = 50;
 const PLAYER_WIDTH = 7;
 const CHICKEN_COLOR_FILL = 0.64; // yellow body/wing visual width used for collision
@@ -80,11 +81,12 @@ export default function ChickenPage() {
 
   const phaseRef = useRef<Phase>("idle");
   const jumpsRef = useRef(0);
-  const cooldownRef = useRef<number[]>(Array.from({ length: LANE_TOTAL + 1 }, () => Math.random() * 0.9));
+  const cooldownRef = useRef<Record<number, number>>({});
   const rafRef = useRef<number>(0);
   const lastFrameRef = useRef<number>(0);
   const carIdRef = useRef(0);
   const jumpGraceUntilRef = useRef(0);
+  const cameraStartRef = useRef(0);
 
   useEffect(() => {
     phaseRef.current = phase;
@@ -92,6 +94,7 @@ export default function ChickenPage() {
 
   useEffect(() => {
     jumpsRef.current = jumps;
+    cameraStartRef.current = Math.max(0, jumps - CAMERA_ANCHOR_ROW);
   }, [jumps]);
 
   const multiplier = useMemo(() => Math.max(1, jumps), [jumps]);
@@ -101,8 +104,9 @@ export default function ChickenPage() {
     setJumps(0);
     jumpsRef.current = 0;
     setCars([]);
-    cooldownRef.current = Array.from({ length: LANE_TOTAL + 1 }, () => Math.random() * 0.9);
+    cooldownRef.current = {};
     jumpGraceUntilRef.current = 0;
+    cameraStartRef.current = 0;
   }, []);
 
   const triggerLoss = useCallback(() => {
@@ -122,12 +126,17 @@ export default function ChickenPage() {
 
       if (phaseRef.current === "playing") {
         setCars((prev) => {
+          const minLane = cameraStartRef.current - 2;
+          const maxLane = cameraStartRef.current + LANE_TOTAL + 2;
           const updated = prev
             .map((car) => ({ ...car, x: car.x + car.dir * car.speed * dt }))
-            .filter((car) => car.x > -car.width - 8 && car.x < 108);
+            .filter((car) => car.x > -car.width - 8 && car.x < 108 && car.lane >= minLane && car.lane <= maxLane);
 
-          for (let lane = 1; lane <= LANE_TOTAL; lane++) {
+          for (let lane = cameraStartRef.current + 1; lane <= cameraStartRef.current + LANE_TOTAL; lane++) {
             if (isSafeLane(lane)) continue;
+            if (cooldownRef.current[lane] === undefined) {
+              cooldownRef.current[lane] = Math.random() * 0.9;
+            }
             cooldownRef.current[lane] -= dt;
             if (cooldownRef.current[lane] <= 0) {
               const laneCars = updated.filter((car) => car.lane === lane);
@@ -258,8 +267,9 @@ export default function ChickenPage() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [jump]);
 
-  const playerRow = Math.max(0, Math.min(LANE_TOTAL, jumps));
-  const lanes = Array.from({ length: LANE_TOTAL + 1 }, (_, i) => i);
+  const cameraStart = Math.max(0, jumps - CAMERA_ANCHOR_ROW);
+  const playerVisibleRow = jumps - cameraStart;
+  const lanes = Array.from({ length: LANE_TOTAL + 1 }, (_, i) => cameraStart + i);
 
   return (
     <div className="game-layout" style={{ height: "100%", display: "flex", overflow: "hidden" }}>
@@ -272,9 +282,9 @@ export default function ChickenPage() {
         <div style={boardStyle}>
           {lanes.slice().reverse().map((lane) => {
             const isSafe = isSafeLane(lane);
-            const yPct = (lane / LANE_TOTAL) * 100;
+            const yPct = ((lane - cameraStart) / LANE_TOTAL) * 100;
             const rowCars = cars.filter((car) => car.lane === lane);
-            const isPlayerLane = playerRow === lane;
+            const isPlayerLane = playerVisibleRow === lane - cameraStart;
 
             return (
               <div
