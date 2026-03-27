@@ -264,7 +264,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Plinko",        href: "/plinko",       icon: <PlinkoIcon /> },
   { label: "Horse Racing",  href: "/horse-racing",  icon: <HorseRacingIcon />, locked: true },
   { label: "Bomb Defuse",   href: "/bomb-defuse",   icon: <BombDefuseIcon />, promo: "2X MONEY" },
-  { label: "Chicken",       href: "/chicken",       icon: <ChickenIcon />,     locked: true },
+  { label: "Chicken",       href: "/chicken",       icon: <ChickenIcon /> },
 ];
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {

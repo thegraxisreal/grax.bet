@@ -17,10 +17,26 @@ const GAME_ICONS: Record<string, string> = {
   Roulette:  "🎡",
   Mines:     "💣",
   Plinko:    "🔵",
+  Chicken:   "🐔",
+  "Bomb Defuse": "🧨",
 };
 
 const MAX_VISIBLE = 5;
 const TOAST_MS = 5500;
+
+function formatFeedAmount(value: number): string {
+  const abs = Math.abs(value);
+  const short = (n: number, suffix: string) => {
+    const v = n % 1 === 0 ? n.toFixed(0) : n.toFixed(2).replace(/\.?0+$/, "");
+    return `${v}${suffix}`;
+  };
+
+  if (abs >= 1e15) return abs.toExponential(2).replace("e+", "e+");
+  if (abs >= 1e12) return short(abs / 1e12, "T");
+  if (abs >= 1e9) return short(abs / 1e9, "B");
+  if (abs >= 1e6) return short(abs / 1e6, "M");
+  return abs.toLocaleString(undefined, { maximumFractionDigits: 2 });
+}
 
 export default function ActivityFeed() {
   const { username: currentUser } = useUser();
@@ -117,17 +133,15 @@ export default function ActivityFeed() {
               borderRadius: 10,
               padding: "12px 16px",
               display: "flex",
-              alignItems: "center",
+              alignItems: "flex-start",
               gap: 10,
               fontFamily: "'Barlow Condensed', sans-serif",
-              fontSize: "1.05rem",
+              fontSize: "1rem",
               letterSpacing: "0.02em",
               pointerEvents: "auto",
               boxShadow: toast.result === "win"
                 ? "0 4px 24px rgba(0,230,118,0.18), 0 2px 8px rgba(0,0,0,0.4)"
                 : "0 4px 24px rgba(244,67,54,0.12), 0 2px 8px rgba(0,0,0,0.4)",
-              whiteSpace: "nowrap",
-              overflow: "hidden",
               cursor: "pointer",
             }}
             onClick={() => dismiss(toast.id)}
@@ -135,21 +149,22 @@ export default function ActivityFeed() {
             <span style={{ fontSize: "1.4rem", flexShrink: 0 }}>
               {GAME_ICONS[toast.game] ?? "🎰"}
             </span>
-            <span style={{ color: "var(--text-secondary)", overflow: "hidden", textOverflow: "ellipsis" }}>
-              <span style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: "1.1rem" }}>
-                {toast.username}
-              </span>
-              {" "}
-              <span style={{ color: toast.result === "win" ? "var(--accent-green)" : "#f44336", fontWeight: 700 }}>
-                {toast.result === "win" ? "won" : "lost"}
-              </span>
-              {" "}
-              <span style={{ color: toast.result === "win" ? "var(--accent-gold)" : "#ff6b6b", fontWeight: 800, fontSize: "1.1rem" }}>
-                ${toast.amount.toLocaleString()}
-              </span>
-              {" on "}
-              <span style={{ color: "var(--text-primary)" }}>{toast.game}</span>
-            </span>
+            <div style={{ color: "var(--text-secondary)", minWidth: 0, display: "flex", flexDirection: "column", gap: 2 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", lineHeight: 1.1 }}>
+                <span style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: "1.05rem", maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis" }}>
+                  {toast.username}
+                </span>
+                <span style={{ color: toast.result === "win" ? "var(--accent-green)" : "#f44336", fontWeight: 700 }}>
+                  {toast.result === "win" ? "won" : "lost"}
+                </span>
+                <span style={{ color: toast.result === "win" ? "var(--accent-gold)" : "#ff6b6b", fontWeight: 800, fontSize: "1.05rem" }}>
+                  ${formatFeedAmount(toast.amount)}
+                </span>
+              </div>
+              <div style={{ fontSize: "0.72rem", letterSpacing: "0.09em", textTransform: "uppercase", color: "var(--text-muted)" }}>
+                on <span style={{ color: "var(--text-primary)", fontWeight: 700 }}>{toast.game}</span>
+              </div>
+            </div>
           </motion.div>
         ))}
       </AnimatePresence>
