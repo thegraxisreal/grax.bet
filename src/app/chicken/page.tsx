@@ -22,7 +22,6 @@ interface Car {
   color: string;
 }
 
-const MAX_JUMPS = 35;
 const LANE_TOTAL = 18;
 const CAMERA_ANCHOR_ROW = 4; // keep chicken near lower part once climbing high
 const PLAYER_X = 50;
@@ -139,25 +138,27 @@ export default function ChickenPage() {
             }
             cooldownRef.current[lane] -= dt;
             if (cooldownRef.current[lane] <= 0) {
+              const progress = jumpsRef.current;
+              const hardRamp = progress <= 20 ? 1 : Math.min(2.35, 1 + (progress - 20) / 20);
               const laneCars = updated.filter((car) => car.lane === lane);
               const hasCenterTraffic = laneCars.some((car) => {
                 const mid = car.x + car.width / 2;
                 return mid > 34 && mid < 66;
               });
               if (hasCenterTraffic) {
-                cooldownRef.current[lane] = 0.25 + Math.random() * 0.35;
+                cooldownRef.current[lane] = (0.25 + Math.random() * 0.35) / hardRamp;
                 continue;
               }
 
               const dir: 1 | -1 = Math.random() > 0.5 ? 1 : -1;
               const hasOppositeDirCar = laneCars.some((car) => car.dir !== dir);
               if (hasOppositeDirCar) {
-                cooldownRef.current[lane] = 0.4 + Math.random() * 0.55;
+                cooldownRef.current[lane] = (0.4 + Math.random() * 0.55) / hardRamp;
                 continue;
               }
 
               const width = 11 + Math.random() * 6;
-              const speed = 16 + Math.random() * 14;
+              const speed = (16 + Math.random() * 14) * hardRamp;
               const nextCar: Car = {
                 id: carIdRef.current++,
                 lane,
@@ -168,9 +169,14 @@ export default function ChickenPage() {
                 color: CAR_COLORS[Math.floor(Math.random() * CAR_COLORS.length)],
               };
               updated.push(nextCar);
-              cooldownRef.current[lane] = 1.35 + Math.random() * 1.45;
+              cooldownRef.current[lane] = (1.35 + Math.random() * 1.45) / hardRamp;
             }
           }
+          const forgetBefore = cameraStartRef.current - 8;
+          Object.keys(cooldownRef.current).forEach((laneKey) => {
+            const laneNum = Number(laneKey);
+            if (laneNum < forgetBefore) delete cooldownRef.current[laneNum];
+          });
 
           const row = jumpsRef.current;
           if (!isSafeLane(row) && ts >= jumpGraceUntilRef.current) {
@@ -238,23 +244,12 @@ export default function ChickenPage() {
     if (phaseRef.current !== "playing") return;
     jumpGraceUntilRef.current = performance.now() + 130;
     setJumps((prev) => {
-      const next = Math.min(MAX_JUMPS, prev + 1);
+      const next = prev + 1;
       if (next > bestJump) setBestJump(next);
-      if (next === MAX_JUMPS) {
-        const payout = clampMoney(bet * next);
-        addBalance(payout);
-        unregisterBet();
-        setPhase("cashout");
-        playCashoutWin();
-        const net = clampMoney(payout - bet);
-        setRecentResult({ net, jumps: next });
-        if (username) logFeedEvent(username, "Chicken", net, "win");
-      } else {
-        playWireCut();
-      }
+      playWireCut();
       return next;
     });
-  }, [addBalance, bestJump, bet, unregisterBet, username]);
+  }, [bestJump]);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -397,8 +392,9 @@ export default function ChickenPage() {
           <>
             <Stat label="Current" value={`${multiplier.toFixed(2)}×`} accent="gold" />
             <Stat label="Potential" value={`$${fmtMoney(potentialPayout)}`} accent="green" />
-            <Stat label="Safe Checkpoint" value={`${Math.floor(jumps / SAFE_STEP) * SAFE_STEP} / ${MAX_JUMPS}`} />
+            <Stat label="Next Safe" value={`${Math.ceil((jumps + 1) / SAFE_STEP) * SAFE_STEP}×`} />
             <div style={{ ...mutedStyle, marginTop: 4 }}>Click the board or press <strong style={{ color: "var(--accent-gold)" }}>Space</strong> to jump.</div>
+            <div style={mutedStyle}>Difficulty ramps up quickly after <strong style={{ color: "var(--accent-gold)" }}>20×</strong>.</div>
 
             <motion.button className="btn-primary" whileHover={{ scale: jumps > 0 ? 1.03 : 1 }} whileTap={{ scale: jumps > 0 ? 0.97 : 1 }} disabled={jumps <= 0} onClick={cashout} style={{ width: "100%", marginTop: "auto", background: "linear-gradient(135deg,#22c55e,#15803d)", opacity: jumps > 0 ? 1 : 0.5 }}>
               CASH OUT ${fmtMoney(potentialPayout)}
