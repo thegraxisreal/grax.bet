@@ -130,9 +130,25 @@ export default function ChickenPage() {
             if (isSafeLane(lane)) continue;
             cooldownRef.current[lane] -= dt;
             if (cooldownRef.current[lane] <= 0) {
+              const laneCars = updated.filter((car) => car.lane === lane);
+              const hasCenterTraffic = laneCars.some((car) => {
+                const mid = car.x + car.width / 2;
+                return mid > 34 && mid < 66;
+              });
+              if (hasCenterTraffic) {
+                cooldownRef.current[lane] = 0.25 + Math.random() * 0.35;
+                continue;
+              }
+
               const dir: 1 | -1 = Math.random() > 0.5 ? 1 : -1;
+              const hasOppositeDirCar = laneCars.some((car) => car.dir !== dir);
+              if (hasOppositeDirCar) {
+                cooldownRef.current[lane] = 0.4 + Math.random() * 0.55;
+                continue;
+              }
+
               const width = 11 + Math.random() * 6;
-              const speed = 18 + Math.random() * 18;
+              const speed = 16 + Math.random() * 14;
               const nextCar: Car = {
                 id: carIdRef.current++,
                 lane,
@@ -143,7 +159,7 @@ export default function ChickenPage() {
                 color: CAR_COLORS[Math.floor(Math.random() * CAR_COLORS.length)],
               };
               updated.push(nextCar);
-              cooldownRef.current[lane] = 1.0 + Math.random() * 1.2;
+              cooldownRef.current[lane] = 1.35 + Math.random() * 1.45;
             }
           }
 
