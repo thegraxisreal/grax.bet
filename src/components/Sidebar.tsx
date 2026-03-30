@@ -213,6 +213,18 @@ function ChickenIcon() {
   );
 }
 
+function SpamIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+      <rect x="2" y="3" width="18" height="16" rx="5" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M7 8.5h8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M7 12h8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" opacity="0.8" />
+      <path d="M7 15.5h5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" opacity="0.6" />
+      <circle cx="16.5" cy="15.5" r="1.4" fill="currentColor" />
+    </svg>
+  );
+}
+
 function CloseIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
@@ -260,6 +272,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Roulette",  href: "/roulette",  icon: <RouletteIcon /> },
   { label: "Crash",     href: "/crash",     icon: <CrashIcon /> },
   { label: "March Madness", href: "/sports",    icon: <SportsIcon />, live: true },
+  { label: "SPAM!",         href: "/spam",      icon: <SpamIcon />, promo: "15 SEC" },
   { label: "Mines",     href: "/mines",     icon: <MinesIcon /> },
   { label: "Plinko",        href: "/plinko",       icon: <PlinkoIcon /> },
   { label: "Horse Racing",  href: "/horse-racing",  icon: <HorseRacingIcon />, locked: true },

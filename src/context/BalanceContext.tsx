@@ -16,6 +16,8 @@ interface BalanceContextValue {
   isBroke: boolean;
   registerBet: () => void;
   unregisterBet: () => void;
+  isCoolingDown: boolean;
+  cooldownRemainingMs: number;
 }
 
 const BalanceContext = createContext<BalanceContextValue | null>(null);
@@ -95,6 +97,8 @@ export function BalanceProvider({ children }: { children: React.ReactNode }) {
         isBroke,
         registerBet,
         unregisterBet,
+        isCoolingDown: false,
+        cooldownRemainingMs: 0,
       }}
     >
       {children}

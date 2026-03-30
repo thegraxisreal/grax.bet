@@ -68,7 +68,7 @@ export default function WinShareButton() {
   }, [clear]);
 
   const handleShare = useCallback(async () => {
-    if (!pending || !username || sent) return;
+    if (!pending || !username || sent || typeof pending.amount !== "number") return;
     setSent(true);
     try {
       await sendWinAnnouncement(username, pending.game, pending.amount);
@@ -81,6 +81,7 @@ export default function WinShareButton() {
   }, [clear, pending, sent, username]);
 
   if (!pending || !username) return null;
+  if (typeof pending.amount !== "number") return null;
 
   const icon = GAME_ICONS[pending.game] ?? "🎰";
   const amountStr = `$${pending.amount % 1 === 0 ? pending.amount : pending.amount.toFixed(2)}`;

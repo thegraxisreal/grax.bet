@@ -1,5 +1,6 @@
 import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
 import { getFirestore, type Firestore } from "firebase/firestore";
+import { getFunctions, type Functions } from "firebase/functions";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBjjaRQEC1HBnucITzXMTJkysvHy9qy30g",
@@ -13,6 +14,7 @@ const firebaseConfig = {
 
 // Lazy singletons — never initialized at module-eval time so SSR stays clean.
 let _db: Firestore | undefined;
+let _functions: Functions | undefined;
 
 export function getDb(): Firestore {
   if (_db) return _db;
@@ -20,4 +22,12 @@ export function getDb(): Firestore {
     getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
   _db = getFirestore(app);
   return _db;
+}
+
+export function getFunctionsClient(): Functions {
+  if (_functions) return _functions;
+  const app: FirebaseApp =
+    getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+  _functions = getFunctions(app);
+  return _functions;
 }

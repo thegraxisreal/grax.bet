@@ -712,9 +712,57 @@ function ChickenArt() {
   );
 }
 
+function SpamArt() {
+  return (
+    <svg viewBox="0 0 200 150" fill="none" style={{ width: "100%", height: "100%" }}>
+      <defs>
+        <linearGradient id="spam-bg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#0f766e" />
+          <stop offset="55%" stopColor="#115e59" />
+          <stop offset="100%" stopColor="#0b2f33" />
+        </linearGradient>
+        <radialGradient id="spam-glow" cx="50%" cy="45%" r="55%">
+          <stop offset="0%" stopColor="rgba(45,212,191,0.35)" />
+          <stop offset="100%" stopColor="rgba(0,0,0,0)" />
+        </radialGradient>
+      </defs>
+
+      <rect x="22" y="16" width="156" height="108" rx="16" fill="url(#spam-bg)" />
+      <ellipse cx="100" cy="70" rx="64" ry="42" fill="url(#spam-glow)" />
+
+      <g opacity="0.16">
+        {[48, 76, 104, 132].map((x) => (
+          <line key={x} x1={x} y1="24" x2={x} y2="116" stroke="white" strokeWidth="1" />
+        ))}
+        {[42, 64, 86, 108].map((y) => (
+          <line key={y} x1="30" y1={y} x2="170" y2={y} stroke="white" strokeWidth="1" />
+        ))}
+      </g>
+
+      <rect x="40" y="38" width="44" height="54" rx="10" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.18)" />
+      <rect x="116" y="38" width="44" height="54" rx="10" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.18)" />
+      <text x="62" y="72" textAnchor="middle" dominantBaseline="middle" fontSize="22" fontWeight="900" fill="#99f6e4" fontFamily="'Barlow Condensed',sans-serif">248</text>
+      <text x="138" y="72" textAnchor="middle" dominantBaseline="middle" fontSize="22" fontWeight="900" fill="#fcd34d" fontFamily="'Barlow Condensed',sans-serif">241</text>
+
+      <text x="100" y="60" textAnchor="middle" fontSize="13" fontWeight="800" fill="white" fontFamily="'Barlow Condensed',sans-serif" letterSpacing="0.18em">SPAM!</text>
+      <text x="100" y="82" textAnchor="middle" fontSize="12" fontWeight="700" fill="rgba(255,255,255,0.8)" fontFamily="'Barlow Condensed',sans-serif" letterSpacing="0.14em">3 2 1</text>
+
+      <rect x="63" y="98" width="74" height="16" rx="8" fill="rgba(0,0,0,0.24)" />
+      <text x="100" y="109" textAnchor="middle" fontSize="8" fontWeight="800" fill="#f0fdfa" fontFamily="'Barlow Condensed',sans-serif" letterSpacing="0.16em">HEAD TO HEAD</text>
+    </svg>
+  );
+}
+
 // ── Game data ─────────────────────────────────────────────────────────────────
 
-const GAMES = [
+const GAMES: ReadonlyArray<{
+  label: string;
+  href: string;
+  locked: boolean;
+  multiplayer?: boolean;
+  gradient: string;
+  art: React.ReactNode;
+}> = [
   {
     label: "Blackjack",
     href: "/blackjack",
@@ -777,6 +825,14 @@ const GAMES = [
     locked: false,
     gradient: "linear-gradient(145deg, #dc2626 0%, #7f1d1d 55%, #2d0a0a 100%)",
     art: <BombDefuseArt />,
+  },
+  {
+    label: "SPAM!",
+    href: "/spam",
+    locked: false,
+    multiplayer: true,
+    gradient: "linear-gradient(145deg, #14b8a6 0%, #0f766e 55%, #0b2f33 100%)",
+    art: <SpamArt />,
   },
   {
     label: "Chicken",
@@ -959,7 +1015,7 @@ export default function Home() {
               {!game.locked && (
                 <div style={{
                   position: "absolute", top: 10, right: 10,
-                  background: "var(--accent-green)",
+                  background: game.multiplayer ? "#f0b429" : "var(--accent-green)",
                   borderRadius: "20px",
                   padding: "2px 8px",
                   fontSize: "0.58rem",
@@ -968,7 +1024,7 @@ export default function Home() {
                   letterSpacing: "0.1em",
                   color: "#0f1923",
                 }}>
-                  LIVE
+                  {game.multiplayer ? "MULTIPLAYER" : "LIVE"}
                 </div>
               )}
             </motion.div>

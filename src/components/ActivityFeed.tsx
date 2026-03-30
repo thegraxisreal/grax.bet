@@ -24,6 +24,40 @@ const GAME_ICONS: Record<string, string> = {
 const MAX_VISIBLE = 5;
 const TOAST_MS = 5500;
 
+function getToastColors(result: Toast["result"]) {
+  if (result === "win") {
+    return {
+      bg: "linear-gradient(135deg, rgba(0,230,118,0.1), var(--bg-card))",
+      border: "rgba(0,230,118,0.4)",
+      left: "var(--accent-green)",
+      shadow: "0 4px 24px rgba(0,230,118,0.18), 0 2px 8px rgba(0,0,0,0.4)",
+      verb: "won",
+      verbColor: "var(--accent-green)",
+      amountColor: "var(--accent-gold)",
+    };
+  }
+  if (result === "hold") {
+    return {
+      bg: "linear-gradient(135deg, rgba(240,180,41,0.14), var(--bg-card))",
+      border: "rgba(240,180,41,0.45)",
+      left: "var(--accent-gold)",
+      shadow: "0 4px 24px rgba(240,180,41,0.18), 0 2px 8px rgba(0,0,0,0.4)",
+      verb: "was held",
+      verbColor: "var(--accent-gold)",
+      amountColor: "var(--accent-gold)",
+    };
+  }
+  return {
+    bg: "linear-gradient(135deg, rgba(244,67,54,0.08), var(--bg-card))",
+    border: "rgba(244,67,54,0.3)",
+    left: "#f44336",
+    shadow: "0 4px 24px rgba(244,67,54,0.12), 0 2px 8px rgba(0,0,0,0.4)",
+    verb: "lost",
+    verbColor: "#f44336",
+    amountColor: "#ff6b6b",
+  };
+}
+
 function formatFeedAmount(value: number): string {
   const abs = Math.abs(value);
   const short = (n: number, suffix: string) => {
@@ -94,6 +128,7 @@ export default function ActivityFeed() {
           game: d.game,
           amount: d.amount,
           result: d.result,
+          note: d.note,
         });
       });
     });
@@ -118,6 +153,10 @@ export default function ActivityFeed() {
     }}>
       <AnimatePresence>
         {toasts.map(toast => (
+          (() => {
+            const colors = getToastColors(toast.result);
+            const hasAmount = typeof toast.amount === "number" && toast.amount > 0;
+            return (
           <motion.div
             key={toast.id}
             initial={{ opacity: 0, x: 60, scale: 0.88 }}
@@ -125,11 +164,9 @@ export default function ActivityFeed() {
             exit={{ opacity: 0, x: 60, scale: 0.88 }}
             transition={{ duration: 0.25, ease: "easeOut" }}
             style={{
-              background: toast.result === "win"
-                ? "linear-gradient(135deg, rgba(0,230,118,0.1), var(--bg-card))"
-                : "linear-gradient(135deg, rgba(244,67,54,0.08), var(--bg-card))",
-              border: `1px solid ${toast.result === "win" ? "rgba(0,230,118,0.4)" : "rgba(244,67,54,0.3)"}`,
-              borderLeft: `4px solid ${toast.result === "win" ? "var(--accent-green)" : "#f44336"}`,
+              background: colors.bg,
+              border: `1px solid ${colors.border}`,
+              borderLeft: `4px solid ${colors.left}`,
               borderRadius: 10,
               padding: "12px 16px",
               display: "flex",
@@ -139,9 +176,7 @@ export default function ActivityFeed() {
               fontSize: "1rem",
               letterSpacing: "0.02em",
               pointerEvents: "auto",
-              boxShadow: toast.result === "win"
-                ? "0 4px 24px rgba(0,230,118,0.18), 0 2px 8px rgba(0,0,0,0.4)"
-                : "0 4px 24px rgba(244,67,54,0.12), 0 2px 8px rgba(0,0,0,0.4)",
+              boxShadow: colors.shadow,
               cursor: "pointer",
             }}
             onClick={() => dismiss(toast.id)}
@@ -154,18 +189,24 @@ export default function ActivityFeed() {
                 <span style={{ color: "var(--text-primary)", fontWeight: 800, fontSize: "1.05rem", maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis" }}>
                   {toast.username}
                 </span>
-                <span style={{ color: toast.result === "win" ? "var(--accent-green)" : "#f44336", fontWeight: 700 }}>
-                  {toast.result === "win" ? "won" : "lost"}
+                <span style={{ color: colors.verbColor, fontWeight: 700 }}>
+                  {colors.verb}
                 </span>
-                <span style={{ color: toast.result === "win" ? "var(--accent-gold)" : "#ff6b6b", fontWeight: 800, fontSize: "1.05rem" }}>
-                  ${formatFeedAmount(toast.amount)}
-                </span>
+                {hasAmount && (
+                  <span style={{ color: colors.amountColor, fontWeight: 800, fontSize: "1.05rem" }}>
+                    ${formatFeedAmount(toast.amount!)}
+                  </span>
+                )}
               </div>
               <div style={{ fontSize: "0.72rem", letterSpacing: "0.09em", textTransform: "uppercase", color: "var(--text-muted)" }}>
-                on <span style={{ color: "var(--text-primary)", fontWeight: 700 }}>{toast.game}</span>
+                {toast.result === "hold" && toast.note
+                  ? toast.note
+                  : <>on <span style={{ color: "var(--text-primary)", fontWeight: 700 }}>{toast.game}</span></>}
               </div>
             </div>
           </motion.div>
+            );
+          })()
         ))}
       </AnimatePresence>
     </div>
