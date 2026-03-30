@@ -4,7 +4,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useBalance } from "@/context/BalanceContext";
 import { useUser } from "@/context/UserContext";
-import { logFeedEvent, logFeedHoldEvent } from "@/lib/feed";
+import { logFeedEvent } from "@/lib/feed";
 import { fmtMoney } from "@/lib/format";
 import { CasinoChip } from "@/components/CasinoChip";
 import { playChipClick } from "@/lib/sound";
@@ -21,28 +21,6 @@ const BASE_MULTIPLIERS = [25, 12, 6, 3.2, 1.8, 1.2, 0.9, 0.8, 0.4, 0.8, 0.9, 1.2
 const HIGH_BALL_MULTIPLIERS = [10, 6, 3.5, 2.2, 1.6, 1.2, 0.95, 0.75, 0.7, 0.75, 0.95, 1.2, 1.6, 2.2, 3.5, 6, 10];
 
 const BALL_COUNTS = [1, 3, 5, 10, 25];
-const PLINKO_COOLDOWN_MS = 90_000;
-const PLINKO_MIN_ROUNDS_FOR_CHECK = 5;
-const PLINKO_TRIGGER_MIN = 500;
-const PLINKO_TRIGGER_RATIO = 0.3;
-
-interface PlinkoRoundSummary {
-  at: number;
-  net: number;
-  balanceAtStart: number;
-}
-
-function getPlinkoTrigger(balanceAtStart: number): number {
-  if (!Number.isFinite(balanceAtStart) || balanceAtStart <= 0) return PLINKO_TRIGGER_MIN;
-  return Math.max(PLINKO_TRIGGER_MIN, balanceAtStart * PLINKO_TRIGGER_RATIO);
-}
-
-function formatCooldown(ms: number): string {
-  const totalSeconds = Math.ceil(ms / 1000);
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
-}
 
 function getMultipliersForBallCount(ballCount: number): number[] {
   return ballCount >= 10 ? HIGH_BALL_MULTIPLIERS : BASE_MULTIPLIERS;
@@ -255,9 +233,6 @@ export default function PlinkoPage() {
   const [bet, setBet] = useState(1);
   const [ballCount, setBallCount] = useState(1);
   const [sessionProfit, setSessionProfit] = useState(0);
-  const [plinkoCooldownUntil, setPlinkoCooldownUntil] = useState(0);
-  const [plinkoCooldownNow, setPlinkoCooldownNow] = useState(() => Date.now());
-  const [recentRounds, setRecentRounds] = useState<PlinkoRoundSummary[]>([]);
 
   // Results
   const [ballResults, setBallResults] = useState<BallResult[]>([]);
@@ -275,8 +250,6 @@ export default function PlinkoPage() {
   const ballIdRef = useRef(0);
   const phaseRef = useRef<Phase>("idle");
   const betRef = useRef(bet);
-  const plinkoCooldownUntilRef = useRef(0);
-  const plinkoCooldownKeyRef = useRef("");
   const dropContextRef = useRef<{
     totalBet: number;
     ballCount: number;
@@ -291,68 +264,7 @@ export default function PlinkoPage() {
 
   const totalBet = bet * ballCount;
   const activeMultipliers = getMultipliersForBallCount(ballCount);
-  const plinkoCooldownKey = username ? `tgrg_plinko_cooldown_until_${username}` : "tgrg_plinko_cooldown_until_guest";
-  const plinkoRoundsKey = username ? `tgrg_plinko_recent_rounds_${username}` : "tgrg_plinko_recent_rounds_guest";
-  const isPlinkoCoolingDown = plinkoCooldownUntil > plinkoCooldownNow;
-  const plinkoCooldownRemainingMs = Math.max(0, plinkoCooldownUntil - plinkoCooldownNow);
-  const controlsDisabled = phase === "dropping" || isPlinkoCoolingDown;
-  plinkoCooldownUntilRef.current = plinkoCooldownUntil;
-  plinkoCooldownKeyRef.current = plinkoCooldownKey;
-
-  useEffect(() => {
-    const stored = localStorage.getItem(plinkoCooldownKey);
-    if (!stored) {
-      setPlinkoCooldownUntil(0);
-      return;
-    }
-    const parsed = parseInt(stored, 10);
-    if (!Number.isNaN(parsed) && parsed > Date.now()) {
-      setPlinkoCooldownUntil(parsed);
-      setPlinkoCooldownNow(Date.now());
-    } else {
-      localStorage.removeItem(plinkoCooldownKey);
-      setPlinkoCooldownUntil(0);
-    }
-  }, [plinkoCooldownKey]);
-
-  useEffect(() => {
-    if (!isPlinkoCoolingDown) return;
-    const timer = setInterval(() => setPlinkoCooldownNow(Date.now()), 250);
-    return () => clearInterval(timer);
-  }, [isPlinkoCoolingDown]);
-
-  useEffect(() => {
-    if (!plinkoCooldownUntil) return;
-    if (Date.now() >= plinkoCooldownUntil) {
-      setPlinkoCooldownUntil(0);
-      localStorage.removeItem(plinkoCooldownKey);
-    }
-  }, [plinkoCooldownUntil, plinkoCooldownNow, plinkoCooldownKey]);
-
-  useEffect(() => {
-    const stored = localStorage.getItem(plinkoRoundsKey);
-    if (!stored) {
-      setRecentRounds([]);
-      return;
-    }
-    try {
-      const parsed = JSON.parse(stored) as PlinkoRoundSummary[];
-      if (!Array.isArray(parsed)) {
-        setRecentRounds([]);
-        return;
-      }
-      const cleaned = parsed
-        .filter((r) => Number.isFinite(r.at) && Number.isFinite(r.net) && Number.isFinite(r.balanceAtStart))
-        .slice(-PLINKO_MIN_ROUNDS_FOR_CHECK);
-      setRecentRounds(cleaned);
-    } catch {
-      setRecentRounds([]);
-    }
-  }, [plinkoRoundsKey]);
-
-  useEffect(() => {
-    localStorage.setItem(plinkoRoundsKey, JSON.stringify(recentRounds.slice(-PLINKO_MIN_ROUNDS_FOR_CHECK)));
-  }, [recentRounds, plinkoRoundsKey]);
+  const controlsDisabled = phase === "dropping";
 
   // ── Canvas resize ─────────────────────────────────────────────────────────
 
@@ -740,31 +652,6 @@ export default function PlinkoPage() {
                 playPlinkoLose();
               }
 
-              setRecentRounds(prev => {
-                const next = [...prev, { at: Date.now(), net, balanceAtStart: dc.balanceAtStart }]
-                  .slice(-PLINKO_MIN_ROUNDS_FOR_CHECK);
-
-                if (next.length >= PLINKO_MIN_ROUNDS_FOR_CHECK) {
-                  const netFive = next.reduce((sum, r) => sum + r.net, 0);
-                  const baseBalance = next[0].balanceAtStart;
-                  const trigger = getPlinkoTrigger(baseBalance);
-                  if (netFive >= trigger && plinkoCooldownUntilRef.current <= Date.now()) {
-                    const until = Date.now() + PLINKO_COOLDOWN_MS;
-                    setPlinkoCooldownUntil(until);
-                    setPlinkoCooldownNow(Date.now());
-                    localStorage.setItem(plinkoCooldownKeyRef.current, String(until));
-                    if (usernameRef.current) {
-                      void logFeedHoldEvent(
-                        usernameRef.current,
-                        "Plinko",
-                        `held for ${formatCooldown(PLINKO_COOLDOWN_MS)} on Plinko`
-                      );
-                    }
-                    return [];
-                  }
-                }
-                return next;
-              });
             }
           }
         }
@@ -795,7 +682,6 @@ export default function PlinkoPage() {
   // ── Drop ──────────────────────────────────────────────────────────────────
 
   const dropBalls = useCallback(() => {
-    if (isPlinkoCoolingDown) return;
     if (totalBet > balance || totalBet <= 0) return;
 
     subtractBalance(totalBet);
@@ -836,11 +722,11 @@ export default function PlinkoPage() {
       };
       ballsRef.current.push(ball);
     }
-  }, [totalBet, balance, ballCount, subtractBalance, registerBet, isPlinkoCoolingDown]);
+  }, [totalBet, balance, ballCount, subtractBalance, registerBet]);
 
   // ── Render ────────────────────────────────────────────────────────────────
 
-  const canDrop = !isPlinkoCoolingDown && phase !== "dropping" && totalBet > 0 && totalBet <= balance;
+  const canDrop = phase !== "dropping" && totalBet > 0 && totalBet <= balance;
 
   const addChip = useCallback((v: number) => {
     playChipClick();
@@ -969,12 +855,6 @@ export default function PlinkoPage() {
             Insufficient balance
           </div>
         )}
-        {isPlinkoCoolingDown && (
-          <div style={{ color: "var(--accent-gold)", fontSize: "0.72rem", fontWeight: 700 }}>
-            Plinko locked: {formatCooldown(plinkoCooldownRemainingMs)}
-          </div>
-        )}
-
         {/* Drop Button */}
         <motion.button
           className="btn-primary"
@@ -984,7 +864,7 @@ export default function PlinkoPage() {
           disabled={!canDrop}
           style={{ width: "100%", fontSize: "1.15rem", letterSpacing: "0.14em" }}
         >
-          {isPlinkoCoolingDown ? `COOLDOWN ${formatCooldown(plinkoCooldownRemainingMs)}` : (phase === "result" ? "DROP AGAIN" : "DROP")}
+          {phase === "result" ? "DROP AGAIN" : "DROP"}
         </motion.button>
 
         {/* Session P/L */}
