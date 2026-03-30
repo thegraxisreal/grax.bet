@@ -14,12 +14,15 @@ import {
   spamCancel,
   spamFindMatch,
   spamHeartbeat,
+  spamJoinQueuedOpponent,
   spamSubmitBurst,
   spamSyncState,
   subscribeSpamMatch,
+  subscribeSpamQueueLobby,
   type SpamHumanPlayer,
   type SpamMatchDoc,
   type SpamPlayer,
+  type SpamQueueListing,
 } from "@/lib/spam";
 
 function formatMoney(value: number) {
@@ -52,6 +55,7 @@ export default function SpamPage() {
   const [error, setError] = useState<string | null>(null);
   const [now, setNow] = useState(Date.now());
   const [pendingCount, setPendingCount] = useState(0);
+  const [lobbyEntries, setLobbyEntries] = useState<SpamQueueListing[]>([]);
 
   const clientIdRef = useRef("");
   const pendingRef = useRef<number[]>([]);
@@ -236,6 +240,10 @@ export default function SpamPage() {
     });
   }, [searching, username, usernameLower]);
 
+  useEffect(() => {
+    if (!username) return;
+    return subscribeSpamQueueLobby(setLobbyEntries, usernameLower);
+  }, [username, usernameLower]);
   const flushPending = useCallback(async (final = false) => {
     if (!username || !matchId) return;
     const batch = pendingRef.current.splice(0, pendingRef.current.length);
@@ -352,6 +360,24 @@ export default function SpamPage() {
     }
   }
 
+  async function joinPlayer(entry: SpamQueueListing) {
+    if (!username) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const state = await spamJoinQueuedOpponent(username, clientIdRef.current, entry.usernameLower, entry.bet);
+      setBalance(state.balance);
+      setSearching(state.state === "searching");
+      setSearchStartedAtMs(state.waitStartedAtMs);
+      setMatchId(state.matchId);
+      setBet(entry.bet);
+    } catch (caught) {
+      setError(formatError(caught));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   function registerTap() {
     if (!match || !me || match.status !== "live") return;
     const elapsed = Date.now() - match.roundStartedAt.toMillis();
@@ -424,6 +450,66 @@ export default function SpamPage() {
             background: "rgba(255,255,255,0.03)",
             border: "1px solid rgba(255,255,255,0.08)",
             display: "grid",
+            gap: 10,
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+            <div style={{ color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.12em", fontSize: "0.74rem" }}>
+              Players looking for game
+            </div>
+            <div style={{ color: "var(--text-secondary)", fontSize: "0.86rem" }}>
+              {lobbyEntries.length} waiting
+            </div>
+          </div>
+
+          {lobbyEntries.length === 0 ? (
+            <div style={{ color: "var(--text-secondary)" }}>No players waiting right now.</div>
+          ) : (
+            <div style={{ display: "grid", gap: 8 }}>
+              {lobbyEntries.map((entry) => {
+                const waitSeconds = clamp(Math.floor((now - entry.waitStartedAtMs) / 1000), 0, 999);
+                return (
+                  <div
+                    key={entry.usernameLower}
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      gap: 12,
+                      flexWrap: "wrap",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                      borderRadius: 12,
+                      padding: "10px 12px",
+                      background: "rgba(15,25,35,0.7)",
+                    }}
+                  >
+                    <div style={{ display: "grid", gap: 4 }}>
+                      <div style={{ fontWeight: 600 }}>{entry.username}</div>
+                      <div style={{ color: "var(--text-secondary)", fontSize: "0.85rem" }}>
+                        Bet {formatMoney(entry.bet)} • waiting {waitSeconds}s
+                      </div>
+                    </div>
+                    <button
+                      className="btn-primary"
+                      disabled={busy || activeLock || entry.bet > balance}
+                      onClick={() => void joinPlayer(entry)}
+                    >
+                      Join
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </section>
+
+        <section
+          style={{
+            borderRadius: 20,
+            padding: "18px 20px",
+            background: "rgba(255,255,255,0.03)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            display: "grid",
             gap: 14,
           }}
         >
@@ -466,7 +552,7 @@ export default function SpamPage() {
             </button>
             {!searching && !matchId ? (
               <button className="btn-primary" disabled={busy || !username || bet > balance} onClick={() => void startSearch()}>
-                Find Match
+                Go Available
               </button>
             ) : (
               <button className="btn-action" disabled={busy} onClick={() => void leaveMatch()}>
