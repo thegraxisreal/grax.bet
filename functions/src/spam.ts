@@ -561,19 +561,20 @@ async function findOrCreateMatch(
     }
 
     let nextBalance = currentBalance;
+    let shouldWriteBalance = false;
     if (!existingQueue) {
       if (currentBalance < bet) {
         throw new functions.https.HttpsError("failed-precondition", "Insufficient balance.");
       }
       nextBalance = Math.round((currentBalance - bet) * 100) / 100;
-      tx.set(userReference, { balance: nextBalance }, { merge: true });
+      shouldWriteBalance = true;
     } else if (existingQueue.bet !== bet) {
       const adjusted = Math.round((currentBalance + existingQueue.bet - bet) * 100) / 100;
       if (adjusted < 0) {
         throw new functions.https.HttpsError("failed-precondition", "Insufficient balance.");
       }
       nextBalance = adjusted;
-      tx.set(userReference, { balance: nextBalance }, { merge: true });
+      shouldWriteBalance = true;
     }
 
     const waitingSnap = await tx.get(db.collection("spam_queue").where("status", "==", "waiting").limit(20));
@@ -582,6 +583,10 @@ async function findOrCreateMatch(
       .filter(({ id, data }) => id !== usernameLower && data.bet === bet)
       .filter(({ data }) => nowMs - data.heartbeatAt.toMillis() <= HEARTBEAT_TIMEOUT_MS)
       .sort((a, b) => a.data.createdAt.toMillis() - b.data.createdAt.toMillis());
+
+    if (shouldWriteBalance) {
+      tx.set(userReference, { balance: nextBalance }, { merge: true });
+    }
 
     const matched = candidates[0];
     if (matched) {

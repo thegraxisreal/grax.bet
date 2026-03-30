@@ -1,8 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { doc, onSnapshot } from "firebase/firestore";
 import { useBalance } from "@/context/BalanceContext";
 import { useUser } from "@/context/UserContext";
+import { getDb } from "@/lib/firebase";
 import { emitLocalFeedPayload } from "@/lib/feed";
 import {
   SPAM_HEARTBEAT_MS,
@@ -59,6 +61,7 @@ export default function SpamPage() {
   const appliedSettlementRef = useRef<Set<string>>(new Set());
   const searchingRef = useRef(false);
   const matchIdRef = useRef<string | null>(null);
+  const heartbeatInFlightRef = useRef(false);
 
   useEffect(() => {
     clientIdRef.current = getSpamClientId();
@@ -180,22 +183,58 @@ export default function SpamPage() {
 
   useEffect(() => {
     if (!username || (!searching && !matchId)) return;
+
+    const sendHeartbeat = async () => {
+      if (heartbeatInFlightRef.current) return;
+      heartbeatInFlightRef.current = true;
+      try {
+        const state = await spamHeartbeat(username, clientIdRef.current, matchIdRef.current);
+        setBalance(state.balance);
+        if (state.matchId) {
+          setMatchId(state.matchId);
+          setSearching(false);
+          setSearchStartedAtMs(null);
+        } else {
+          setSearching(state.state === "searching");
+          setSearchStartedAtMs(state.waitStartedAtMs);
+        }
+      } catch {
+        // Ignore transient heartbeat errors and keep retrying.
+      } finally {
+        heartbeatInFlightRef.current = false;
+      }
+    };
+
+    void sendHeartbeat();
     const interval = window.setInterval(() => {
-      void spamHeartbeat(username, clientIdRef.current, matchId)
-        .then((state) => {
-          setBalance(state.balance);
-          if (state.matchId) {
-            setMatchId(state.matchId);
-            setSearching(false);
-          } else {
-            setSearching(state.state === "searching");
-            setSearchStartedAtMs(state.waitStartedAtMs);
-          }
-        })
-        .catch(() => {});
+      void sendHeartbeat();
     }, SPAM_HEARTBEAT_MS);
-    return () => window.clearInterval(interval);
+
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        void sendHeartbeat();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
+
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
   }, [matchId, searching, setBalance, username]);
+
+  useEffect(() => {
+    if (!username || !searching) return;
+    const reference = doc(getDb(), "users", usernameLower);
+    return onSnapshot(reference, (snap) => {
+      const data = snap.data() as { activeSpamMatchId?: string } | undefined;
+      if (typeof data?.activeSpamMatchId === "string" && data.activeSpamMatchId) {
+        setMatchId(data.activeSpamMatchId);
+        setSearching(false);
+        setSearchStartedAtMs(null);
+      }
+    });
+  }, [searching, username, usernameLower]);
 
   const flushPending = useCallback(async (final = false) => {
     if (!username || !matchId) return;
