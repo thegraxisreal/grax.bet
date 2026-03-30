@@ -493,17 +493,19 @@ async function runSearch(username: string, bet: number, clientId: string, allowB
     }
 
     let nextBalance = currentBalance;
+    let shouldWriteBalance = false;
     if (!existingQueue) {
       if (currentBalance < normalizedBet) throw new Error("Not enough balance.");
       nextBalance = Math.round((currentBalance - normalizedBet) * 100) / 100;
-      tx.set(userReference, { balance: nextBalance }, { merge: true });
+      shouldWriteBalance = true;
     } else if (existingQueue.bet !== normalizedBet) {
       const adjusted = Math.round((currentBalance + existingQueue.bet - normalizedBet) * 100) / 100;
       if (adjusted < 0) throw new Error("Not enough balance.");
       nextBalance = adjusted;
-      tx.set(userReference, { balance: nextBalance }, { merge: true });
+      shouldWriteBalance = true;
     }
 
+    let matchedCandidate: { id: string; data: SpamQueueDoc } | null = null;
     for (const candidateId of candidateIds) {
       const candidateRef = dbRef("spam_queue", candidateId);
       const candidateSnap = await tx.get(candidateRef);
@@ -511,7 +513,16 @@ async function runSearch(username: string, bet: number, clientId: string, allowB
       const candidate = candidateSnap.data() as SpamQueueDoc;
       if (candidate.status !== "waiting" || candidate.bet !== normalizedBet) continue;
       if (nowMs - candidate.heartbeatAt.toMillis() > SPAM_HEARTBEAT_TIMEOUT_MS) continue;
+      matchedCandidate = { id: candidateId, data: candidate };
+      break;
+    }
 
+    if (shouldWriteBalance) {
+      tx.set(userReference, { balance: nextBalance }, { merge: true });
+    }
+
+    if (matchedCandidate) {
+      const { id: candidateId, data: candidate } = matchedCandidate;
       const matchReference = doc(collection(getDb(), "spam_matches"));
       const createdAt = nowTs(nowMs);
       const roundStartedAt = nowTs(nowMs + SPAM_COUNTDOWN_MS);
@@ -568,7 +579,7 @@ async function runSearch(username: string, bet: number, clientId: string, allowB
 
       tx.set(matchReference, match);
       tx.delete(queueReference);
-      tx.delete(candidateRef);
+      tx.delete(dbRef("spam_queue", candidateId));
       setUserSpamFields(tx, usernameLower, { matchId: matchReference.id, queueBet: null, queueClientId: null });
       setUserSpamFields(tx, candidateId, { matchId: matchReference.id, queueBet: null, queueClientId: null });
 
