@@ -123,6 +123,14 @@ export interface SpamSearchState {
   waitStartedAtMs: number | null;
 }
 
+export interface SpamQueueListing {
+  usernameLower: string;
+  username: string;
+  bet: number;
+  waitStartedAtMs: number;
+  heartbeatAtMs: number;
+}
+
 function dbRef(path: "users" | "spam_queue" | "spam_matches" | "feed", id: string) {
   return doc(getDb(), path, id);
 }
@@ -493,17 +501,19 @@ async function runSearch(username: string, bet: number, clientId: string, allowB
     }
 
     let nextBalance = currentBalance;
+    let shouldWriteBalance = false;
     if (!existingQueue) {
       if (currentBalance < normalizedBet) throw new Error("Not enough balance.");
       nextBalance = Math.round((currentBalance - normalizedBet) * 100) / 100;
-      tx.set(userReference, { balance: nextBalance }, { merge: true });
+      shouldWriteBalance = true;
     } else if (existingQueue.bet !== normalizedBet) {
       const adjusted = Math.round((currentBalance + existingQueue.bet - normalizedBet) * 100) / 100;
       if (adjusted < 0) throw new Error("Not enough balance.");
       nextBalance = adjusted;
-      tx.set(userReference, { balance: nextBalance }, { merge: true });
+      shouldWriteBalance = true;
     }
 
+    let matchedCandidate: { id: string; data: SpamQueueDoc } | null = null;
     for (const candidateId of candidateIds) {
       const candidateRef = dbRef("spam_queue", candidateId);
       const candidateSnap = await tx.get(candidateRef);
@@ -511,7 +521,16 @@ async function runSearch(username: string, bet: number, clientId: string, allowB
       const candidate = candidateSnap.data() as SpamQueueDoc;
       if (candidate.status !== "waiting" || candidate.bet !== normalizedBet) continue;
       if (nowMs - candidate.heartbeatAt.toMillis() > SPAM_HEARTBEAT_TIMEOUT_MS) continue;
+      matchedCandidate = { id: candidateId, data: candidate };
+      break;
+    }
 
+    if (shouldWriteBalance) {
+      tx.set(userReference, { balance: nextBalance }, { merge: true });
+    }
+
+    if (matchedCandidate) {
+      const { id: candidateId, data: candidate } = matchedCandidate;
       const matchReference = doc(collection(getDb(), "spam_matches"));
       const createdAt = nowTs(nowMs);
       const roundStartedAt = nowTs(nowMs + SPAM_COUNTDOWN_MS);
@@ -568,7 +587,7 @@ async function runSearch(username: string, bet: number, clientId: string, allowB
 
       tx.set(matchReference, match);
       tx.delete(queueReference);
-      tx.delete(candidateRef);
+      tx.delete(dbRef("spam_queue", candidateId));
       setUserSpamFields(tx, usernameLower, { matchId: matchReference.id, queueBet: null, queueClientId: null });
       setUserSpamFields(tx, candidateId, { matchId: matchReference.id, queueBet: null, queueClientId: null });
 
@@ -694,6 +713,123 @@ export async function spamSyncState(username: string): Promise<SpamSyncState> {
 
 export async function spamFindMatch(username: string, bet: number, clientId: string) {
   return runSearch(username, bet, clientId, false);
+}
+
+export async function spamJoinQueuedOpponent(
+  username: string,
+  clientId: string,
+  opponentUsernameLower: string,
+  opponentBet: number
+): Promise<SpamSearchState> {
+  const { usernameLower } = normalizeUsername(username);
+  const normalizedBet = normalizeBet(opponentBet);
+  const targetId = opponentUsernameLower.trim().toLowerCase();
+  if (!targetId || targetId === usernameLower) {
+    throw new Error("Invalid opponent.");
+  }
+
+  return runTransaction(getDb(), async (tx) => {
+    const nowMs = Date.now();
+    const userReference = dbRef("users", usernameLower);
+    const queueReference = dbRef("spam_queue", usernameLower);
+    const opponentQueueReference = dbRef("spam_queue", targetId);
+
+    const userSnap = await tx.get(userReference);
+    const user = (userSnap.data() ?? {}) as UserDoc;
+    const currentBalance = Math.round((user.balance ?? STARTING_BALANCE) * 100) / 100;
+    const queueSnap = await tx.get(queueReference);
+    const existingQueue = queueSnap.exists() ? (queueSnap.data() as SpamQueueDoc) : null;
+    const opponentSnap = await tx.get(opponentQueueReference);
+    const opponentQueue = opponentSnap.exists() ? (opponentSnap.data() as SpamQueueDoc) : null;
+
+    if (typeof user.activeSpamMatchId === "string" && user.activeSpamMatchId) {
+      return { state: "matched", matchId: user.activeSpamMatchId, balance: currentBalance, waitStartedAtMs: null };
+    }
+
+    if (
+      !opponentQueue ||
+      opponentQueue.status !== "waiting" ||
+      opponentQueue.bet !== normalizedBet ||
+      nowMs - opponentQueue.heartbeatAt.toMillis() > SPAM_HEARTBEAT_TIMEOUT_MS
+    ) {
+      throw new Error("That player is no longer available.");
+    }
+
+    let nextBalance = currentBalance;
+    if (!existingQueue) {
+      if (currentBalance < normalizedBet) throw new Error("Not enough balance.");
+      nextBalance = Math.round((currentBalance - normalizedBet) * 100) / 100;
+    } else if (existingQueue.bet !== normalizedBet) {
+      const adjusted = Math.round((currentBalance + existingQueue.bet - normalizedBet) * 100) / 100;
+      if (adjusted < 0) throw new Error("Not enough balance.");
+      nextBalance = adjusted;
+    }
+
+    if (!existingQueue || existingQueue.bet !== normalizedBet) {
+      tx.set(userReference, { balance: nextBalance }, { merge: true });
+    }
+
+    const matchReference = doc(collection(getDb(), "spam_matches"));
+    const createdAt = nowTs(nowMs);
+    const roundStartedAt = nowTs(nowMs + SPAM_COUNTDOWN_MS);
+    const roundEndsAt = nowTs(roundStartedAt.toMillis() + SPAM_ROUND_MS);
+
+    const match: SpamMatchDoc = {
+      game: "SPAM!",
+      bet: normalizedBet,
+      pot: Math.round(normalizedBet * 2 * 100) / 100,
+      source: "pvp",
+      status: "countdown",
+      participantIds: [targetId, usernameLower],
+      createdAt,
+      updatedAt: createdAt,
+      countdownStartedAt: createdAt,
+      roundStartedAt,
+      roundEndsAt,
+      players: {
+        [targetId]: {
+          kind: "human",
+          username: opponentQueue.username,
+          clientId: opponentQueue.clientId,
+          bet: normalizedBet,
+          acceptedCount: 0,
+          rawCount: 0,
+          lastAcceptedAtMs: 0,
+          seq: 0,
+          finalSubmitted: false,
+          presence: "active",
+          heartbeatAt: createdAt,
+          payout: 0,
+        },
+        [usernameLower]: {
+          kind: "human",
+          username,
+          clientId,
+          bet: normalizedBet,
+          acceptedCount: 0,
+          rawCount: 0,
+          lastAcceptedAtMs: 0,
+          seq: 0,
+          finalSubmitted: false,
+          presence: "active",
+          heartbeatAt: createdAt,
+          payout: 0,
+        },
+      },
+      settlement: {
+        status: "pending",
+        winnerKey: null,
+        reason: "normal",
+      },
+    };
+
+    tx.set(matchReference, match);
+    tx.delete(queueReference);
+    tx.delete(opponentQueueReference);
+    setUserSpamFields(tx, usernameLower, { matchId: matchReference.id, queueBet: null, queueClientId: null });
+    setUserSpamFields(tx, targetId, { matchId: matchReference.id, queueBet: null, queueClientId: null });
+    return { state: "matched", matchId: matchReference.id, balance: nextBalance, waitStartedAtMs: null };
+  });
 }
 
 export async function spamHeartbeat(username: string, clientId: string, matchId?: string | null): Promise<SpamSearchState> {
@@ -877,6 +1013,28 @@ export async function spamSubmitBurst(
 export function subscribeSpamMatch(matchId: string, callback: (match: SpamMatchDoc | null) => void): Unsubscribe {
   return onSnapshot(dbRef("spam_matches", matchId), (snap) => {
     callback(snap.exists() ? (snap.data() as SpamMatchDoc) : null);
+  });
+}
+
+export function subscribeSpamQueueLobby(
+  callback: (entries: SpamQueueListing[]) => void,
+  currentUserLower?: string
+): Unsubscribe {
+  return onSnapshot(query(collection(getDb(), "spam_queue"), where("status", "==", "waiting"), limit(30)), (snap) => {
+    const nowMs = Date.now();
+    const entries = snap.docs
+      .map((docSnap) => ({ id: docSnap.id, data: docSnap.data() as SpamQueueDoc }))
+      .filter(({ id }) => !currentUserLower || id !== currentUserLower)
+      .filter(({ data }) => nowMs - data.heartbeatAt.toMillis() <= SPAM_HEARTBEAT_TIMEOUT_MS)
+      .sort((left, right) => left.data.createdAt.toMillis() - right.data.createdAt.toMillis())
+      .map(({ id, data }) => ({
+        usernameLower: id,
+        username: data.username,
+        bet: data.bet,
+        waitStartedAtMs: data.createdAt.toMillis(),
+        heartbeatAtMs: data.heartbeatAt.toMillis(),
+      }));
+    callback(entries);
   });
 }
 
