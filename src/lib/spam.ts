@@ -579,7 +579,7 @@ async function runSearch(username: string, bet: number, clientId: string, allowB
 
       tx.set(matchReference, match);
       tx.delete(queueReference);
-      tx.delete(candidateRef);
+      tx.delete(dbRef("spam_queue", candidateId));
       setUserSpamFields(tx, usernameLower, { matchId: matchReference.id, queueBet: null, queueClientId: null });
       setUserSpamFields(tx, candidateId, { matchId: matchReference.id, queueBet: null, queueClientId: null });
 
