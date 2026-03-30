@@ -240,11 +240,14 @@ export default function SpamPage() {
     });
   }, [searching, username, usernameLower]);
 
+<<<<<<< codex/fix-spam-game-join-issues-59r2zx
   useEffect(() => {
     if (!username) return;
     return subscribeSpamQueueLobby(setLobbyEntries, usernameLower);
   }, [username, usernameLower]);
 
+=======
+>>>>>>> claude/build-casino-app-BkTON
   const flushPending = useCallback(async (final = false) => {
     if (!username || !matchId) return;
     const batch = pendingRef.current.splice(0, pendingRef.current.length);
