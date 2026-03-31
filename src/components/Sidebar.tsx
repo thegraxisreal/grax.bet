@@ -225,6 +225,19 @@ function SpamIcon() {
   );
 }
 
+
+function GolfIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+      <rect x="2" y="2" width="18" height="18" rx="3" stroke="currentColor" strokeWidth="1.4" />
+      <circle cx="8" cy="14" r="2.2" fill="currentColor" opacity="0.8" />
+      <circle cx="15.5" cy="7" r="1.5" fill="currentColor" opacity="0.45" />
+      <line x1="15.5" y1="7" x2="15.5" y2="3.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+      <path d="M15.5 3.5 L18 4.5 L15.5 5.5 Z" fill="currentColor" />
+    </svg>
+  );
+}
+
 function CloseIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
@@ -274,6 +287,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "March Madness", href: "/sports",    icon: <SportsIcon />, live: true },
   { label: "SPAM!",         href: "/spam",      icon: <SpamIcon />, promo: "15 SEC" },
   { label: "Mines",     href: "/mines",     icon: <MinesIcon /> },
+  { label: "Golf",      href: "/golf",      icon: <GolfIcon /> },
   { label: "Plinko",        href: "/plinko",       icon: <PlinkoIcon /> },
   { label: "Horse Racing",  href: "/horse-racing",  icon: <HorseRacingIcon />, locked: true },
   { label: "Bomb Defuse",   href: "/bomb-defuse",   icon: <BombDefuseIcon />, promo: "2X MONEY" },
