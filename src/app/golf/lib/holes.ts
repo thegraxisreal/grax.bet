@@ -27,10 +27,10 @@ export const HOLES: HoleConfig[] = [
       { id: "block-b", type: "rect", x: 625, y: 375, w: 80, h: 55, bounce: 0.88 },
     ],
     surfaces: [
-      { id: "fairway", kind: "fairway", x: 35, y: 35, w: 830, h: 470, friction: 0.988 },
-      { id: "rough-left", kind: "rough", x: 35, y: 35, w: 220, h: 470, friction: 0.974 },
-      { id: "sand-trap", kind: "sand", x: 675, y: 68, w: 140, h: 90, friction: 0.956 },
-      { id: "water", kind: "water", x: 565, y: 405, w: 170, h: 92, friction: 0.96 },
+      { id: "fairway", kind: "fairway", x: 35, y: 35, w: 830, h: 470, friction: 0.972 },
+      { id: "rough-left", kind: "rough", x: 35, y: 35, w: 220, h: 470, friction: 0.948 },
+      { id: "sand-trap", kind: "sand", x: 675, y: 68, w: 140, h: 90, friction: 0.915 },
+      { id: "water", kind: "water", x: 565, y: 405, w: 170, h: 92, friction: 0.94 },
     ],
   },
 ];

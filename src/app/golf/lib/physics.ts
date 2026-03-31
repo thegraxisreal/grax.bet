@@ -1,6 +1,6 @@
 import { BallState, HoleConfig, Obstacle, SurfaceZone, Vec2 } from "./types";
 
-const STOP_SPEED = 10;
+const STOP_SPEED = 28;
 
 export function vecLength(v: Vec2) {
   return Math.hypot(v.x, v.y);
@@ -116,5 +116,5 @@ export function isBallInCup(ball: BallState, hole: HoleConfig) {
   const dx = ball.pos.x - hole.cup.x;
   const dy = ball.pos.y - hole.cup.y;
   const dist = Math.hypot(dx, dy);
-  return dist <= hole.cupRadius - 2 && vecLength(ball.vel) < 50;
+  return dist <= hole.cupRadius + hole.ballRadius;
 }

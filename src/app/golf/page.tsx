@@ -129,10 +129,24 @@ export default function GolfPage() {
               onStart={startGame}
             />
           ) : (
-            <GolfCanvas key={`${phase}-${bet}-${target}`} hole={hole} onFinish={handleFinish} />
+            <div className="rounded-xl border p-5 text-slate-300" style={{ background: "#08111f", borderColor: "#223147" }}>
+              Launching full-screen play mode…
+            </div>
           )}
         </div>
       </div>
+
+      {phase === "playing" && (
+        <div className="fixed inset-0 z-40 flex flex-col bg-slate-950 p-4">
+          <div className="mb-3 flex items-center justify-between text-xs uppercase tracking-[0.2em] text-slate-300">
+            <span>Full-Screen Golf Mode</span>
+            <span>Bet {fmtMoney(bet)} · {target.toUpperCase()} PAR</span>
+          </div>
+          <div className="min-h-0 flex-1">
+            <GolfCanvas key={`${phase}-${bet}-${target}`} hole={hole} onFinish={handleFinish} />
+          </div>
+        </div>
+      )}
 
       {phase === "result" && result && (
         <ResultModal result={result} target={target} bet={bet} payout={payout} net={net} onPlayAgain={playAgain} />
