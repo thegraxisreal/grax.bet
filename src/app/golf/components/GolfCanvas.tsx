@@ -42,58 +42,6 @@ export default function GolfCanvas({ hole, onFinish }: GolfCanvasProps) {
     let raf = 0;
     let last = performance.now();
 
-    const loop = (now: number) => {
-      const dt = Math.min(0.032, (now - last) / 1000);
-      last = now;
-
-      if (!ballRef.current.moving && !finishedRef.current) {
-        if (shotPhaseRef.current === "aim") {
-          angleRef.current += dt * 2.2;
-        } else {
-          powerRef.current += dt * powerDirRef.current * 0.95;
-          if (powerRef.current >= 1) {
-            powerRef.current = 1;
-            powerDirRef.current = -1;
-          }
-          if (powerRef.current <= 0.08) {
-            powerRef.current = 0.08;
-            powerDirRef.current = 1;
-          }
-          setPowerValue(powerRef.current);
-        }
-      }
-
-      if (ballRef.current.moving) {
-        const r = stepBall(ballRef.current, hole, dt);
-        if (r.inWater) {
-          ballRef.current.pos = { ...ballRef.current.lastSafePos };
-          ballRef.current.vel = { x: 0, y: 0 };
-          ballRef.current.moving = false;
-          strokesRef.current += 1;
-          setStrokes(strokesRef.current);
-          shotPhaseRef.current = "aim";
-          setPhase("aim");
-        } else if (r.stopped) {
-          ballRef.current.lastSafePos = { ...ballRef.current.pos };
-          shotPhaseRef.current = "aim";
-          setPhase("aim");
-        }
-
-        if (isBallInCup(ballRef.current, hole)) {
-          finishedRef.current = true;
-          onFinish(strokesRef.current);
-        }
-      }
-
-      if (strokesRef.current >= hole.maxStrokes && !finishedRef.current) {
-        finishedRef.current = true;
-        onFinish(hole.maxStrokes);
-      }
-
-      draw(ctx);
-      raf = requestAnimationFrame(loop);
-    };
-
     const draw = (ctx2d: CanvasRenderingContext2D) => {
       ctx2d.clearRect(0, 0, hole.width, hole.height);
       ctx2d.imageSmoothingEnabled = false;
@@ -160,6 +108,58 @@ export default function GolfCanvas({ hole, onFinish }: GolfCanvasProps) {
       }
     };
 
+    const loop = (now: number) => {
+      const dt = Math.min(0.032, (now - last) / 1000);
+      last = now;
+
+      if (!ballRef.current.moving && !finishedRef.current) {
+        if (shotPhaseRef.current === "aim") {
+          angleRef.current += dt * 2.2;
+        } else {
+          powerRef.current += dt * powerDirRef.current * 0.95;
+          if (powerRef.current >= 1) {
+            powerRef.current = 1;
+            powerDirRef.current = -1;
+          }
+          if (powerRef.current <= 0.08) {
+            powerRef.current = 0.08;
+            powerDirRef.current = 1;
+          }
+          setPowerValue(powerRef.current);
+        }
+      }
+
+      if (ballRef.current.moving) {
+        const r = stepBall(ballRef.current, hole, dt);
+        if (r.inWater) {
+          ballRef.current.pos = { ...ballRef.current.lastSafePos };
+          ballRef.current.vel = { x: 0, y: 0 };
+          ballRef.current.moving = false;
+          strokesRef.current += 1;
+          setStrokes(strokesRef.current);
+          shotPhaseRef.current = "aim";
+          setPhase("aim");
+        } else if (r.stopped) {
+          ballRef.current.lastSafePos = { ...ballRef.current.pos };
+          shotPhaseRef.current = "aim";
+          setPhase("aim");
+        }
+
+        if (isBallInCup(ballRef.current, hole)) {
+          finishedRef.current = true;
+          onFinish(strokesRef.current);
+        }
+      }
+
+      if (strokesRef.current >= hole.maxStrokes && !finishedRef.current) {
+        finishedRef.current = true;
+        onFinish(hole.maxStrokes);
+      }
+
+      draw(ctx);
+      raf = requestAnimationFrame(loop);
+    };
+
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
   }, [hole, onFinish]);
@@ -186,30 +186,27 @@ export default function GolfCanvas({ hole, onFinish }: GolfCanvasProps) {
   };
 
   return (
-    <div>
-      <div className="mb-3 flex items-center justify-between text-xs uppercase tracking-[0.2em] text-slate-300">
+    <div className="flex h-full min-h-0 flex-col">
+      <div className="mb-2 flex items-center justify-between text-xs uppercase tracking-[0.2em] text-slate-300">
         <span>Par {hole.par}</span>
         <span>Strokes {strokes}</span>
         <span>{phase === "aim" ? "Tap: Lock Aim" : "Tap: Lock Power"}</span>
       </div>
-      <div className="relative overflow-hidden rounded-xl border" style={{ borderColor: "#334155", background: "#020617" }}>
+      <div className="relative min-h-0 flex-1 overflow-hidden rounded-xl border" style={{ borderColor: "#334155", background: "#020617" }}>
         <canvas
           ref={canvasRef}
           width={hole.width}
           height={hole.height}
           onClick={onShootClick}
-          className="h-auto w-full touch-manipulation"
-          style={{ imageRendering: "pixelated" }}
+          className="h-full w-full touch-manipulation"
+          style={{ imageRendering: "pixelated", objectFit: "contain" }}
         />
         {phase === "power" && (
-          <div className="absolute right-4 top-4">
+          <div className="absolute right-3 top-3">
             <PowerBar power={powerValue} />
           </div>
         )}
       </div>
-      <button onClick={onShootClick} className="mt-3 w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-200">
-        {phase === "aim" ? "Lock Direction" : "Lock Power + Shoot"}
-      </button>
     </div>
   );
 }
