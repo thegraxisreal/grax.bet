@@ -1,3 +1,5 @@
+export type BetTarget = "under" | "over";
+
 export interface Vec2 {
   x: number;
   y: number;
@@ -84,4 +86,11 @@ export interface BallState {
 export interface RoundResult {
   won: boolean;
   strokes: number;
+}
+
+
+export interface HoleResult {
+  strokes: number;
+  par: number;
+  relation: "under" | "over" | "par";
 }
