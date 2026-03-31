@@ -1,4 +1,4 @@
-import { BallState, HoleConfig, Obstacle, SurfaceZone, Vec2 } from "./types";
+import { BallState, HammerHazard, HoleConfig, Obstacle, SurfaceZone, Vec2 } from "./types";
 
 const STOP_SPEED = 28;
 
@@ -64,7 +64,36 @@ function collideWithObstacle(ball: BallState, obstacle: Obstacle, radius: number
   return false;
 }
 
-export function stepBall(ball: BallState, hole: HoleConfig, dt: number) {
+export function hammerHeadPosition(hammer: HammerHazard, elapsedSec: number): Vec2 {
+  const span = (hammer.angleMax - hammer.angleMin) / 2;
+  const mid = (hammer.angleMax + hammer.angleMin) / 2;
+  const a = mid + Math.sin(elapsedSec * hammer.speed) * span;
+  return {
+    x: hammer.pivot.x + Math.cos(a) * hammer.armLength,
+    y: hammer.pivot.y + Math.sin(a) * hammer.armLength,
+  };
+}
+
+function collideWithHammers(ball: BallState, hole: HoleConfig, elapsedSec: number): boolean {
+  for (const hammer of hole.hammers ?? []) {
+    const head = hammerHeadPosition(hammer, elapsedSec);
+    const dx = ball.pos.x - head.x;
+    const dy = ball.pos.y - head.y;
+    const dist = Math.hypot(dx, dy);
+    const target = hammer.headRadius + hole.ballRadius;
+    if (dist < target) {
+      const nx = dist === 0 ? 1 : dx / dist;
+      const ny = dist === 0 ? 0 : dy / dist;
+      ball.pos.x = head.x + nx * target;
+      ball.pos.y = head.y + ny * target;
+      ball.vel = reflectVelocity({ x: ball.vel.x + nx * 130, y: ball.vel.y + ny * 130 }, { x: nx, y: ny }, 1.02);
+      return true;
+    }
+  }
+  return false;
+}
+
+export function stepBall(ball: BallState, hole: HoleConfig, dt: number, elapsedSec: number) {
   ball.pos.x += ball.vel.x * dt;
   ball.pos.y += ball.vel.y * dt;
 
@@ -86,18 +115,17 @@ export function stepBall(ball: BallState, hole: HoleConfig, dt: number) {
   }
 
   for (const obstacle of hole.obstacles) {
-    if (collideWithObstacle(ball, obstacle, hole.ballRadius)) {
-      bounced = true;
-    }
+    if (collideWithObstacle(ball, obstacle, hole.ballRadius)) bounced = true;
   }
+  if (collideWithHammers(ball, hole, elapsedSec)) bounced = true;
 
   const surface = surfaceAt(ball.pos, hole.surfaces);
   const friction = surface?.friction ?? 0.984;
   ball.vel.x *= friction;
   ball.vel.y *= friction;
 
-  if (surface?.kind === "water") {
-    return { bounced, inWater: true, stopped: false };
+  if (surface?.kind === "lava") {
+    return { bounced, inLava: true, stopped: false };
   }
 
   const speed = vecLength(ball.vel);
@@ -105,11 +133,11 @@ export function stepBall(ball: BallState, hole: HoleConfig, dt: number) {
     ball.vel.x = 0;
     ball.vel.y = 0;
     ball.moving = false;
-    return { bounced, inWater: false, stopped: true };
+    return { bounced, inLava: false, stopped: true };
   }
 
   ball.moving = true;
-  return { bounced, inWater: false, stopped: false };
+  return { bounced, inLava: false, stopped: false };
 }
 
 export function isBallInCup(ball: BallState, hole: HoleConfig) {

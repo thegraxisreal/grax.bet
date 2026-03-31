@@ -1,15 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { HoleConfig } from "../lib/types";
-import { isBallInCup, stepBall } from "../lib/physics";
-import PowerBar from "./PowerBar";
+import { HoleConfig, RoundResult } from "../lib/types";
+import { hammerHeadPosition, isBallInCup, stepBall } from "../lib/physics";
 
 type ShotPhase = "aim" | "power";
 
 interface GolfCanvasProps {
   hole: HoleConfig;
-  onFinish: (strokes: number) => void;
+  onFinish: (result: RoundResult) => void;
 }
 
 export default function GolfCanvas({ hole, onFinish }: GolfCanvasProps) {
@@ -25,6 +24,7 @@ export default function GolfCanvas({ hole, onFinish }: GolfCanvasProps) {
   const powerDirRef = useRef(1);
   const powerRef = useRef(0.5);
   const finishedRef = useRef(false);
+  const elapsedRef = useRef(0);
 
   const ballRef = useRef({
     pos: { ...hole.tee },
@@ -45,14 +45,14 @@ export default function GolfCanvas({ hole, onFinish }: GolfCanvasProps) {
     const draw = (ctx2d: CanvasRenderingContext2D) => {
       ctx2d.clearRect(0, 0, hole.width, hole.height);
       ctx2d.imageSmoothingEnabled = false;
-      ctx2d.fillStyle = "#0d3f26";
+      ctx2d.fillStyle = hole.theme.bg;
       ctx2d.fillRect(0, 0, hole.width, hole.height);
 
       for (const surface of hole.surfaces) {
-        if (surface.kind === "fairway") ctx2d.fillStyle = "#1f6b3a";
-        if (surface.kind === "rough") ctx2d.fillStyle = "#19552d";
-        if (surface.kind === "sand") ctx2d.fillStyle = "#a07a42";
-        if (surface.kind === "water") ctx2d.fillStyle = "#1d4ed8";
+        if (surface.kind === "fairway") ctx2d.fillStyle = hole.theme.fairway;
+        if (surface.kind === "rough") ctx2d.fillStyle = hole.theme.rough;
+        if (surface.kind === "sand") ctx2d.fillStyle = hole.theme.sand;
+        if (surface.kind === "lava") ctx2d.fillStyle = hole.theme.lava;
         ctx2d.fillRect(surface.x, surface.y, surface.w, surface.h);
       }
 
@@ -72,7 +72,7 @@ export default function GolfCanvas({ hole, onFinish }: GolfCanvasProps) {
       ctx2d.fillStyle = "#fde047";
       ctx2d.fillRect(hole.cup.x + 18, hole.cup.y - 32, 18, 13);
 
-      ctx2d.strokeStyle = "#4b5563";
+      ctx2d.strokeStyle = hole.theme.wall;
       ctx2d.lineWidth = 8;
       hole.walls.forEach((w) => {
         ctx2d.beginPath();
@@ -91,6 +91,20 @@ export default function GolfCanvas({ hole, onFinish }: GolfCanvasProps) {
         }
       }
 
+      for (const hammer of hole.hammers ?? []) {
+        const head = hammerHeadPosition(hammer, elapsedRef.current);
+        ctx2d.strokeStyle = "#cbd5e1";
+        ctx2d.lineWidth = 5;
+        ctx2d.beginPath();
+        ctx2d.moveTo(hammer.pivot.x, hammer.pivot.y);
+        ctx2d.lineTo(head.x, head.y);
+        ctx2d.stroke();
+        ctx2d.fillStyle = "#ef4444";
+        ctx2d.beginPath();
+        ctx2d.arc(head.x, head.y, hammer.headRadius, 0, Math.PI * 2);
+        ctx2d.fill();
+      }
+
       const b = ballRef.current;
       ctx2d.fillStyle = "#f8fafc";
       ctx2d.beginPath();
@@ -105,12 +119,31 @@ export default function GolfCanvas({ hole, onFinish }: GolfCanvasProps) {
         ctx2d.moveTo(b.pos.x, b.pos.y);
         ctx2d.lineTo(b.pos.x + Math.cos(activeAngle) * 45, b.pos.y + Math.sin(activeAngle) * 45);
         ctx2d.stroke();
+
+        if (shotPhaseRef.current === "power") {
+          const barH = 70;
+          const barW = 10;
+          const barX = b.pos.x + 18;
+          const barY = b.pos.y - 35;
+          ctx2d.fillStyle = "#111827";
+          ctx2d.fillRect(barX, barY, barW, barH);
+          ctx2d.fillStyle = "#22c55e";
+          ctx2d.fillRect(barX, barY + barH * 0.66, barW, barH * 0.34);
+          ctx2d.fillStyle = "#eab308";
+          ctx2d.fillRect(barX, barY + barH * 0.33, barW, barH * 0.33);
+          ctx2d.fillStyle = "#ef4444";
+          ctx2d.fillRect(barX, barY, barW, barH * 0.33);
+          const markerY = barY + (1 - powerRef.current) * barH;
+          ctx2d.fillStyle = "#e2e8f0";
+          ctx2d.fillRect(barX - 3, markerY - 2, barW + 6, 4);
+        }
       }
     };
 
     const loop = (now: number) => {
       const dt = Math.min(0.032, (now - last) / 1000);
       last = now;
+      elapsedRef.current += dt;
 
       if (!ballRef.current.moving && !finishedRef.current) {
         if (shotPhaseRef.current === "aim") {
@@ -130,8 +163,8 @@ export default function GolfCanvas({ hole, onFinish }: GolfCanvasProps) {
       }
 
       if (ballRef.current.moving) {
-        const r = stepBall(ballRef.current, hole, dt);
-        if (r.inWater) {
+        const r = stepBall(ballRef.current, hole, dt, elapsedRef.current);
+        if (r.inLava) {
           ballRef.current.pos = { ...ballRef.current.lastSafePos };
           ballRef.current.vel = { x: 0, y: 0 };
           ballRef.current.moving = false;
@@ -147,13 +180,13 @@ export default function GolfCanvas({ hole, onFinish }: GolfCanvasProps) {
 
         if (isBallInCup(ballRef.current, hole)) {
           finishedRef.current = true;
-          onFinish(strokesRef.current);
+          onFinish({ won: true, strokes: strokesRef.current });
         }
       }
 
       if (strokesRef.current >= hole.maxStrokes && !finishedRef.current) {
         finishedRef.current = true;
-        onFinish(hole.maxStrokes);
+        onFinish({ won: false, strokes: hole.maxStrokes });
       }
 
       draw(ctx);
@@ -190,7 +223,7 @@ export default function GolfCanvas({ hole, onFinish }: GolfCanvasProps) {
       <div className="mb-2 flex items-center justify-between text-xs uppercase tracking-[0.2em] text-slate-300">
         <span>Par {hole.par}</span>
         <span>Strokes {strokes}</span>
-        <span>{phase === "aim" ? "Tap: Lock Aim" : "Tap: Lock Power"}</span>
+        <span>{phase === "aim" ? "Tap: Lock Aim" : `Power ${Math.round(powerValue * 100)}%`}</span>
       </div>
       <div className="relative min-h-0 flex-1 overflow-hidden rounded-xl border" style={{ borderColor: "#334155", background: "#020617" }}>
         <canvas
@@ -201,11 +234,6 @@ export default function GolfCanvas({ hole, onFinish }: GolfCanvasProps) {
           className="h-full w-full touch-manipulation"
           style={{ imageRendering: "pixelated", objectFit: "contain" }}
         />
-        {phase === "power" && (
-          <div className="absolute right-3 top-3">
-            <PowerBar power={powerValue} />
-          </div>
-        )}
       </div>
     </div>
   );

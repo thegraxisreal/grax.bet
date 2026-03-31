@@ -3,154 +3,163 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useBalance } from "@/context/BalanceContext";
-import { useUser } from "@/context/UserContext";
-import { logFeedEvent, logFeedHoldEvent } from "@/lib/feed";
 import { fmtMoney } from "@/lib/format";
-import BettingPanel from "./components/BettingPanel";
 import GolfCanvas from "./components/GolfCanvas";
-import ResultModal from "./components/ResultModal";
-import { DEFAULT_HOLE } from "./lib/holes";
-import { BetTarget, HoleResult } from "./lib/types";
+import { HOLES } from "./lib/holes";
+import { HoleConfig, RoundResult } from "./lib/types";
 
-type Phase = "betting" | "playing" | "result";
+type Phase = "select" | "playing" | "result";
 
 export default function GolfPage() {
   const { balance, subtractBalance, addBalance } = useBalance();
-  const { username } = useUser();
-
-  const hole = DEFAULT_HOLE;
-  const [phase, setPhase] = useState<Phase>("betting");
-  const [bet, setBet] = useState(2);
-  const [target, setTarget] = useState<BetTarget>("under");
-  const [result, setResult] = useState<HoleResult | null>(null);
+  const [phase, setPhase] = useState<Phase>("select");
+  const [selected, setSelected] = useState(0);
+  const [stake, setStake] = useState(2);
+  const [result, setResult] = useState<RoundResult | null>(null);
   const [payout, setPayout] = useState(0);
-  const [net, setNet] = useState(0);
 
-  const previewScale = useMemo(() => 260 / hole.width, [hole.width]);
+  const hole = HOLES[selected];
+  const stakeClamped = useMemo(() => Math.max(0.5, Math.min(balance, stake || 0)), [balance, stake]);
 
-  const startGame = () => {
-    const clampedBet = Math.max(0.5, Math.min(balance, Number.isFinite(bet) ? bet : 0));
-    if (clampedBet <= 0 || clampedBet > balance) return;
-    setBet(Math.round(clampedBet * 100) / 100);
-    subtractBalance(clampedBet);
+  const start = () => {
+    if (stakeClamped <= 0 || stakeClamped > balance) return;
+    subtractBalance(stakeClamped);
+    setStake(stakeClamped);
+    setPayout(0);
+    setResult(null);
     setPhase("playing");
+  };
+
+  const finishRound = (round: RoundResult) => {
+    setResult(round);
+    if (round.won) {
+      const win = Math.round(stake * hole.multiplier * 100) / 100;
+      addBalance(win);
+      setPayout(win);
+    } else {
+      setPayout(0);
+    }
+    setPhase("result");
+  };
+
+  const quit = () => {
+    setResult({ won: false, strokes: 0 });
+    setPayout(0);
+    setPhase("result");
+  };
+
+  const reset = () => {
+    setPhase("select");
     setResult(null);
     setPayout(0);
-    setNet(0);
-  };
-
-  const handleFinish = (strokes: number) => {
-    const relation: HoleResult["relation"] = strokes < hole.par ? "under" : strokes > hole.par ? "over" : "par";
-
-    const won = relation === target;
-    const push = relation === "par";
-    const multiplier = target === "under" ? 2.5 : 1.5;
-    const payoutAmt = push ? bet : won ? bet * multiplier : 0;
-    const netAmt = payoutAmt - bet;
-
-    if (payoutAmt > 0) addBalance(payoutAmt);
-
-    setResult({ strokes, par: hole.par, relation });
-    setPayout(Math.round(payoutAmt * 100) / 100);
-    setNet(Math.round(netAmt * 100) / 100);
-    setPhase("result");
-
-    if (username) {
-      if (push) {
-        logFeedHoldEvent(username, "golf", `Push at par (${strokes})`).catch(() => undefined);
-      } else {
-        logFeedEvent(username, "golf", Math.abs(netAmt), won ? "win" : "loss").catch(() => undefined);
-      }
-    }
-  };
-
-  const playAgain = () => {
-    setPhase("betting");
-    setResult(null);
   };
 
   return (
     <div className="h-full overflow-auto p-6" style={{ background: "var(--bg-primary)" }}>
-      <div className="mx-auto w-full max-w-6xl">
+      <div className="mx-auto w-full max-w-7xl">
         <div className="mb-5 flex items-center justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Retro Minigolf</p>
-            <h1 className="text-4xl font-bold uppercase tracking-widest" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-              /Golf
-            </h1>
+            <h1 className="text-4xl font-bold uppercase tracking-widest" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>/Golf</h1>
           </div>
-          <Link href="/" className="rounded border border-slate-700 bg-slate-900 px-3 py-2 text-xs uppercase tracking-[0.2em] text-slate-200">
-            Back to Lobby
-          </Link>
+          <Link href="/" className="rounded border border-slate-700 bg-slate-900 px-3 py-2 text-xs uppercase tracking-[0.2em] text-slate-200">Back to Lobby</Link>
         </div>
 
-        <div className="mb-4 rounded border border-slate-800 bg-slate-950/60 px-4 py-3 text-sm text-slate-300">
-          Balance: <strong className="text-emerald-300">{fmtMoney(balance)}</strong>
-        </div>
-
-        <div className="grid gap-5 lg:grid-cols-[320px_1fr]">
-          <div className="rounded-xl border p-4" style={{ background: "#08111f", borderColor: "#223147" }}>
-            <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Hole Preview</p>
-            <svg viewBox={`0 0 ${hole.width} ${hole.height}`} className="mt-3 w-full rounded border border-slate-700 bg-green-900/20" style={{ imageRendering: "pixelated", height: `${hole.height * previewScale}px` }}>
-              <rect x="0" y="0" width={hole.width} height={hole.height} fill="#0d3f26" />
-              {hole.surfaces.map((surface) => (
-                <rect
-                  key={surface.id}
-                  x={surface.x}
-                  y={surface.y}
-                  width={surface.w}
-                  height={surface.h}
-                  fill={surface.kind === "water" ? "#1d4ed8" : surface.kind === "sand" ? "#a07a42" : surface.kind === "rough" ? "#19552d" : "#1f6b3a"}
-                />
-              ))}
-              {hole.walls.map((wall, index) => (
-                <line key={index} x1={wall.from.x} y1={wall.from.y} x2={wall.to.x} y2={wall.to.y} stroke="#4b5563" strokeWidth={8} />
-              ))}
-              {hole.obstacles.map((ob) =>
-                ob.type === "rect" ? (
-                  <rect key={ob.id} x={ob.x} y={ob.y} width={ob.w} height={ob.h} fill="#6b7280" />
-                ) : (
-                  <circle key={ob.id} cx={ob.center.x} cy={ob.center.y} r={ob.radius} fill="#6b7280" />
-                )
-              )}
-              <circle cx={hole.tee.x} cy={hole.tee.y} r={hole.ballRadius} fill="#f8fafc" />
-              <circle cx={hole.cup.x} cy={hole.cup.y} r={hole.cupRadius} fill="#111827" />
-            </svg>
-          </div>
-
-          {phase === "betting" ? (
-            <BettingPanel
-              hole={hole}
-              balance={balance}
-              bet={bet}
-              target={target}
-              onBetChange={setBet}
-              onTargetChange={setTarget}
-              onStart={startGame}
-            />
-          ) : (
-            <div className="rounded-xl border p-5 text-slate-300" style={{ background: "#08111f", borderColor: "#223147" }}>
-              Launching full-screen play mode…
+        {phase === "select" && (
+          <>
+            <div className="mb-4 rounded border border-slate-800 bg-slate-950/60 px-4 py-3 text-sm text-slate-300">
+              Balance: <strong className="text-emerald-300">{fmtMoney(balance)}</strong>
             </div>
-          )}
-        </div>
+
+            <div className="mb-4 rounded-xl border p-4" style={{ background: "#08111f", borderColor: "#223147" }}>
+              <p className="mb-3 text-xs uppercase tracking-[0.2em] text-slate-400">Choose Your Level</p>
+              <div className="grid gap-3 md:grid-cols-3">
+                {HOLES.map((h, idx) => (
+                  <button
+                    key={h.id}
+                    onClick={() => setSelected(idx)}
+                    className="rounded border p-2 text-left"
+                    style={{ borderColor: selected === idx ? "#f0b429" : "#334155", background: selected === idx ? "rgba(240,180,41,0.12)" : "#0b1220" }}
+                  >
+                    <LevelPreview hole={h} />
+                    <p className="mt-2 text-xs font-semibold uppercase tracking-widest text-slate-300">{h.name}</p>
+                    <p className="text-[11px] text-slate-400">Par {h.par} · {h.multiplier}x multiplier</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded-xl border p-4" style={{ background: "#08111f", borderColor: "#223147" }}>
+              <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Play Amount (No betting side pick)</p>
+              <div className="mt-3 flex flex-wrap items-end gap-3">
+                <input
+                  type="number"
+                  min={0.5}
+                  max={balance}
+                  step={0.5}
+                  value={stake}
+                  onChange={(e) => setStake(Number(e.target.value))}
+                  className="w-40 rounded border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100"
+                />
+                <button onClick={start} className="rounded bg-emerald-400 px-4 py-2 font-bold uppercase tracking-widest text-slate-950">Play Level ({hole.multiplier}x)</button>
+              </div>
+            </div>
+          </>
+        )}
+
+        {phase === "playing" && (
+          <div className="fixed inset-0 z-40 flex flex-col bg-slate-950 p-3">
+            <div className="mb-2 flex items-center justify-between text-xs uppercase tracking-[0.2em] text-slate-300">
+              <span>{hole.name} · Multiplier {hole.multiplier}x</span>
+              <button onClick={quit} className="rounded border border-rose-500 px-2 py-1 text-rose-300">Quit (Lose)</button>
+            </div>
+            <div className="min-h-0 flex-1">
+              <GolfCanvas hole={hole} onFinish={finishRound} />
+            </div>
+          </div>
+        )}
+
+        {phase === "result" && result && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4">
+            <div className="w-full max-w-md rounded-xl border p-6" style={{ background: "#0f172a", borderColor: "#334155" }}>
+              <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Level Result</p>
+              <h2 className="mt-1 text-3xl font-bold uppercase tracking-widest" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+                {result.won ? "Hole Cleared" : "Round Lost"}
+              </h2>
+              <p className="mt-3 text-slate-200">{hole.name} · Strokes {result.strokes}</p>
+              <div className="mt-4 space-y-1 text-sm text-slate-300">
+                <p>Play amount: {fmtMoney(stake)}</p>
+                <p>Multiplier: {hole.multiplier}x</p>
+                <p className="font-semibold" style={{ color: result.won ? "#22c55e" : "#ef4444" }}>
+                  {result.won ? `Payout: ${fmtMoney(payout)}` : `Lost: ${fmtMoney(stake)}`}
+                </p>
+              </div>
+              <button onClick={reset} className="mt-6 w-full rounded bg-emerald-400 px-4 py-3 font-bold uppercase tracking-[0.2em] text-slate-950">Choose Another Level</button>
+            </div>
+          </div>
+        )}
       </div>
-
-      {phase === "playing" && (
-        <div className="fixed inset-0 z-40 flex flex-col bg-slate-950 p-4">
-          <div className="mb-3 flex items-center justify-between text-xs uppercase tracking-[0.2em] text-slate-300">
-            <span>Full-Screen Golf Mode</span>
-            <span>Bet {fmtMoney(bet)} · {target.toUpperCase()} PAR</span>
-          </div>
-          <div className="min-h-0 flex-1">
-            <GolfCanvas key={`${phase}-${bet}-${target}`} hole={hole} onFinish={handleFinish} />
-          </div>
-        </div>
-      )}
-
-      {phase === "result" && result && (
-        <ResultModal result={result} target={target} bet={bet} payout={payout} net={net} onPlayAgain={playAgain} />
-      )}
     </div>
+  );
+}
+
+function LevelPreview({ hole }: { hole: HoleConfig }) {
+  return (
+    <svg viewBox={`0 0 ${hole.width} ${hole.height}`} className="h-24 w-full rounded" style={{ imageRendering: "pixelated", background: hole.theme.bg }}>
+      <rect x="0" y="0" width={hole.width} height={hole.height} fill={hole.theme.bg} />
+      {hole.surfaces.map((surface) => (
+        <rect
+          key={surface.id}
+          x={surface.x}
+          y={surface.y}
+          width={surface.w}
+          height={surface.h}
+          fill={surface.kind === "lava" ? hole.theme.lava : surface.kind === "sand" ? hole.theme.sand : surface.kind === "rough" ? hole.theme.rough : hole.theme.fairway}
+        />
+      ))}
+      {hole.walls.map((wall, i) => <line key={i} x1={wall.from.x} y1={wall.from.y} x2={wall.to.x} y2={wall.to.y} stroke={hole.theme.wall} strokeWidth="10" />)}
+      <circle cx={hole.tee.x} cy={hole.tee.y} r={hole.ballRadius * 1.2} fill="#f8fafc" />
+      <circle cx={hole.cup.x} cy={hole.cup.y} r={hole.cupRadius} fill="#111827" />
+    </svg>
   );
 }

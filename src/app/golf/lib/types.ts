@@ -1,5 +1,3 @@
-export type BetTarget = "under" | "over";
-
 export interface Vec2 {
   x: number;
   y: number;
@@ -32,12 +30,22 @@ export type Obstacle = RectObstacle | CircleObstacle;
 
 export interface SurfaceZone {
   id: string;
-  kind: "fairway" | "rough" | "sand" | "water";
+  kind: "fairway" | "rough" | "sand" | "lava";
   x: number;
   y: number;
   w: number;
   h: number;
   friction: number;
+}
+
+export interface HammerHazard {
+  id: string;
+  pivot: Vec2;
+  armLength: number;
+  angleMin: number;
+  angleMax: number;
+  speed: number;
+  headRadius: number;
 }
 
 export interface HoleConfig {
@@ -51,9 +59,19 @@ export interface HoleConfig {
   cupRadius: number;
   ballRadius: number;
   maxStrokes: number;
+  multiplier: number;
+  theme: {
+    bg: string;
+    fairway: string;
+    rough: string;
+    sand: string;
+    lava: string;
+    wall: string;
+  };
   walls: WallSegment[];
   obstacles: Obstacle[];
   surfaces: SurfaceZone[];
+  hammers?: HammerHazard[];
 }
 
 export interface BallState {
@@ -63,8 +81,7 @@ export interface BallState {
   moving: boolean;
 }
 
-export interface HoleResult {
+export interface RoundResult {
+  won: boolean;
   strokes: number;
-  par: number;
-  relation: "under" | "over" | "par";
 }
