@@ -178,6 +178,23 @@ function RouletteArt() {
   );
 }
 
+
+function GolfArt() {
+  return (
+    <svg viewBox="0 0 200 150" fill="none" style={{ width: "100%", height: "100%" }}>
+      <rect x="15" y="15" width="170" height="120" rx="16" fill="#14532d" />
+      <rect x="28" y="28" width="144" height="94" rx="12" fill="#166534" />
+      <rect x="68" y="66" width="64" height="16" rx="6" fill="#0f3f22" />
+      <circle cx="57" cy="98" r="8" fill="#f8fafc" />
+      <circle cx="147" cy="48" r="7" fill="#111827" />
+      <rect x="152" y="24" width="3" height="24" fill="#e2e8f0" />
+      <polygon points="155,24 170,30 155,36" fill="#ef4444" />
+      <rect x="90" y="42" width="18" height="18" fill="#6b7280" />
+      <circle cx="118" cy="96" r="9" fill="#6b7280" />
+    </svg>
+  );
+}
+
 function SlotsArt() {
   return (
     <svg viewBox="0 0 200 150" fill="none" style={{ width: "100%", height: "100%" }}>
@@ -783,6 +800,13 @@ const GAMES: ReadonlyArray<{
     locked: false,
     gradient: "linear-gradient(145deg, #dc2626 0%, #991b1b 55%, #5c0a0a 100%)",
     art: <RouletteArt />,
+  },
+  {
+    label: "Golf",
+    href: "/golf",
+    locked: false,
+    gradient: "linear-gradient(145deg, #16a34a 0%, #166534 55%, #14532d 100%)",
+    art: <GolfArt />,
   },
   {
     label: "Slots",
