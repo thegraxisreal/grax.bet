@@ -1,6 +1,6 @@
 import { BallState, HammerHazard, HoleConfig, Obstacle, SurfaceZone, Vec2 } from "./types";
 
-const STOP_SPEED = 28;
+const STOP_SPEED = 22;
 
 export function vecLength(v: Vec2) {
   return Math.hypot(v.x, v.y);
@@ -120,7 +120,7 @@ export function stepBall(ball: BallState, hole: HoleConfig, dt: number, elapsedS
   if (collideWithHammers(ball, hole, elapsedSec)) bounced = true;
 
   const surface = surfaceAt(ball.pos, hole.surfaces);
-  const friction = surface?.friction ?? 0.984;
+  const friction = Math.min(0.988, (surface?.friction ?? 0.984) + 0.008);
   ball.vel.x *= friction;
   ball.vel.y *= friction;
 

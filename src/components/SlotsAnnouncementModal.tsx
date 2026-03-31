@@ -85,7 +85,7 @@ export default function SlotsAnnouncementModal() {
             color: "#86efac",
           }}
         >
-          Golf Coming Soon
+          Golf Is Here
         </div>
 
         <p
@@ -99,7 +99,7 @@ export default function SlotsAnnouncementModal() {
             marginBottom: 10,
           }}
         >
-          18 Holes · Pixel Art · Big Wins
+          In Beta · Pixel Art · Big Wins
         </p>
 
         <p
@@ -112,7 +112,7 @@ export default function SlotsAnnouncementModal() {
             marginInline: "auto",
           }}
         >
-          Our retro mini-golf course is still in the workshop. Expect classic pixel vibes, tricky bank shots, and casino-style payouts across a full 18-hole run.
+          Golf just landed in beta. Expect retro pixel vibes, tricky bank shots, and evolving levels while we keep tuning feel and balance.
         </p>
 
         <div style={{ display: "flex", gap: 8, justifyContent: "center", marginBottom: 20, flexWrap: "wrap" }}>
