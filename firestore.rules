@@ -37,5 +37,10 @@ service cloud.firestore {
     match /spam_queue/{queueId} {
       allow read, write: if true;
     }
+
+    // Live event leaderboard entries
+    match /live_event_entries/{entryId} {
+      allow read, write: if true;
+    }
   }
 }

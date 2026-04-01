@@ -19,6 +19,7 @@ const GAME_ICONS: Record<string, string> = {
   Plinko:    "🔵",
   Chicken:   "🐔",
   "Bomb Defuse": "🧨",
+  "Live Events": "🔥",
 };
 
 const MAX_VISIBLE = 5;

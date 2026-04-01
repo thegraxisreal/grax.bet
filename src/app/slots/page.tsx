@@ -3,7 +3,9 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useBalance } from "@/context/BalanceContext";
+import { useLiveEvents } from "@/context/LiveEventsContext";
 import { useUser } from "@/context/UserContext";
+import GameLiveEventBanner from "@/components/GameLiveEventBanner";
 import { logFeedEvent } from "@/lib/feed";
 import { fmtMoney } from "@/lib/format";
 import { CasinoChip } from "@/components/CasinoChip";
@@ -64,6 +66,7 @@ function isBigWin(wins: ReturnType<typeof checkWins>): boolean {
 export default function SlotsPage() {
   const { balance, addBalance, subtractBalance, registerBet, unregisterBet } =
     useBalance();
+  const { getPayoutMultiplier } = useLiveEvents();
   const { username } = useUser();
 
   const [phase, setPhase] = useState<Phase>("idle");
@@ -80,6 +83,7 @@ export default function SlotsPage() {
   const [stoppedReels, setStoppedReels] = useState<boolean[]>([
     false, false, false, false, false,
   ]);
+  const payoutBoost = getPayoutMultiplier("Slots");
 
   const reelRefs = useRef<(HTMLDivElement | null)[]>([null, null, null, null, null]);
   const stopTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -182,7 +186,12 @@ export default function SlotsPage() {
       const resultTimer = setTimeout(() => {
         const results = resultsRef.current;
         const b = betRef.current;
-        const spinWins = checkWins(results, b);
+        const rawWins = checkWins(results, b);
+        const spinWins = rawWins.map((win) => ({
+          ...win,
+          multiplier: Math.round(win.multiplier * payoutBoost * 100) / 100,
+          payout: Math.round(win.payout * payoutBoost * 100) / 100,
+        }));
         const payout = calculateTotalPayout(spinWins);
 
         setWins(spinWins);
@@ -206,7 +215,7 @@ export default function SlotsPage() {
 
       stopTimersRef.current.push(resultTimer);
     });
-  }, [balance, subtractBalance, registerBet, addBalance, unregisterBet, username]);
+  }, [balance, subtractBalance, registerBet, addBalance, unregisterBet, username, payoutBoost]);
 
   const handleSpin = useCallback(() => {
     if (phase !== "idle" || bet <= 0 || balance < bet) return;
@@ -293,6 +302,8 @@ export default function SlotsPage() {
             5 Reels · 4 Rows · 4 Paylines
           </div>
         </div>
+
+        <GameLiveEventBanner gameName="Slots" />
 
         {/* Balance */}
         <div className="balance-display" style={{ justifyContent: "center" }}>

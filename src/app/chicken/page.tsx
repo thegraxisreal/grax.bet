@@ -30,6 +30,8 @@ const CHICKEN_COLOR_FILL = 0.64; // yellow body/wing visual width used for colli
 const CAR_COLOR_FILL = 0.86; // painted body region (ignores transparent margins/lights)
 const SAFE_STEP = 5;
 const CAR_COLORS = ["#ef4444", "#3b82f6", "#f97316", "#a855f7", "#14b8a6", "#eab308"];
+const HOLD_TRIGGER_MS = 5000;
+const CRASH_IMPACT_DELAY_MS = 800;
 
 const isSafeLane = (jump: number) => jump % SAFE_STEP === 0;
 const clampMoney = (v: number) => Math.round(v * 100) / 100;
@@ -66,6 +68,58 @@ function CarIcon({ color, dir }: { color: string; dir: 1 | -1 }) {
   );
 }
 
+function CheaterPlaneIcon() {
+  return (
+    <svg width="100%" height="100%" viewBox="0 0 260 120" fill="none">
+      <defs>
+        <linearGradient id="plane-body" x1="30" y1="34" x2="206" y2="84" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#f8fafc" />
+          <stop offset="45%" stopColor="#cbd5e1" />
+          <stop offset="100%" stopColor="#94a3b8" />
+        </linearGradient>
+        <linearGradient id="plane-wing" x1="84" y1="26" x2="150" y2="96" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#e2e8f0" />
+          <stop offset="100%" stopColor="#64748b" />
+        </linearGradient>
+        <linearGradient id="plane-banner" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#ef4444" />
+          <stop offset="100%" stopColor="#991b1b" />
+        </linearGradient>
+      </defs>
+
+      <ellipse cx="132" cy="96" rx="84" ry="10" fill="rgba(0,0,0,0.22)" />
+
+      <path d="M18 68 C10 61 10 49 18 42 L40 34 L52 42 L52 68 L40 76 Z" fill="#475569" />
+      <path d="M34 56 L10 61 L20 49 Z" fill="#64748b" />
+
+      <path d="M42 70 L160 26 C177 20 204 22 224 36 L240 48 C246 53 246 59 240 64 L224 76 C205 89 178 92 160 86 L42 70 Z" fill="url(#plane-body)" />
+      <path d="M54 68 L164 34 C178 29 201 31 217 42 L228 50 C232 53 232 59 228 62 L217 70 C201 81 178 83 164 78 L54 68 Z" fill="rgba(15,23,42,0.08)" />
+      <path d="M42 70 L160 26 C177 20 204 22 224 36 L240 48 C246 53 246 59 240 64 L224 76 C205 89 178 92 160 86 L42 70 Z" stroke="#475569" strokeWidth="3" />
+
+      <path d="M86 50 L116 16 L170 18 L140 52 Z" fill="url(#plane-wing)" stroke="#475569" strokeWidth="3" strokeLinejoin="round" />
+      <path d="M116 56 L154 96 L184 88 L146 55 Z" fill="#64748b" stroke="#475569" strokeWidth="3" strokeLinejoin="round" />
+      <path d="M58 62 L36 90 L70 78 L84 64 Z" fill="#94a3b8" stroke="#475569" strokeWidth="3" strokeLinejoin="round" />
+
+      <path d="M170 34 C178 28 190 28 200 33 L210 38 L180 46 Z" fill="#e2e8f0" />
+      <path d="M162 70 L218 67 C213 75 204 81 192 84 L154 84 Z" fill="#cbd5e1" />
+
+      <path d="M194 38 L214 41 L225 49 L210 53 L188 49 Z" fill="#0f172a" />
+      <path d="M201 42 L213 44 L217 48 L208 50 L197 48 Z" fill="#7dd3fc" />
+
+      <rect x="86" y="49" width="86" height="20" rx="6" fill="url(#plane-banner)" stroke="#7f1d1d" strokeWidth="2.5" />
+      <text x="129" y="63" textAnchor="middle" fontSize="17" fontWeight="900" fill="#fff" style={{ letterSpacing: "0.12em" }}>
+        CHEATER
+      </text>
+
+      <circle cx="28" cy="55" r="11" fill="#111827" stroke="#475569" strokeWidth="3" />
+      <path d="M21 49 L35 61 M35 49 L21 61" stroke="#f8fafc" strokeWidth="2" strokeLinecap="round" opacity="0.9" />
+
+      <path d="M6 54 C-2 50 -2 40 8 36" stroke="rgba(251,191,36,0.7)" strokeWidth="3.5" strokeLinecap="round" />
+      <path d="M2 61 C-10 60 -12 50 0 45" stroke="rgba(249,115,22,0.7)" strokeWidth="5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export default function ChickenPage() {
   const { balance, addBalance, subtractBalance, registerBet, unregisterBet } = useBalance();
   const { username } = useUser();
@@ -77,6 +131,8 @@ export default function ChickenPage() {
   const [cars, setCars] = useState<Car[]>([]);
   const [bestJump, setBestJump] = useState(0);
   const [recentResult, setRecentResult] = useState<{ net: number; jumps: number } | null>(null);
+  const [cheaterCrashRow, setCheaterCrashRow] = useState<number | null>(null);
+  const [cheaterImpact, setCheaterImpact] = useState(false);
 
   const phaseRef = useRef<Phase>("idle");
   const jumpsRef = useRef(0);
@@ -86,6 +142,11 @@ export default function ChickenPage() {
   const carIdRef = useRef(0);
   const jumpGraceUntilRef = useRef(0);
   const cameraStartRef = useRef(0);
+  const cheaterCrashRef = useRef(false);
+  const cheaterImpactRef = useRef(false);
+  const spaceHeldRef = useRef(false);
+  const spaceHoldStartRef = useRef<number | null>(null);
+  const crashTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     phaseRef.current = phase;
@@ -95,6 +156,14 @@ export default function ChickenPage() {
     jumpsRef.current = jumps;
     cameraStartRef.current = Math.max(0, jumps - CAMERA_ANCHOR_ROW);
   }, [jumps]);
+
+  useEffect(() => {
+    cheaterCrashRef.current = cheaterCrashRow !== null;
+  }, [cheaterCrashRow]);
+
+  useEffect(() => {
+    cheaterImpactRef.current = cheaterImpact;
+  }, [cheaterImpact]);
 
   const multiplier = useMemo(() => Math.max(1, jumps), [jumps]);
   const potentialPayout = useMemo(() => clampMoney(bet * multiplier), [bet, multiplier]);
@@ -106,10 +175,30 @@ export default function ChickenPage() {
     cooldownRef.current = {};
     jumpGraceUntilRef.current = 0;
     cameraStartRef.current = 0;
+    setCheaterCrashRow(null);
+    setCheaterImpact(false);
+    cheaterCrashRef.current = false;
+    cheaterImpactRef.current = false;
+    spaceHeldRef.current = false;
+    spaceHoldStartRef.current = null;
+    if (crashTimeoutRef.current) {
+      clearTimeout(crashTimeoutRef.current);
+      crashTimeoutRef.current = null;
+    }
   }, []);
 
   const triggerLoss = useCallback(() => {
     if (phaseRef.current !== "playing") return;
+    setCheaterCrashRow(null);
+    setCheaterImpact(false);
+    cheaterCrashRef.current = false;
+    cheaterImpactRef.current = false;
+    spaceHeldRef.current = false;
+    spaceHoldStartRef.current = null;
+    if (crashTimeoutRef.current) {
+      clearTimeout(crashTimeoutRef.current);
+      crashTimeoutRef.current = null;
+    }
     setPhase("dead");
     unregisterBet();
     playLose();
@@ -124,6 +213,22 @@ export default function ChickenPage() {
       lastFrameRef.current = ts;
 
       if (phaseRef.current === "playing") {
+        if (
+          !cheaterCrashRef.current
+          && spaceHeldRef.current
+          && spaceHoldStartRef.current !== null
+          && ts - spaceHoldStartRef.current >= HOLD_TRIGGER_MS
+        ) {
+          cheaterCrashRef.current = true;
+          setCheaterImpact(false);
+          setCheaterCrashRow(Math.max(0, jumpsRef.current - cameraStartRef.current));
+        }
+
+        if (cheaterCrashRef.current) {
+          rafRef.current = requestAnimationFrame(animate);
+          return;
+        }
+
         setCars((prev) => {
           const minLane = cameraStartRef.current - 2;
           const maxLane = cameraStartRef.current + LANE_TOTAL + 2;
@@ -229,7 +334,7 @@ export default function ChickenPage() {
   }, [balance, pendingBet, phase, registerBet, resetRound, subtractBalance]);
 
   const cashout = useCallback(() => {
-    if (phase !== "playing" || jumps <= 0) return;
+    if (phase !== "playing" || jumps <= 0 || cheaterCrashRef.current) return;
     const payout = clampMoney(bet * jumps);
     addBalance(payout);
     unregisterBet();
@@ -241,7 +346,7 @@ export default function ChickenPage() {
   }, [addBalance, bet, jumps, phase, unregisterBet, username]);
 
   const jump = useCallback(() => {
-    if (phaseRef.current !== "playing") return;
+    if (phaseRef.current !== "playing" || cheaterCrashRef.current) return;
     jumpGraceUntilRef.current = performance.now() + 130;
     setJumps((prev) => {
       const next = prev + 1;
@@ -255,16 +360,39 @@ export default function ChickenPage() {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.code === "Space") {
         e.preventDefault();
+        if (phaseRef.current === "playing" && !spaceHeldRef.current) {
+          spaceHeldRef.current = true;
+          spaceHoldStartRef.current = performance.now();
+        }
         jump();
       }
     };
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (e.code !== "Space") return;
+      spaceHeldRef.current = false;
+      spaceHoldStartRef.current = null;
+    };
+    const onBlur = () => {
+      spaceHeldRef.current = false;
+      spaceHoldStartRef.current = null;
+    };
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
+    window.addEventListener("blur", onBlur);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
+      window.removeEventListener("blur", onBlur);
+    };
   }, [jump]);
 
   const cameraStart = Math.max(0, jumps - CAMERA_ANCHOR_ROW);
   const playerVisibleRow = jumps - cameraStart;
   const lanes = Array.from({ length: LANE_TOTAL + 1 }, (_, i) => cameraStart + i);
+  const laneHeightPct = 100 / (LANE_TOTAL + 1);
+  const targetRow = cheaterCrashRow ?? playerVisibleRow;
+  const targetBottomPct = (targetRow / LANE_TOTAL) * 100;
+  const targetTopPct = Math.max(2, 100 - targetBottomPct - laneHeightPct * 0.78);
 
   return (
     <div className="game-layout" style={{ height: "100%", display: "flex", overflow: "hidden" }}>
@@ -340,6 +468,69 @@ export default function ChickenPage() {
               </div>
             );
           })}
+
+          {cheaterCrashRow !== null && (
+            <>
+              <motion.div
+                initial={{ left: "116%", top: "-24%", rotate: -18, scale: 0.9 }}
+                animate={{ left: "42.5%", top: `${targetTopPct}%`, rotate: 42, scale: 1.06 }}
+                transition={{ duration: 2.8, ease: [0.16, 0.9, 0.2, 1] }}
+                onAnimationComplete={() => {
+                  if (!cheaterCrashRef.current || cheaterImpactRef.current) return;
+                  setCheaterImpact(true);
+                  if (crashTimeoutRef.current) clearTimeout(crashTimeoutRef.current);
+                  crashTimeoutRef.current = setTimeout(() => {
+                    crashTimeoutRef.current = null;
+                    triggerLoss();
+                  }, CRASH_IMPACT_DELAY_MS);
+                }}
+                style={{
+                  position: "absolute",
+                  width: "42%",
+                  pointerEvents: "none",
+                  zIndex: 40,
+                  filter: "drop-shadow(0 8px 12px rgba(0,0,0,0.55))",
+                }}
+              >
+                <CheaterPlaneIcon />
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: cheaterImpact ? 1 : 0 }}
+                transition={{ duration: 0.22 }}
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  pointerEvents: "none",
+                  zIndex: 35,
+                  background: cheaterImpact ? "radial-gradient(circle at 48% 66%, rgba(248,113,113,0.72), rgba(127,29,29,0.08) 44%, rgba(0,0,0,0.2) 100%)" : "transparent",
+                }}
+              />
+              {cheaterImpact && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.7 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.28 }}
+                  style={{
+                    position: "absolute",
+                    left: "50%",
+                    top: "46%",
+                    transform: "translate(-50%, -50%)",
+                    zIndex: 45,
+                    fontFamily: "'Barlow Condensed', sans-serif",
+                    fontSize: "2rem",
+                    fontWeight: 900,
+                    letterSpacing: "0.12em",
+                    color: "#fecaca",
+                    textShadow: "0 0 20px rgba(239,68,68,0.9)",
+                    pointerEvents: "none",
+                  }}
+                >
+                  YOU DIED
+                </motion.div>
+              )}
+            </>
+          )}
         </div>
       </div>
 
@@ -395,8 +586,13 @@ export default function ChickenPage() {
             <Stat label="Next Safe" value={`${Math.ceil((jumps + 1) / SAFE_STEP) * SAFE_STEP}×`} />
             <div style={{ ...mutedStyle, marginTop: 4 }}>Click the board or press <strong style={{ color: "var(--accent-gold)" }}>Space</strong> to jump.</div>
             <div style={mutedStyle}>Difficulty ramps up quickly after <strong style={{ color: "var(--accent-gold)" }}>20×</strong>.</div>
+            {cheaterCrashRow !== null && (
+              <div style={{ ...mutedStyle, color: "#fca5a5", letterSpacing: "0.1em", textTransform: "uppercase", marginTop: 2 }}>
+                Cheater detected. Incoming airstrike...
+              </div>
+            )}
 
-            <motion.button className="btn-primary" whileHover={{ scale: jumps > 0 ? 1.03 : 1 }} whileTap={{ scale: jumps > 0 ? 0.97 : 1 }} disabled={jumps <= 0} onClick={cashout} style={{ width: "100%", marginTop: "auto", background: "linear-gradient(135deg,#22c55e,#15803d)", opacity: jumps > 0 ? 1 : 0.5 }}>
+            <motion.button className="btn-primary" whileHover={{ scale: jumps > 0 && cheaterCrashRow === null ? 1.03 : 1 }} whileTap={{ scale: jumps > 0 && cheaterCrashRow === null ? 0.97 : 1 }} disabled={jumps <= 0 || cheaterCrashRow !== null} onClick={cashout} style={{ width: "100%", marginTop: "auto", background: "linear-gradient(135deg,#22c55e,#15803d)", opacity: jumps > 0 && cheaterCrashRow === null ? 1 : 0.5 }}>
               CASH OUT ${fmtMoney(potentialPayout)}
             </motion.button>
           </>
@@ -406,7 +602,7 @@ export default function ChickenPage() {
           <>
             <div style={{ textAlign: "center", marginTop: 4 }}>
               <div style={{ ...mutedStyle, color: phase === "cashout" ? "#4ade80" : "#fca5a5", letterSpacing: "0.12em", textTransform: "uppercase" }}>
-                {phase === "cashout" ? "Escaped!" : "Splat!"}
+                {phase === "cashout" ? "Escaped!" : "You Died"}
               </div>
               <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "2rem", fontWeight: 800, color: phase === "cashout" ? "#4ade80" : "#f87171" }}>
                 {recentResult && (recentResult.net >= 0 ? `+$${fmtMoney(recentResult.net)}` : `-$${fmtMoney(-recentResult.net)}`)}

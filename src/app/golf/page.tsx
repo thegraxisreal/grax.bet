@@ -31,21 +31,19 @@ export default function GolfPage() {
   };
 
   const finishRound = (round: RoundResult) => {
-    setResult(round);
-    if (round.won) {
-      const win = Math.round(stake * hole.multiplier * 100) / 100;
-      addBalance(win);
-      setPayout(win);
-    } else {
-      setPayout(0);
-    }
+    const resolved = { ...round, won: true };
+    setResult(resolved);
+    const win = Math.round(stake * hole.multiplier * 100) / 100;
+    addBalance(win);
+    setPayout(win);
     setPhase("result");
   };
 
   const quit = () => {
-    setResult({ won: false, strokes: 0 });
+    addBalance(stake);
+    setResult(null);
     setPayout(0);
-    setPhase("result");
+    setPhase("select");
   };
 
   const reset = () => {
@@ -83,7 +81,7 @@ export default function GolfPage() {
                   >
                     <LevelPreview hole={h} />
                     <p className="mt-2 text-xs font-semibold uppercase tracking-widest text-slate-300">{h.name}</p>
-                    <p className="text-[11px] text-slate-400">Par {h.par} · {h.multiplier}x multiplier</p>
+                    <p className="text-[11px] text-slate-400">{h.multiplier}x multiplier</p>
                   </button>
                 ))}
               </div>
@@ -111,7 +109,7 @@ export default function GolfPage() {
           <div className="fixed inset-0 z-40 flex flex-col bg-slate-950 p-3">
             <div className="mb-2 flex items-center justify-between text-xs uppercase tracking-[0.2em] text-slate-300">
               <span>{hole.name} · Multiplier {hole.multiplier}x</span>
-              <button onClick={quit} className="rounded border border-rose-500 px-2 py-1 text-rose-300">Quit (Lose)</button>
+              <button onClick={quit} className="rounded border border-rose-500 px-2 py-1 text-rose-300">Quit</button>
             </div>
             <div className="min-h-0 flex-1">
               <GolfCanvas hole={hole} onFinish={finishRound} />

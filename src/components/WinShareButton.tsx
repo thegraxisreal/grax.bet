@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useUser } from "@/context/UserContext";
-import { sendWinAnnouncement } from "@/lib/chat";
+import { sendCustomChatAnnouncement, sendWinAnnouncement } from "@/lib/chat";
 import type { FeedPayload } from "@/lib/feed";
 
 const WINDOW_MS = 5000;
@@ -15,9 +15,17 @@ const GAME_ICONS: Record<string, string> = {
   Plinko: "🔵",
 };
 
+interface EventSharePrompt {
+  game: string;
+  amount: number;
+  title: string;
+  body: string;
+}
+
 export default function WinShareButton() {
   const { username } = useUser();
   const [pending, setPending] = useState<FeedPayload | null>(null);
+  const [eventPrompt, setEventPrompt] = useState<EventSharePrompt | null>(null);
   const [timeLeft, setTimeLeft] = useState(0);
   const [sent, setSent] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -27,6 +35,7 @@ export default function WinShareButton() {
     if (timerRef.current) clearInterval(timerRef.current);
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     setPending(null);
+    setEventPrompt(null);
     setTimeLeft(0);
     setSent(false);
   }, []);
@@ -67,24 +76,68 @@ export default function WinShareButton() {
     };
   }, [clear]);
 
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<EventSharePrompt>).detail;
+      if (!detail?.body) return;
+
+      if (timerRef.current) clearInterval(timerRef.current);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+
+      setSent(false);
+      setPending(null);
+      setEventPrompt(detail);
+      setTimeLeft(WINDOW_MS / 1000);
+
+      timerRef.current = setInterval(() => {
+        setTimeLeft((t) => {
+          if (t <= 1) {
+            clearInterval(timerRef.current!);
+            return 0;
+          }
+          return t - 1;
+        });
+      }, 1000);
+
+      timeoutRef.current = setTimeout(() => {
+        setEventPrompt(null);
+        setSent(false);
+      }, WINDOW_MS);
+    };
+
+    window.addEventListener("grax-live-event-share", handler);
+    return () => {
+      window.removeEventListener("grax-live-event-share", handler);
+    };
+  }, []);
+
   const handleShare = useCallback(async () => {
-    if (!pending || !username || sent || typeof pending.amount !== "number") return;
+    if (!username || sent) return;
     setSent(true);
     try {
-      await sendWinAnnouncement(username, pending.game, pending.amount);
+      if (eventPrompt) {
+        await sendCustomChatAnnouncement(username, eventPrompt.body);
+      } else if (pending && typeof pending.amount === "number") {
+        await sendWinAnnouncement(username, pending.game, pending.amount);
+      } else {
+        setSent(false);
+        return;
+      }
     } catch {
       setSent(false);
       return;
     }
     // Fade out after brief "Shared!" state
     setTimeout(clear, 1200);
-  }, [clear, pending, sent, username]);
+  }, [clear, eventPrompt, pending, sent, username]);
 
-  if (!pending || !username) return null;
-  if (typeof pending.amount !== "number") return null;
+  if ((!pending && !eventPrompt) || !username) return null;
+  if (!eventPrompt && typeof pending?.amount !== "number") return null;
 
-  const icon = GAME_ICONS[pending.game] ?? "🎰";
-  const amountStr = `$${pending.amount % 1 === 0 ? pending.amount : pending.amount.toFixed(2)}`;
+  const icon = GAME_ICONS[eventPrompt?.game ?? pending?.game ?? ""] ?? "🎰";
+  const amountStr = eventPrompt
+    ? `${eventPrompt.amount}x`
+    : `$${pending!.amount! % 1 === 0 ? pending!.amount : pending!.amount!.toFixed(2)}`;
 
   return (
     <button
@@ -120,7 +173,9 @@ export default function WinShareButton() {
       <span style={{ fontSize: "1.3rem" }}>{sent ? "✓" : icon}</span>
       {sent
         ? "Shared to chat!"
-        : `Share win to chat — ${amountStr} on ${pending.game} (${timeLeft}s)`}
+        : eventPrompt
+          ? `Share event run — ${amountStr} in ${eventPrompt.title} (${timeLeft}s)`
+          : `Share win to chat — ${amountStr} on ${pending!.game} (${timeLeft}s)`}
     </button>
   );
 }

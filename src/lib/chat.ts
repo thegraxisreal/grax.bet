@@ -45,6 +45,15 @@ export async function sendWinAnnouncement(username: string, game: string, amount
   });
 }
 
+export async function sendCustomChatAnnouncement(username: string, text: string): Promise<void> {
+  if (!username || !text.trim()) return;
+  await addDoc(collection(getDb(), CHAT_COLLECTION), {
+    username,
+    text: text.trim().slice(0, 300),
+    timestamp: Timestamp.now(),
+  });
+}
+
 export function subscribeChat(callback: (messages: ChatMessage[]) => void): Unsubscribe {
   const q = query(
     collection(getDb(), CHAT_COLLECTION),

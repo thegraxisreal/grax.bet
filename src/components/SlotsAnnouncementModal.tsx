@@ -8,16 +8,15 @@ export default function SlotsAnnouncementModal() {
   const pathname = usePathname();
 
   useEffect(() => {
-    if (pathname !== "/") return;
-    const key = "grax_golf_coming_soon_seen";
-    if (sessionStorage.getItem(key) === "1") return;
-
+    if (pathname !== "/") {
+      setVisible(false);
+      return;
+    }
     const t = setTimeout(() => setVisible(true), 500);
     return () => clearTimeout(t);
   }, [pathname]);
 
   function dismiss() {
-    sessionStorage.setItem("grax_golf_coming_soon_seen", "1");
     setVisible(false);
   }
 

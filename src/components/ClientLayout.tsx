@@ -6,10 +6,12 @@ import { UserProvider } from "@/context/UserContext";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 import BrokeModal from "@/components/BrokeModal";
+import CooldownModal from "@/components/CooldownModal";
 import UsernameModal from "@/components/UsernameModal";
 import ActivityFeed from "@/components/ActivityFeed";
 import WinShareButton from "@/components/WinShareButton";
 import SlotsAnnouncementModal from "@/components/SlotsAnnouncementModal";
+import { LiveEventsProvider } from "@/context/LiveEventsContext";
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -20,6 +22,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   return (
     <UserProvider>
     <BalanceProvider>
+      <LiveEventsProvider>
       <div style={{
         display: "flex",
         height: "100vh",
@@ -52,10 +55,12 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
         </div>
       </div>
       <BrokeModal />
+      <CooldownModal />
       <UsernameModal />
       <ActivityFeed />
       <WinShareButton />
       <SlotsAnnouncementModal />
+      </LiveEventsProvider>
     </BalanceProvider>
     </UserProvider>
   );

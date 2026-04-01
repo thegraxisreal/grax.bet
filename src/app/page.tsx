@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { useLiveEvents } from "@/context/LiveEventsContext";
 
 // ── Game card illustrations ───────────────────────────────────────────────────
 
@@ -415,6 +416,134 @@ function PlinkoArt() {
           <text x={x+w/2} y="137" textAnchor="middle" dominantBaseline="middle" fontSize="7" fontWeight="800" fill="white" fontFamily="'Barlow Condensed',sans-serif">{label}</text>
         </g>
       ))}
+    </svg>
+  );
+}
+
+function PlinkoIIArt() {
+  return (
+    <svg viewBox="0 0 200 150" fill="none" style={{ width: "100%", height: "100%" }}>
+      <defs>
+        <radialGradient id="pl2-bg-glow" cx="50%" cy="35%" r="65%">
+          <stop offset="0%" stopColor="rgba(56,189,248,0.45)" />
+          <stop offset="45%" stopColor="rgba(168,85,247,0.25)" />
+          <stop offset="100%" stopColor="rgba(0,0,0,0)" />
+        </radialGradient>
+        <linearGradient id="pl2-frame" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#67e8f9" />
+          <stop offset="50%" stopColor="#a855f7" />
+          <stop offset="100%" stopColor="#f97316" />
+        </linearGradient>
+        <linearGradient id="pl2-ball" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#fde68a" />
+          <stop offset="100%" stopColor="#f97316" />
+        </linearGradient>
+        <filter id="pl2-glow">
+          <feGaussianBlur stdDeviation="4" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+
+      <rect x="14" y="12" width="172" height="124" rx="18" fill="rgba(6,12,24,0.72)" />
+      <rect x="14" y="12" width="172" height="124" rx="18" stroke="url(#pl2-frame)" strokeWidth="1.5" />
+      <ellipse cx="100" cy="56" rx="66" ry="38" fill="url(#pl2-bg-glow)" />
+
+      {Array.from({ length: 6 }).map((_, row) => {
+        const cols = row + 4;
+        const startX = 100 - ((cols - 1) * 14);
+        return Array.from({ length: cols }).map((__, col) => {
+          const x = startX + col * 28;
+          const y = 32 + row * 13;
+          const highlight = row >= 3 && (col === 1 || col === cols - 2);
+          return (
+            <g key={`${row}-${col}`}>
+              <circle cx={x} cy={y} r="4.2" fill={highlight ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.08)"} />
+              <circle cx={x} cy={y} r="3.1" fill={highlight ? "#67e8f9" : "#475569"} />
+            </g>
+          );
+        });
+      })}
+
+      <path
+        d="M98 18 C112 32 128 44 138 60 C146 74 144 90 128 102"
+        stroke="rgba(103,232,249,0.55)"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeDasharray="5 7"
+      />
+
+      <circle cx="104" cy="26" r="8" fill="url(#pl2-ball)" filter="url(#pl2-glow)" />
+      <circle cx="101" cy="23" r="2.4" fill="rgba(255,255,255,0.55)" />
+
+      {[
+        { x: 24, w: 20, color: "#0ea5e9", label: "2x" },
+        { x: 46, w: 20, color: "#14b8a6", label: "4x" },
+        { x: 68, w: 22, color: "#22c55e", label: "8x" },
+        { x: 92, w: 22, color: "#f59e0b", label: "16x" },
+        { x: 116, w: 22, color: "#ef4444", label: "32x" },
+        { x: 140, w: 20, color: "#a855f7", label: "8x" },
+        { x: 162, w: 14, color: "#0ea5e9", label: "4x" },
+      ].map((bucket) => (
+        <g key={bucket.x}>
+          <rect x={bucket.x} y="112" width={bucket.w} height="18" rx="4" fill={bucket.color} opacity="0.92" />
+          <text
+            x={bucket.x + bucket.w / 2}
+            y="123"
+            textAnchor="middle"
+            dominantBaseline="middle"
+            fontSize="7"
+            fontWeight="900"
+            fill="white"
+            fontFamily="'Barlow Condensed',sans-serif"
+          >
+            {bucket.label}
+          </text>
+        </g>
+      ))}
+
+      <g filter="url(#pl2-glow)">
+        <text
+          x="26"
+          y="30"
+          fontSize="22"
+          fontWeight="900"
+          fill="white"
+          fontFamily="'Barlow Condensed',sans-serif"
+          letterSpacing="0.12em"
+        >
+          PLINKO II
+        </text>
+      </g>
+      <text
+        x="28"
+        y="46"
+        fontSize="8"
+        fontWeight="700"
+        fill="rgba(255,255,255,0.65)"
+        fontFamily="'Barlow Condensed',sans-serif"
+        letterSpacing="0.2em"
+      >
+        HYPERDROP MODE
+      </text>
+
+      <g transform="translate(98 66)">
+        <rect x="-42" y="0" width="84" height="18" rx="9" fill="rgba(15,23,42,0.82)" stroke="rgba(103,232,249,0.4)" />
+        <text
+          x="0"
+          y="11"
+          textAnchor="middle"
+          fontSize="8"
+          fontWeight="800"
+          fill="#67e8f9"
+          fontFamily="'Barlow Condensed',sans-serif"
+          letterSpacing="0.16em"
+        >
+          COMING SOON
+        </text>
+      </g>
     </svg>
   );
 }
@@ -837,6 +966,13 @@ const GAMES: ReadonlyArray<{
     art: <PlinkoArt />,
   },
   {
+    label: "Plinko II",
+    href: "/plinko-ii",
+    locked: true,
+    gradient: "linear-gradient(145deg, #0f172a 0%, #1d4ed8 35%, #7c3aed 68%, #f97316 100%)",
+    art: <PlinkoIIArt />,
+  },
+  {
     label: "Horse Racing",
     href: "/horse-racing",
     locked: true,
@@ -868,6 +1004,144 @@ const GAMES: ReadonlyArray<{
 ] as const;
 
 // ── Page ──────────────────────────────────────────────────────────────────────
+
+function LiveEventsHeroCard() {
+  const { resolvedState, eventCountdown, nextCountdown } = useLiveEvents();
+  const liveEvent = resolvedState.currentEvent;
+  const nextEvents = resolvedState.upcomingEvents;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 18 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.45, delay: 0.08 }}
+      style={{
+        marginBottom: 20,
+        borderRadius: 12,
+        border: "1px solid rgba(240,180,41,0.16)",
+        background: "rgba(255,255,255,0.03)",
+      }}
+    >
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1.2fr 1fr",
+          gap: 12,
+          padding: "12px 14px",
+        }}
+      >
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <span
+              style={{
+                background: liveEvent ? "linear-gradient(135deg, #f97316, #ef4444)" : "rgba(255,255,255,0.08)",
+                color: liveEvent ? "#fff" : "var(--text-secondary)",
+                borderRadius: 999,
+                padding: "3px 8px",
+                fontSize: "0.62rem",
+                fontWeight: 800,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+              }}
+            >
+              {liveEvent ? "Live Event" : "Upcoming"}
+            </span>
+            <span style={{ color: "var(--text-secondary)", fontSize: "0.74rem", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+              8 AM to 4 PM local
+            </span>
+          </div>
+
+          <div style={{ color: "var(--text-primary)", fontWeight: 700, fontSize: "0.95rem" }}>
+            {liveEvent
+              ? `${liveEvent.targetGames[0]} is 2x right now`
+              : nextEvents[0]
+                ? `${nextEvents[0].targetGames[0]} goes 2x next`
+                : "No live event active"}
+          </div>
+
+          <div style={{ color: "var(--text-secondary)", fontSize: "0.82rem", lineHeight: 1.45 }}>
+            {liveEvent
+              ? `${liveEvent.displayText} Ends in ${eventCountdown}.`
+              : nextEvents[0]
+                ? `${nextEvents[0].targetGames[0]} goes 2x at ${formatEventStart(nextEvents[0].startAtMs)}.`
+                : "Come back during the daily rotation."}
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <Link
+              href={`/${(liveEvent ?? nextEvents[0])?.eventKey === "plinko" ? "plinko" : (liveEvent ?? nextEvents[0])?.eventKey ?? "plinko"}`}
+              style={{
+                textDecoration: "none",
+                color: "var(--accent-gold)",
+                borderRadius: 999,
+                padding: "8px 12px",
+                fontFamily: "'Barlow Condensed', sans-serif",
+                fontWeight: 700,
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                border: "1px solid rgba(240,180,41,0.2)",
+                background: "rgba(240,180,41,0.08)",
+              }}
+            >
+              {liveEvent ? `Play ${liveEvent.targetGames[0]}` : nextEvents[0] ? `View ${nextEvents[0].targetGames[0]}` : "View Event"}
+            </Link>
+            <span style={{ color: "var(--text-muted)", fontSize: "0.76rem" }}>
+              {liveEvent ? `Ends ${formatEventStart(liveEvent.endAtMs)}` : nextCountdown}
+            </span>
+          </div>
+        </div>
+
+        <div
+          style={{
+            background: "rgba(0,0,0,0.16)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            borderRadius: 10,
+            padding: 10,
+            display: "flex",
+            flexDirection: "column",
+            gap: 8,
+          }}
+        >
+          <div style={{ color: "var(--accent-gold)", fontSize: "0.72rem", letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 700 }}>
+            Next 2 boosts
+          </div>
+          {nextEvents.slice(0, 2).map((event, index) => (
+            <div
+              key={event.id}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 10,
+                padding: "8px 10px",
+                borderRadius: 8,
+                background: "rgba(255,255,255,0.03)",
+                border: "1px solid rgba(255,255,255,0.06)",
+              }}
+            >
+              <div
+                style={{
+                  color: "var(--accent-gold)",
+                  fontSize: "0.86rem",
+                  fontWeight: 700,
+                  background: "rgba(240,180,41,0.1)",
+                  border: "1px solid rgba(240,180,41,0.18)",
+                  borderRadius: 7,
+                  padding: "6px 8px",
+                }}
+              >
+                {event.targetGames[0]} goes 2x
+              </div>
+              <span style={{ color: "var(--accent-gold)", fontWeight: 700, fontSize: "0.78rem" }}>
+                {index === 0 ? nextCountdown : formatEventStart(event.startAtMs)}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
 
 export default function Home() {
   return (
@@ -906,6 +1180,8 @@ export default function Home() {
           Premium fake-money casino. All the thrills, none of the risk.
         </p>
       </motion.div>
+
+      <LiveEventsHeroCard />
 
       {/* Section heading */}
       <div style={{
@@ -1074,4 +1350,8 @@ export default function Home() {
       </div>
     </div>
   );
+}
+
+function formatEventStart(timestamp: number): string {
+  return new Date(timestamp).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 }

@@ -184,11 +184,6 @@ export default function GolfCanvas({ hole, onFinish }: GolfCanvasProps) {
         }
       }
 
-      if (strokesRef.current >= hole.maxStrokes && !finishedRef.current) {
-        finishedRef.current = true;
-        onFinish({ won: false, strokes: hole.maxStrokes });
-      }
-
       draw(ctx);
       raf = requestAnimationFrame(loop);
     };
@@ -221,7 +216,7 @@ export default function GolfCanvas({ hole, onFinish }: GolfCanvasProps) {
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="mb-2 flex items-center justify-between text-xs uppercase tracking-[0.2em] text-slate-300">
-        <span>Par {hole.par}</span>
+        <span>Free Play</span>
         <span>Strokes {strokes}</span>
         <span>{phase === "aim" ? "Tap: Lock Aim" : `Power ${Math.round(powerValue * 100)}%`}</span>
       </div>

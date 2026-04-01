@@ -3,9 +3,11 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useBalance } from "@/context/BalanceContext";
+import { usePlinkoLiveEvent } from "@/context/LiveEventsContext";
 import { useUser } from "@/context/UserContext";
 import { logFeedEvent } from "@/lib/feed";
 import { fmtMoney } from "@/lib/format";
+import type { LiveEventDefinition } from "@/lib/liveEvents";
 import { CasinoChip } from "@/components/CasinoChip";
 import { playChipClick } from "@/lib/sound";
 
@@ -221,11 +223,74 @@ interface BucketFlash {
   time: number;
 }
 
+function PlinkoEventPanel({
+  liveEvent,
+  nextEvent,
+  eventCountdown,
+  nextCountdown,
+}: {
+  liveEvent: LiveEventDefinition | null;
+  nextEvent: LiveEventDefinition | null;
+  eventCountdown: string | null;
+  nextCountdown: string | null;
+}) {
+  return (
+    <div
+      style={{
+        background: "rgba(0,0,0,0.2)",
+        border: "1px solid rgba(240,180,41,0.16)",
+        borderRadius: 8,
+        padding: "10px",
+        display: "grid",
+        gap: 8,
+      }}
+    >
+      <div>
+        <div style={{ color: "var(--accent-gold)", fontSize: "0.68rem", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 4 }}>
+          {liveEvent ? "Plinko 2x Live" : "Plinko 2x"}
+        </div>
+        <div style={{ color: "var(--text-secondary)", fontSize: "0.75rem", lineHeight: 1.45, marginTop: 2 }}>
+          {liveEvent
+            ? `Every bottom bucket is 2x until ${new Date(liveEvent.endAtMs).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}.`
+            : nextEvent
+              ? `Plinko goes 2x at ${new Date(nextEvent.startAtMs).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}.`
+              : "Plinko is not on 2x right now."}
+        </div>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+        <div style={eventMiniCardStyle}>
+          <div style={eventMiniLabelStyle}>{liveEvent ? "Ends In" : "Starts In"}</div>
+          <div style={eventMiniValueStyle}>{liveEvent ? eventCountdown : nextCountdown ?? "--:--"}</div>
+        </div>
+        <div style={eventMiniCardStyle}>
+          <div style={eventMiniLabelStyle}>Boost</div>
+          <div style={{ ...eventMiniValueStyle, fontSize: "0.88rem" }}>All buckets 2x</div>
+        </div>
+      </div>
+
+      {liveEvent && (
+        <div style={{ color: "var(--text-muted)", fontSize: "0.74rem", lineHeight: 1.4 }}>
+          Example: a normal 25x edge hit becomes 50x.
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function PlinkoPage() {
   const { balance, addBalance, subtractBalance, registerBet, unregisterBet } = useBalance();
   const { username } = useUser();
+  const {
+    liveEvent,
+    nextEvent,
+    eventCountdown,
+    nextCountdown,
+    getPayoutMultiplier,
+    pushResultCallout,
+  } = usePlinkoLiveEvent();
   const usernameRef = useRef<string | null>(null);
   usernameRef.current = username ?? null;
 
@@ -263,7 +328,8 @@ export default function PlinkoPage() {
   betRef.current = bet;
 
   const totalBet = bet * ballCount;
-  const activeMultipliers = getMultipliersForBallCount(ballCount);
+  const payoutBoost = getPayoutMultiplier("Plinko");
+  const activeMultipliers = getMultipliersForBallCount(ballCount).map((multiplier) => Math.round(multiplier * payoutBoost * 100) / 100);
   const controlsDisabled = phase === "dropping";
 
   // ── Canvas resize ─────────────────────────────────────────────────────────
@@ -643,6 +709,9 @@ export default function PlinkoPage() {
                 if (net > 0) logFeedEvent(usernameRef.current, "Plinko", net, "win");
                 else if (net < 0) logFeedEvent(usernameRef.current, "Plinko", Math.abs(net), "loss");
               }
+              if (liveEvent && payoutBoost > 1) {
+                pushResultCallout(`Plinko Frenzy is active: every bucket is paying ${payoutBoost}x this hour`);
+              }
 
               if (net > 0) {
                 const maxM = Math.max(...dc.results.map(r => r.multiplier));
@@ -677,7 +746,7 @@ export default function PlinkoPage() {
       running = false;
       cancelAnimationFrame(animFrameRef.current);
     };
-  }, [canvasSize, addBalance, unregisterBet, activeMultipliers]);
+  }, [canvasSize, addBalance, unregisterBet, activeMultipliers, liveEvent, payoutBoost, pushResultCallout]);
 
   // ── Drop ──────────────────────────────────────────────────────────────────
 
@@ -771,6 +840,13 @@ export default function PlinkoPage() {
             color: "var(--text-primary)",
           }}>Plinko</span>
         </div>
+
+        <PlinkoEventPanel
+          liveEvent={liveEvent}
+          nextEvent={nextEvent}
+          eventCountdown={eventCountdown}
+          nextCountdown={nextCountdown}
+        />
 
         {/* Bet */}
         <div>
@@ -1068,4 +1144,28 @@ const pillStyle: React.CSSProperties = {
   letterSpacing: "0.06em",
   cursor: "pointer",
   transition: "all 0.15s ease",
+};
+
+const eventMiniCardStyle: React.CSSProperties = {
+  background: "rgba(0,0,0,0.22)",
+  border: "1px solid rgba(255,255,255,0.08)",
+  borderRadius: 8,
+  padding: "8px 9px",
+};
+
+const eventMiniLabelStyle: React.CSSProperties = {
+  color: "var(--text-muted)",
+  fontSize: "0.62rem",
+  letterSpacing: "0.1em",
+  textTransform: "uppercase",
+  marginBottom: 3,
+};
+
+const eventMiniValueStyle: React.CSSProperties = {
+  color: "var(--text-primary)",
+  fontFamily: "'Barlow Condensed', sans-serif",
+  fontWeight: 800,
+  fontSize: "0.98rem",
+  letterSpacing: "0.06em",
+  textTransform: "uppercase",
 };

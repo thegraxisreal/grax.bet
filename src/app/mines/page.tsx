@@ -3,7 +3,9 @@
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useBalance } from "@/context/BalanceContext";
+import { useLiveEvents } from "@/context/LiveEventsContext";
 import { useUser } from "@/context/UserContext";
+import GameLiveEventBanner from "@/components/GameLiveEventBanner";
 import { logFeedEvent } from "@/lib/feed";
 import { fmtMoney } from "@/lib/format";
 import { CasinoChip } from "@/components/CasinoChip";
@@ -287,6 +289,7 @@ function SmallStat({ label, value, accent }: { label: string; value: string; acc
 
 export default function MinesPage() {
   const { balance, addBalance, subtractBalance, registerBet, unregisterBet } = useBalance();
+  const { getPayoutMultiplier } = useLiveEvents();
   const { username } = useUser();
 
   const [phase, setPhase] = useState<Phase>("idle");
@@ -301,7 +304,8 @@ export default function MinesPage() {
 
   const mult = multiplierAt(mineCount, safeRevealed);
   const nextMult = multiplierAt(mineCount, safeRevealed + 1);
-  const cashoutTotal = safeRevealed > 0 ? Math.round(bet * mult * 100) / 100 : 0;
+  const payoutBoost = getPayoutMultiplier("Mines");
+  const cashoutTotal = safeRevealed > 0 ? Math.round(bet * mult * payoutBoost * 100) / 100 : 0;
   const profit = cashoutTotal - bet;
 
   // Staggered mine reveal delays
@@ -355,7 +359,7 @@ export default function MinesPage() {
       playChipClick();
       if (newSafe === TOTAL - mineCount) {
         const finalMult = multiplierAt(mineCount, newSafe);
-        const payout = Math.round(bet * finalMult * 100) / 100;
+        const payout = Math.round(bet * finalMult * payoutBoost * 100) / 100;
         addBalance(payout);
         setFinalPayout(payout);
         unregisterBet();
@@ -364,7 +368,7 @@ export default function MinesPage() {
         playWin();
       }
     }
-  }, [phase, revealed, minePositions, safeRevealed, mineCount, bet, addBalance, unregisterBet, username]);
+  }, [phase, revealed, minePositions, safeRevealed, mineCount, bet, addBalance, unregisterBet, username, payoutBoost]);
 
   const handleCashout = useCallback(() => {
     if (phase !== "playing" || safeRevealed === 0) return;
@@ -426,6 +430,8 @@ export default function MinesPage() {
             Mines
           </span>
         </div>
+
+        <GameLiveEventBanner gameName="Mines" />
 
         <PanelDivider />
 
