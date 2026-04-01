@@ -94,6 +94,11 @@ h1, h2, h3, h4, h5, h6 {
   50%       { box-shadow: 0 0 28px rgba(0,230,118,0.7); }
 }
 
+@keyframes spamSweep {
+  from { transform: translateX(-120%); }
+  to { transform: translateX(120%); }
+}
+
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
   50%       { transform: translateY(-6px); }

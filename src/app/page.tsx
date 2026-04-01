@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { useLiveEvents } from "@/context/LiveEventsContext";
 
 // ── Game card illustrations ───────────────────────────────────────────────────
 
@@ -174,6 +175,23 @@ function RouletteArt() {
       <circle cx="98" cy="17" r="2" fill="rgba(255,255,255,0.8)" />
       {/* Gold indicator arrow */}
       <polygon points="100,10 104,2 96,2" fill="#f0b429" />
+    </svg>
+  );
+}
+
+
+function GolfArt() {
+  return (
+    <svg viewBox="0 0 200 150" fill="none" style={{ width: "100%", height: "100%" }}>
+      <rect x="15" y="15" width="170" height="120" rx="16" fill="#14532d" />
+      <rect x="28" y="28" width="144" height="94" rx="12" fill="#166534" />
+      <rect x="68" y="66" width="64" height="16" rx="6" fill="#0f3f22" />
+      <circle cx="57" cy="98" r="8" fill="#f8fafc" />
+      <circle cx="147" cy="48" r="7" fill="#111827" />
+      <rect x="152" y="24" width="3" height="24" fill="#e2e8f0" />
+      <polygon points="155,24 170,30 155,36" fill="#ef4444" />
+      <rect x="90" y="42" width="18" height="18" fill="#6b7280" />
+      <circle cx="118" cy="96" r="9" fill="#6b7280" />
     </svg>
   );
 }
@@ -588,7 +606,7 @@ function BombDefuseArt() {
       <g>
         <rect x="6" y="8" width="44" height="22" rx="5" fill="rgba(239,68,68,0.15)" stroke="rgba(239,68,68,0.4)" strokeWidth="1" />
         <text x="28" y="14" textAnchor="middle" fontSize="5.5" fill="rgba(239,68,68,0.7)" fontFamily="'Barlow Condensed',sans-serif" fontWeight="700" letterSpacing="0.08em">DEFUSE</text>
-        <text x="28" y="25" textAnchor="middle" fontSize="10" fill="#ef4444" fontFamily="'Barlow Condensed',sans-serif" fontWeight="900">3× BET</text>
+        <text x="28" y="25" textAnchor="middle" fontSize="10" fill="#ef4444" fontFamily="'Barlow Condensed',sans-serif" fontWeight="900">2X MONEY</text>
       </g>
     </svg>
   );
@@ -712,9 +730,57 @@ function ChickenArt() {
   );
 }
 
+function SpamArt() {
+  return (
+    <svg viewBox="0 0 200 150" fill="none" style={{ width: "100%", height: "100%" }}>
+      <defs>
+        <linearGradient id="spam-bg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#0f766e" />
+          <stop offset="55%" stopColor="#115e59" />
+          <stop offset="100%" stopColor="#0b2f33" />
+        </linearGradient>
+        <radialGradient id="spam-glow" cx="50%" cy="45%" r="55%">
+          <stop offset="0%" stopColor="rgba(45,212,191,0.35)" />
+          <stop offset="100%" stopColor="rgba(0,0,0,0)" />
+        </radialGradient>
+      </defs>
+
+      <rect x="22" y="16" width="156" height="108" rx="16" fill="url(#spam-bg)" />
+      <ellipse cx="100" cy="70" rx="64" ry="42" fill="url(#spam-glow)" />
+
+      <g opacity="0.16">
+        {[48, 76, 104, 132].map((x) => (
+          <line key={x} x1={x} y1="24" x2={x} y2="116" stroke="white" strokeWidth="1" />
+        ))}
+        {[42, 64, 86, 108].map((y) => (
+          <line key={y} x1="30" y1={y} x2="170" y2={y} stroke="white" strokeWidth="1" />
+        ))}
+      </g>
+
+      <rect x="40" y="38" width="44" height="54" rx="10" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.18)" />
+      <rect x="116" y="38" width="44" height="54" rx="10" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.18)" />
+      <text x="62" y="72" textAnchor="middle" dominantBaseline="middle" fontSize="22" fontWeight="900" fill="#99f6e4" fontFamily="'Barlow Condensed',sans-serif">248</text>
+      <text x="138" y="72" textAnchor="middle" dominantBaseline="middle" fontSize="22" fontWeight="900" fill="#fcd34d" fontFamily="'Barlow Condensed',sans-serif">241</text>
+
+      <text x="100" y="60" textAnchor="middle" fontSize="13" fontWeight="800" fill="white" fontFamily="'Barlow Condensed',sans-serif" letterSpacing="0.18em">SPAM!</text>
+      <text x="100" y="82" textAnchor="middle" fontSize="12" fontWeight="700" fill="rgba(255,255,255,0.8)" fontFamily="'Barlow Condensed',sans-serif" letterSpacing="0.14em">3 2 1</text>
+
+      <rect x="63" y="98" width="74" height="16" rx="8" fill="rgba(0,0,0,0.24)" />
+      <text x="100" y="109" textAnchor="middle" fontSize="8" fontWeight="800" fill="#f0fdfa" fontFamily="'Barlow Condensed',sans-serif" letterSpacing="0.16em">HEAD TO HEAD</text>
+    </svg>
+  );
+}
+
 // ── Game data ─────────────────────────────────────────────────────────────────
 
-const GAMES = [
+const GAMES: ReadonlyArray<{
+  label: string;
+  href: string;
+  locked: boolean;
+  multiplayer?: boolean;
+  gradient: string;
+  art: React.ReactNode;
+}> = [
   {
     label: "Blackjack",
     href: "/blackjack",
@@ -735,6 +801,13 @@ const GAMES = [
     locked: false,
     gradient: "linear-gradient(145deg, #dc2626 0%, #991b1b 55%, #5c0a0a 100%)",
     art: <RouletteArt />,
+  },
+  {
+    label: "Golf",
+    href: "/golf",
+    locked: false,
+    gradient: "linear-gradient(145deg, #16a34a 0%, #166534 55%, #14532d 100%)",
+    art: <GolfArt />,
   },
   {
     label: "Slots",
@@ -774,20 +847,166 @@ const GAMES = [
   {
     label: "Bomb Defuse",
     href: "/bomb-defuse",
-    locked: true,
+    locked: false,
     gradient: "linear-gradient(145deg, #dc2626 0%, #7f1d1d 55%, #2d0a0a 100%)",
     art: <BombDefuseArt />,
   },
   {
+    label: "SPAM!",
+    href: "/spam",
+    locked: false,
+    multiplayer: true,
+    gradient: "linear-gradient(145deg, #14b8a6 0%, #0f766e 55%, #0b2f33 100%)",
+    art: <SpamArt />,
+  },
+  {
     label: "Chicken",
     href: "/chicken",
-    locked: true,
+    locked: false,
     gradient: "linear-gradient(145deg, #d97706 0%, #92400e 55%, #451a03 100%)",
     art: <ChickenArt />,
   },
 ] as const;
 
 // ── Page ──────────────────────────────────────────────────────────────────────
+
+function LiveEventsHeroCard() {
+  const { resolvedState, eventCountdown, nextCountdown } = useLiveEvents();
+  const liveEvent = resolvedState.currentEvent;
+  const nextEvents = resolvedState.upcomingEvents;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 18 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.45, delay: 0.08 }}
+      style={{
+        marginBottom: 20,
+        borderRadius: 12,
+        border: "1px solid rgba(240,180,41,0.16)",
+        background: "rgba(255,255,255,0.03)",
+      }}
+    >
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1.2fr 1fr",
+          gap: 12,
+          padding: "12px 14px",
+        }}
+      >
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <span
+              style={{
+                background: liveEvent ? "linear-gradient(135deg, #f97316, #ef4444)" : "rgba(255,255,255,0.08)",
+                color: liveEvent ? "#fff" : "var(--text-secondary)",
+                borderRadius: 999,
+                padding: "3px 8px",
+                fontSize: "0.62rem",
+                fontWeight: 800,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+              }}
+            >
+              {liveEvent ? "Live Event" : "Upcoming"}
+            </span>
+            <span style={{ color: "var(--text-secondary)", fontSize: "0.74rem", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+              8 AM to 4 PM local
+            </span>
+          </div>
+
+          <div style={{ color: "var(--text-primary)", fontWeight: 700, fontSize: "0.95rem" }}>
+            {liveEvent
+              ? `${liveEvent.targetGames[0]} is 2x right now`
+              : nextEvents[0]
+                ? `${nextEvents[0].targetGames[0]} goes 2x next`
+                : "No live event active"}
+          </div>
+
+          <div style={{ color: "var(--text-secondary)", fontSize: "0.82rem", lineHeight: 1.45 }}>
+            {liveEvent
+              ? `${liveEvent.displayText} Ends in ${eventCountdown}.`
+              : nextEvents[0]
+                ? `${nextEvents[0].targetGames[0]} goes 2x at ${formatEventStart(nextEvents[0].startAtMs)}.`
+                : "Come back during the daily rotation."}
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <Link
+              href={`/${(liveEvent ?? nextEvents[0])?.eventKey === "plinko" ? "plinko" : (liveEvent ?? nextEvents[0])?.eventKey ?? "plinko"}`}
+              style={{
+                textDecoration: "none",
+                color: "var(--accent-gold)",
+                borderRadius: 999,
+                padding: "8px 12px",
+                fontFamily: "'Barlow Condensed', sans-serif",
+                fontWeight: 700,
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                border: "1px solid rgba(240,180,41,0.2)",
+                background: "rgba(240,180,41,0.08)",
+              }}
+            >
+              {liveEvent ? `Play ${liveEvent.targetGames[0]}` : nextEvents[0] ? `View ${nextEvents[0].targetGames[0]}` : "View Event"}
+            </Link>
+            <span style={{ color: "var(--text-muted)", fontSize: "0.76rem" }}>
+              {liveEvent ? `Ends ${formatEventStart(liveEvent.endAtMs)}` : nextCountdown}
+            </span>
+          </div>
+        </div>
+
+        <div
+          style={{
+            background: "rgba(0,0,0,0.16)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            borderRadius: 10,
+            padding: 10,
+            display: "flex",
+            flexDirection: "column",
+            gap: 8,
+          }}
+        >
+          <div style={{ color: "var(--accent-gold)", fontSize: "0.72rem", letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 700 }}>
+            Next 2 boosts
+          </div>
+          {nextEvents.slice(0, 2).map((event, index) => (
+            <div
+              key={event.id}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 10,
+                padding: "8px 10px",
+                borderRadius: 8,
+                background: "rgba(255,255,255,0.03)",
+                border: "1px solid rgba(255,255,255,0.06)",
+              }}
+            >
+              <div
+                style={{
+                  color: "var(--accent-gold)",
+                  fontSize: "0.86rem",
+                  fontWeight: 700,
+                  background: "rgba(240,180,41,0.1)",
+                  border: "1px solid rgba(240,180,41,0.18)",
+                  borderRadius: 7,
+                  padding: "6px 8px",
+                }}
+              >
+                {event.targetGames[0]} goes 2x
+              </div>
+              <span style={{ color: "var(--accent-gold)", fontWeight: 700, fontSize: "0.78rem" }}>
+                {index === 0 ? nextCountdown : formatEventStart(event.startAtMs)}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
 
 export default function Home() {
   return (
@@ -826,6 +1045,8 @@ export default function Home() {
           Premium fake-money casino. All the thrills, none of the risk.
         </p>
       </motion.div>
+
+      <LiveEventsHeroCard />
 
       {/* Section heading */}
       <div style={{
@@ -959,7 +1180,7 @@ export default function Home() {
               {!game.locked && (
                 <div style={{
                   position: "absolute", top: 10, right: 10,
-                  background: "var(--accent-green)",
+                  background: game.multiplayer ? "#f0b429" : "var(--accent-green)",
                   borderRadius: "20px",
                   padding: "2px 8px",
                   fontSize: "0.58rem",
@@ -968,7 +1189,7 @@ export default function Home() {
                   letterSpacing: "0.1em",
                   color: "#0f1923",
                 }}>
-                  LIVE
+                  {game.multiplayer ? "MULTIPLAYER" : "LIVE"}
                 </div>
               )}
             </motion.div>
@@ -994,4 +1215,8 @@ export default function Home() {
       </div>
     </div>
   );
+}
+
+function formatEventStart(timestamp: number): string {
+  return new Date(timestamp).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 }

@@ -9,6 +9,7 @@ interface NavItem {
   href: string;
   locked?: boolean;
   live?: boolean;
+  promo?: string;
   icon: React.ReactNode;
 }
 
@@ -212,6 +213,31 @@ function ChickenIcon() {
   );
 }
 
+function SpamIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+      <rect x="2" y="3" width="18" height="16" rx="5" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M7 8.5h8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M7 12h8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" opacity="0.8" />
+      <path d="M7 15.5h5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" opacity="0.6" />
+      <circle cx="16.5" cy="15.5" r="1.4" fill="currentColor" />
+    </svg>
+  );
+}
+
+
+function GolfIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+      <rect x="2" y="2" width="18" height="18" rx="3" stroke="currentColor" strokeWidth="1.4" />
+      <circle cx="8" cy="14" r="2.2" fill="currentColor" opacity="0.8" />
+      <circle cx="15.5" cy="7" r="1.5" fill="currentColor" opacity="0.45" />
+      <line x1="15.5" y1="7" x2="15.5" y2="3.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+      <path d="M15.5 3.5 L18 4.5 L15.5 5.5 Z" fill="currentColor" />
+    </svg>
+  );
+}
+
 function CloseIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
@@ -259,11 +285,13 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Roulette",  href: "/roulette",  icon: <RouletteIcon /> },
   { label: "Crash",     href: "/crash",     icon: <CrashIcon /> },
   { label: "March Madness", href: "/sports",    icon: <SportsIcon />, live: true },
+  { label: "SPAM!",         href: "/spam",      icon: <SpamIcon />, promo: "15 SEC" },
   { label: "Mines",     href: "/mines",     icon: <MinesIcon /> },
+  { label: "Golf",      href: "/golf",      icon: <GolfIcon /> },
   { label: "Plinko",        href: "/plinko",       icon: <PlinkoIcon /> },
   { label: "Horse Racing",  href: "/horse-racing",  icon: <HorseRacingIcon />, locked: true },
-  { label: "Bomb Defuse",   href: "/bomb-defuse",   icon: <BombDefuseIcon />,  locked: true },
-  { label: "Chicken",       href: "/chicken",       icon: <ChickenIcon />,     locked: true },
+  { label: "Bomb Defuse",   href: "/bomb-defuse",   icon: <BombDefuseIcon />, promo: "2X MONEY" },
+  { label: "Chicken",       href: "/chicken",       icon: <ChickenIcon /> },
 ];
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
@@ -354,6 +382,23 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                   textTransform: "uppercase",
                 }}>
                   Live Bets
+                </span>
+              )}
+              {item.promo && !isActive && !item.live && (
+                <span style={{
+                  background: "linear-gradient(135deg, #22c55e, #06b6d4)",
+                  borderRadius: "10px",
+                  padding: "1px 8px",
+                  fontSize: "0.56rem",
+                  letterSpacing: "0.1em",
+                  color: "#04121d",
+                  fontWeight: 800,
+                  marginLeft: "auto",
+                  boxShadow: "0 0 8px rgba(34,197,94,0.55), 0 0 20px rgba(6,182,212,0.3)",
+                  animation: "glow-pulse 1.8s ease-in-out infinite",
+                  textTransform: "uppercase",
+                }}>
+                  {item.promo}
                 </span>
               )}
               {isActive && (

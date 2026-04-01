@@ -3,9 +3,11 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useBalance } from "@/context/BalanceContext";
+import { useLiveEvents } from "@/context/LiveEventsContext";
 import { useUser } from "@/context/UserContext";
 import { logFeedEvent } from "@/lib/feed";
 import { fmtMoney } from "@/lib/format";
+import GameLiveEventBanner from "@/components/GameLiveEventBanner";
 import { CasinoChip } from "@/components/CasinoChip";
 import CollapsibleBetSelector from "@/components/CollapsibleBetSelector";
 import { playChipClick } from "@/lib/sound";
@@ -146,6 +148,7 @@ const pillStyle: React.CSSProperties = {
 
 export default function CrashPage() {
   const { balance, addBalance, subtractBalance, registerBet, unregisterBet } = useBalance();
+  const { getPayoutMultiplier } = useLiveEvents();
   const { username } = useUser();
 
   const [phase, setPhase] = useState<Phase>("waiting");
@@ -184,6 +187,7 @@ export default function CrashPage() {
   phaseRef.current = phase;
   betRef.current = bet;
   autoCashoutRef.current = autoCashout;
+  const payoutBoost = getPayoutMultiplier("Crash");
 
   // ── Cashout ──────────────────────────────────────────────────────────────────
 
@@ -193,7 +197,7 @@ export default function CrashPage() {
     cashedOutRef.current = true;
     setCashedOut(true);
     setCashedOutAt(m);
-    const payout = Math.round(betRef.current * m * 100) / 100;
+    const payout = Math.round(betRef.current * m * payoutBoost * 100) / 100;
     addBalance(payout);
     unregisterBet();
     const net = Math.round((payout - betRef.current) * 100) / 100;
@@ -201,7 +205,7 @@ export default function CrashPage() {
     setSessionProfit(p => Math.round((p + net) * 100) / 100);
     if (username) logFeedEvent(username, "Crash", net, "win");
     playCashout();
-  }, [addBalance, unregisterBet, username]);
+  }, [addBalance, unregisterBet, username, payoutBoost]);
 
   // ── Main loop ─────────────────────────────────────────────────────────────────
 
@@ -580,7 +584,7 @@ export default function CrashPage() {
 
   const btnLabel = () => {
     if (phase === "waiting") return hasBet ? "✓ Bet Placed" : "Place Bet";
-    if (canCashout) return `Cash Out  $${fmtMoney(bet * multiplier)}`;
+    if (canCashout) return `Cash Out  $${fmtMoney(bet * multiplier * payoutBoost)}`;
     if (phase === "running") return "Waiting…";
     return "Crashed";
   };
@@ -614,6 +618,8 @@ export default function CrashPage() {
           </svg>
           <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: "1.3rem", letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-primary)" }}>Crash</span>
         </div>
+
+        <GameLiveEventBanner gameName="Crash" />
 
         {/* Status badge */}
         <div style={{
@@ -705,6 +711,7 @@ export default function CrashPage() {
             <span style={{ ...labelStyle, margin: 0 }}>Potential</span>
             <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "1rem", color: multColor(multiplier) }}>
               ${fmtMoney(bet * multiplier)}
+              {payoutBoost > 1 ? ` → $${fmtMoney(bet * multiplier * payoutBoost)}` : ""}
             </span>
           </div>
         )}

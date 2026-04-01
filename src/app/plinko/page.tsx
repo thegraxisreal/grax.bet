@@ -3,9 +3,11 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useBalance } from "@/context/BalanceContext";
+import { usePlinkoLiveEvent } from "@/context/LiveEventsContext";
 import { useUser } from "@/context/UserContext";
 import { logFeedEvent } from "@/lib/feed";
 import { fmtMoney } from "@/lib/format";
+import type { LiveEventDefinition } from "@/lib/liveEvents";
 import { CasinoChip } from "@/components/CasinoChip";
 import { playChipClick } from "@/lib/sound";
 
@@ -17,9 +19,14 @@ const BUCKETS = ROWS + 1;
 type Phase = "idle" | "dropping" | "result";
 
 // Real plinko: edges are jackpots, center is a loss — balls land in center most often
-const MULTIPLIERS = [150, 20, 8, 3, 2, 1.2, 0.6, 0.3, 0.2, 0.3, 0.6, 1.2, 2, 3, 8, 20, 150];
+const BASE_MULTIPLIERS = [25, 12, 6, 3.2, 1.8, 1.2, 0.9, 0.8, 0.4, 0.8, 0.9, 1.2, 1.8, 3.2, 6, 12, 25];
+const HIGH_BALL_MULTIPLIERS = [10, 6, 3.5, 2.2, 1.6, 1.2, 0.95, 0.75, 0.7, 0.75, 0.95, 1.2, 1.6, 2.2, 3.5, 6, 10];
 
-const BALL_COUNTS = [1, 3, 5, 10];
+const BALL_COUNTS = [1, 3, 5, 10, 25];
+
+function getMultipliersForBallCount(ballCount: number): number[] {
+  return ballCount >= 10 ? HIGH_BALL_MULTIPLIERS : BASE_MULTIPLIERS;
+}
 
 function bucketColor(mult: number): string {
   if (mult >= 10) return "#f0b429";
@@ -151,13 +158,14 @@ const BUCKET_H = 36;
 const TOP_PAD = 40;
 const SIDE_PAD = 30;
 const BOARD_BOTTOM = BOARD_H - BUCKET_H - 12;
+const ROW_SPACING = (BOARD_BOTTOM - TOP_PAD) / ROWS;
+const LATERAL_STEP = (BOARD_W - SIDE_PAD * 2) / (ROWS + 2);
 
 // Compute peg positions once
 function getPegPositions(): { x: number; y: number; row: number; col: number }[] {
   const pegs: { x: number; y: number; row: number; col: number }[] = [];
-  const spacingY = (BOARD_BOTTOM - TOP_PAD) / (ROWS);
-  const usableW = BOARD_W - SIDE_PAD * 2;
-  const spacingX = usableW / (ROWS + 2);
+  const spacingY = ROW_SPACING;
+  const spacingX = LATERAL_STEP;
 
   for (let row = 0; row < ROWS; row++) {
     const pegsInRow = row + 3;
@@ -201,6 +209,7 @@ interface PhysBall {
   squish: number; // 1 = normal, <1 = squished
   hitPegTimers: Map<string, number>; // pegKey -> time remaining
   resultReported: boolean;
+  nextDecisionRow: number;
 }
 
 interface BallResult {
@@ -214,11 +223,74 @@ interface BucketFlash {
   time: number;
 }
 
+function PlinkoEventPanel({
+  liveEvent,
+  nextEvent,
+  eventCountdown,
+  nextCountdown,
+}: {
+  liveEvent: LiveEventDefinition | null;
+  nextEvent: LiveEventDefinition | null;
+  eventCountdown: string | null;
+  nextCountdown: string | null;
+}) {
+  return (
+    <div
+      style={{
+        background: "rgba(0,0,0,0.2)",
+        border: "1px solid rgba(240,180,41,0.16)",
+        borderRadius: 8,
+        padding: "10px",
+        display: "grid",
+        gap: 8,
+      }}
+    >
+      <div>
+        <div style={{ color: "var(--accent-gold)", fontSize: "0.68rem", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 4 }}>
+          {liveEvent ? "Plinko 2x Live" : "Plinko 2x"}
+        </div>
+        <div style={{ color: "var(--text-secondary)", fontSize: "0.75rem", lineHeight: 1.45, marginTop: 2 }}>
+          {liveEvent
+            ? `Every bottom bucket is 2x until ${new Date(liveEvent.endAtMs).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}.`
+            : nextEvent
+              ? `Plinko goes 2x at ${new Date(nextEvent.startAtMs).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}.`
+              : "Plinko is not on 2x right now."}
+        </div>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+        <div style={eventMiniCardStyle}>
+          <div style={eventMiniLabelStyle}>{liveEvent ? "Ends In" : "Starts In"}</div>
+          <div style={eventMiniValueStyle}>{liveEvent ? eventCountdown : nextCountdown ?? "--:--"}</div>
+        </div>
+        <div style={eventMiniCardStyle}>
+          <div style={eventMiniLabelStyle}>Boost</div>
+          <div style={{ ...eventMiniValueStyle, fontSize: "0.88rem" }}>All buckets 2x</div>
+        </div>
+      </div>
+
+      {liveEvent && (
+        <div style={{ color: "var(--text-muted)", fontSize: "0.74rem", lineHeight: 1.4 }}>
+          Example: a normal 25x edge hit becomes 50x.
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function PlinkoPage() {
   const { balance, addBalance, subtractBalance, registerBet, unregisterBet } = useBalance();
   const { username } = useUser();
+  const {
+    liveEvent,
+    nextEvent,
+    eventCountdown,
+    nextCountdown,
+    getPayoutMultiplier,
+    pushResultCallout,
+  } = usePlinkoLiveEvent();
   const usernameRef = useRef<string | null>(null);
   usernameRef.current = username ?? null;
 
@@ -246,6 +318,7 @@ export default function PlinkoPage() {
   const dropContextRef = useRef<{
     totalBet: number;
     ballCount: number;
+    balanceAtStart: number;
     results: BallResult[];
     totalPayout: number;
     allLanded: number;
@@ -255,6 +328,9 @@ export default function PlinkoPage() {
   betRef.current = bet;
 
   const totalBet = bet * ballCount;
+  const payoutBoost = getPayoutMultiplier("Plinko");
+  const activeMultipliers = getMultipliersForBallCount(ballCount).map((multiplier) => Math.round(multiplier * payoutBoost * 100) / 100);
+  const controlsDisabled = phase === "dropping";
 
   // ── Canvas resize ─────────────────────────────────────────────────────────
 
@@ -284,7 +360,7 @@ export default function PlinkoPage() {
     let running = true;
     let lastTime = performance.now();
 
-    const mults = () => MULTIPLIERS;
+    const mults = () => activeMultipliers;
 
     function drawBoard(ctx: CanvasRenderingContext2D, scaleX: number, scaleY: number) {
       ctx.save();
@@ -481,9 +557,29 @@ export default function PlinkoPage() {
       const gravity = 1200;
       const bounceDamping = 0.5;
       const friction = 0.98;
+      const lateralImpulse = 170;
+      const maxAbsVx = 420;
 
       for (const ball of balls) {
         if (ball.landed) continue;
+
+        // Fairness rule: every row applies an independent 50/50 left-right decision.
+        while (ball.nextDecisionRow < ROWS && ball.y >= TOP_PAD + ball.nextDecisionRow * ROW_SPACING - BALL_RADIUS * 0.5) {
+          const dir = Math.random() < 0.5 ? -1 : 1;
+          const impulse = lateralImpulse + Math.random() * 35;
+          ball.vx += dir * impulse;
+          ball.vx = Math.max(-maxAbsVx, Math.min(maxAbsVx, ball.vx));
+          ball.squish = 0.78;
+
+          const row = ball.nextDecisionRow;
+          const pegsInRow = row + 3;
+          const rowWidth = (pegsInRow - 1) * LATERAL_STEP;
+          const startX = (BOARD_W - rowWidth) / 2;
+          const approxCol = Math.max(0, Math.min(pegsInRow - 1, Math.round((ball.x - startX) / LATERAL_STEP)));
+          ball.hitPegTimers.set(`${row}-${approxCol}`, 0.15);
+          playPegHit(row);
+          ball.nextDecisionRow++;
+        }
 
         // Apply gravity
         ball.vy += gravity * dt;
@@ -538,10 +634,6 @@ export default function PlinkoPage() {
               ball.vy -= 2 * dot * ny;
               ball.vx *= bounceDamping;
               ball.vy *= bounceDamping;
-
-              // Add random horizontal nudge for realism
-              const nudge = (Math.random() < 0.5 ? -1 : 1) * (30 + Math.random() * 70);
-              ball.vx += nudge;
 
               // Squish
               ball.squish = 0.7;
@@ -617,6 +709,9 @@ export default function PlinkoPage() {
                 if (net > 0) logFeedEvent(usernameRef.current, "Plinko", net, "win");
                 else if (net < 0) logFeedEvent(usernameRef.current, "Plinko", Math.abs(net), "loss");
               }
+              if (liveEvent && payoutBoost > 1) {
+                pushResultCallout(`Plinko Frenzy is active: every bucket is paying ${payoutBoost}x this hour`);
+              }
 
               if (net > 0) {
                 const maxM = Math.max(...dc.results.map(r => r.multiplier));
@@ -651,7 +746,7 @@ export default function PlinkoPage() {
       running = false;
       cancelAnimationFrame(animFrameRef.current);
     };
-  }, [canvasSize, addBalance, unregisterBet]);
+  }, [canvasSize, addBalance, unregisterBet, activeMultipliers, liveEvent, payoutBoost, pushResultCallout]);
 
   // ── Drop ──────────────────────────────────────────────────────────────────
 
@@ -667,6 +762,7 @@ export default function PlinkoPage() {
     dropContextRef.current = {
       totalBet,
       ballCount,
+      balanceAtStart: balance,
       results: [],
       totalPayout: 0,
       allLanded: 0,
@@ -691,6 +787,7 @@ export default function PlinkoPage() {
         squish: 1,
         hitPegTimers: new Map(),
         resultReported: false,
+        nextDecisionRow: 0,
       };
       ballsRef.current.push(ball);
     }
@@ -744,6 +841,13 @@ export default function PlinkoPage() {
           }}>Plinko</span>
         </div>
 
+        <PlinkoEventPanel
+          liveEvent={liveEvent}
+          nextEvent={nextEvent}
+          eventCountdown={eventCountdown}
+          nextCountdown={nextCountdown}
+        />
+
         {/* Bet */}
         <div>
           <label style={labelStyle}>Bet Per Ball</label>
@@ -768,7 +872,7 @@ export default function PlinkoPage() {
                 setBet(isNaN(v) ? 0 : Math.min(Math.max(0, Math.round(v * 100) / 100), balance));
               }}
               placeholder="0.00"
-              disabled={phase === "dropping"}
+              disabled={controlsDisabled}
               style={{
                 flex: 1, background: "none", border: "none", outline: "none",
                 fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700,
@@ -777,6 +881,7 @@ export default function PlinkoPage() {
             />
             {bet > 0 && (
               <button onClick={() => setBet(0)}
+                disabled={controlsDisabled}
                 style={{ background: "none", border: "none", color: "var(--text-muted)",
                   cursor: "pointer", fontSize: "1rem", padding: 0, lineHeight: 1 }}>×</button>
             )}
@@ -784,18 +889,18 @@ export default function PlinkoPage() {
           <div style={{ display: "flex", gap: 4, marginTop: 6 }}>
             {[1, 5, 10, 25].map(v => (
               <div key={v} style={{ transform: "scale(0.65)", transformOrigin: "top left" }}>
-                <CasinoChip value={v} onClick={addChip} disabled={phase === "dropping"} />
+                <CasinoChip value={v} onClick={addChip} disabled={controlsDisabled} />
               </div>
             ))}
           </div>
           <div style={{ display: "flex", gap: 4, marginTop: 4 }}>
             <button onClick={() => setBet(Math.floor((balance / 2 / ballCount) * 100) / 100)}
-              disabled={phase === "dropping"}
+              disabled={controlsDisabled}
               style={{ flex: 1, padding: "5px 6px", borderRadius: 5, border: "1px solid rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.06)", color: "var(--text-secondary)", fontFamily: "'Barlow Condensed', sans-serif", fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.06em", cursor: "pointer" }}>
               ½
             </button>
             <button onClick={() => setBet(Math.floor((balance / ballCount) * 100) / 100)}
-              disabled={phase === "dropping"}
+              disabled={controlsDisabled}
               style={{ flex: 1, padding: "5px 6px", borderRadius: 5, border: "1px solid rgba(240,180,41,0.3)", background: "rgba(240,180,41,0.08)", color: "var(--accent-gold)", fontFamily: "'Barlow Condensed', sans-serif", fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.06em", cursor: "pointer" }}>
               MAX
             </button>
@@ -808,7 +913,7 @@ export default function PlinkoPage() {
           <div style={{ display: "flex", gap: 4 }}>
             {BALL_COUNTS.map(n => (
               <button key={n} onClick={() => setBallCount(n)}
-                disabled={phase === "dropping"}
+                disabled={controlsDisabled}
                 style={{
                   ...pillStyle,
                   background: ballCount === n ? "var(--accent-green)" : "rgba(255,255,255,0.07)",
@@ -826,7 +931,6 @@ export default function PlinkoPage() {
             Insufficient balance
           </div>
         )}
-
         {/* Drop Button */}
         <motion.button
           className="btn-primary"
@@ -1042,3 +1146,26 @@ const pillStyle: React.CSSProperties = {
   transition: "all 0.15s ease",
 };
 
+const eventMiniCardStyle: React.CSSProperties = {
+  background: "rgba(0,0,0,0.22)",
+  border: "1px solid rgba(255,255,255,0.08)",
+  borderRadius: 8,
+  padding: "8px 9px",
+};
+
+const eventMiniLabelStyle: React.CSSProperties = {
+  color: "var(--text-muted)",
+  fontSize: "0.62rem",
+  letterSpacing: "0.1em",
+  textTransform: "uppercase",
+  marginBottom: 3,
+};
+
+const eventMiniValueStyle: React.CSSProperties = {
+  color: "var(--text-primary)",
+  fontFamily: "'Barlow Condensed', sans-serif",
+  fontWeight: 800,
+  fontSize: "0.98rem",
+  letterSpacing: "0.06em",
+  textTransform: "uppercase",
+};

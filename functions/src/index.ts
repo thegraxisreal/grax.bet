@@ -1,5 +1,6 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
+export * from "./spam";
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -71,7 +72,7 @@ async function fetchBracketGames(): Promise<BracketGame[]> {
   const tournamentMap: Record<string, { round: number; region: string }> = {};
   if (tRes.status === "fulfilled" && (tRes.value as Response).ok) {
     try {
-      const tData = await (tRes.value as Response).json();
+      const tData = (await (tRes.value as Response).json()) as any;
       const tournaments: any[] = tData.tournaments ?? [];
       for (const t of tournaments) {
         const rounds: any[] = t.bracket?.rounds ?? [];
@@ -96,7 +97,7 @@ async function fetchBracketGames(): Promise<BracketGame[]> {
     return [];
   }
 
-  const sbData = await (sbRes.value as Response).json();
+  const sbData = (await (sbRes.value as Response).json()) as any;
   const events: any[] = sbData.events ?? [];
 
   return events
@@ -218,7 +219,7 @@ export const syncBracket = functions.pubsub
       const usersSnap = await db.collection("users").get();
 
       await Promise.all(
-        usersSnap.docs.map(async (userDoc) => {
+        usersSnap.docs.map(async (userDoc: admin.firestore.QueryDocumentSnapshot) => {
           const betRef = userDoc.ref.collection("bets").doc(game.gameId);
           const betSnap = await betRef.get();
           if (!betSnap.exists) return;
@@ -233,7 +234,7 @@ export const syncBracket = functions.pubsub
           if (won) {
             const payout = Math.round(bet.amount * PAYOUT * 100) / 100;
             // Update Firestore balance
-            await db.runTransaction(async (tx) => {
+            await db.runTransaction(async (tx: admin.firestore.Transaction) => {
               const userSnap = await tx.get(userDoc.ref);
               if (!userSnap.exists) return;
               const currentBalance =

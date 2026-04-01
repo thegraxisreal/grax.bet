@@ -1,8 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { useBalance } from "@/context/BalanceContext";
 import { useUser } from "@/context/UserContext";
+import { useLiveEvents } from "@/context/LiveEventsContext";
 import { fmtDollar } from "@/lib/format";
 
 function GraxLogo({ height = 28 }: { height?: number }) {
@@ -20,14 +22,10 @@ function GraxLogo({ height = 28 }: { height?: number }) {
           <stop offset="100%" stopColor="#ef4444" />
         </linearGradient>
       </defs>
-      {/* G icon mark */}
       <circle cx="18" cy="18" r="13" fill="rgba(240,180,41,0.1)" stroke="#f0b429" strokeWidth="1.5" />
       <path d="M24 14 Q18 10 13 14 Q9 17 11 22 Q13 27 19 26 L19 21 L23 21" stroke="#f0b429" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-      {/* GRAX wordmark */}
       <text x="37" y="25" fontFamily="'Barlow Condensed', Arial Black, sans-serif" fontWeight="900" fontSize="22" letterSpacing="1" fill="url(#hdr-g1)" textDecoration="none">GRAX</text>
-      {/* .bet */}
       <text x="94" y="25" fontFamily="'Barlow Condensed', Arial Black, sans-serif" fontWeight="500" fontSize="16" letterSpacing="0.5" fill="rgba(255,255,255,0.45)">.bet</text>
-      {/* Live dot */}
       <circle cx="126" cy="9" r="3.5" fill="url(#hdr-dot)">
         <animate attributeName="opacity" values="1;0.4;1" dur="1.8s" repeatCount="indefinite"/>
       </circle>
@@ -45,8 +43,10 @@ function ChipIcon() {
       {[0, 60, 120, 180, 240, 300].map((angle, i) => (
         <line
           key={i}
-          x1="11" y1="1.5"
-          x2="11" y2="4"
+          x1="11"
+          y1="1.5"
+          x2="11"
+          y2="4"
           stroke="#f0b429"
           strokeWidth="2"
           strokeLinecap="round"
@@ -74,92 +74,228 @@ interface HeaderProps {
 export default function Header({ onMenuToggle }: HeaderProps) {
   const { balance, resetBalance } = useBalance();
   const { username } = useUser();
+  const { resolvedState, eventCountdown, nextCountdown } = useLiveEvents();
   const [hovered, setHovered] = useState(false);
 
-  return (
-    <header style={{
-      height: "56px",
-      background: "var(--bg-sidebar)",
-      borderBottom: "1px solid var(--border-color)",
-      display: "flex",
-      alignItems: "center",
-      padding: "0 24px",
-      gap: "16px",
-      flexShrink: 0,
-      position: "relative",
-      zIndex: 10,
-    }}>
-      {/* Mobile hamburger */}
-      <button
-        className="mobile-menu-btn"
-        onClick={onMenuToggle}
-        aria-label="Open navigation menu"
-      >
-        <HamburgerIcon />
-      </button>
+  const liveEvent = resolvedState.currentEvent;
+  const nextEvents = resolvedState.upcomingEvents;
+  const isOffHours = resolvedState.status === "off_hours";
 
-      {/* Site name */}
-      <div style={{ flex: 1 }}>
-        <GraxLogo height={28} />
+  return (
+    <header
+      style={{
+        background: "var(--bg-sidebar)",
+        borderBottom: "1px solid var(--border-color)",
+        display: "flex",
+        flexDirection: "column",
+        flexShrink: 0,
+        position: "relative",
+        zIndex: 10,
+      }}
+    >
+      <div
+        style={{
+          minHeight: "56px",
+          display: "flex",
+          alignItems: "center",
+          padding: "0 24px",
+          gap: "16px",
+        }}
+      >
+        <button
+          className="mobile-menu-btn"
+          onClick={onMenuToggle}
+          aria-label="Open navigation menu"
+        >
+          <HamburgerIcon />
+        </button>
+
+        <div style={{ flex: 1 }}>
+          <GraxLogo height={28} />
+        </div>
+
+        {username && (
+          <span
+            style={{
+              color: "var(--text-secondary)",
+              fontSize: "0.85rem",
+              fontWeight: 600,
+              letterSpacing: "0.05em",
+            }}
+          >
+            {username}
+          </span>
+        )}
+
+        <div
+          style={{ position: "relative" }}
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
+        >
+          <div className="balance-display">
+            <ChipIcon />
+            <span>{fmtDollar(balance)}</span>
+          </div>
+          {hovered && (
+            <div
+              style={{
+                position: "absolute",
+                top: "calc(100% + 8px)",
+                right: 0,
+                background: "var(--bg-card)",
+                border: "1px solid var(--border-color)",
+                borderRadius: "8px",
+                padding: "8px",
+                zIndex: 100,
+                minWidth: "140px",
+                boxShadow: "0 4px 16px rgba(0,0,0,0.4)",
+              }}
+            >
+              <button
+                onClick={resetBalance}
+                style={{
+                  width: "100%",
+                  background: "var(--accent-green)",
+                  color: "#000",
+                  border: "none",
+                  borderRadius: "6px",
+                  padding: "8px 12px",
+                  fontFamily: "'Barlow Condensed', sans-serif",
+                  fontWeight: 700,
+                  fontSize: "0.95rem",
+                  letterSpacing: "0.05em",
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "var(--accent-green-dark)")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "var(--accent-green)")}
+              >
+                Reset to $50.00
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Username */}
-      {username && (
-        <span style={{
-          color: "var(--text-secondary)",
-          fontSize: "0.85rem",
-          fontWeight: 600,
-          letterSpacing: "0.05em",
-        }}>
-          {username}
-        </span>
-      )}
-
-      {/* Balance */}
       <div
-        style={{ position: "relative" }}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
+        style={{
+          padding: "8px 24px 9px",
+          borderTop: "1px solid rgba(255,255,255,0.05)",
+          background: "linear-gradient(180deg, rgba(9,20,32,0.7), rgba(9,20,32,0.92))",
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          flexWrap: "wrap",
+        }}
       >
-        <div className="balance-display">
-          <ChipIcon />
-          <span>{fmtDollar(balance)}</span>
-        </div>
-        {hovered && (
-          <div style={{
-            position: "absolute",
-            top: "calc(100% + 8px)",
-            right: 0,
-            background: "var(--bg-card)",
-            border: "1px solid var(--border-color)",
-            borderRadius: "8px",
-            padding: "8px",
-            zIndex: 100,
-            minWidth: "140px",
-            boxShadow: "0 4px 16px rgba(0,0,0,0.4)",
-          }}>
-            <button
-              onClick={resetBalance}
+        {liveEvent ? (
+          <>
+            <span
               style={{
-                width: "100%",
-                background: "var(--accent-green)",
-                color: "#000",
-                border: "none",
-                borderRadius: "6px",
+                background: "linear-gradient(135deg, #f97316, #ef4444)",
+                color: "#fff",
+                borderRadius: 999,
+                padding: "3px 10px",
+                fontSize: "0.62rem",
+                fontWeight: 800,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+              }}
+            >
+              Live Now
+            </span>
+            <div style={{ minWidth: 180, flex: "0 1 auto", color: "var(--text-primary)", fontWeight: 700, fontSize: "0.88rem" }}>
+              {liveEvent.title}
+            </div>
+            <div
+              style={{
+                color: "var(--accent-gold)",
+                fontFamily: "'Barlow Condensed', sans-serif",
+                fontSize: "0.92rem",
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+              }}
+            >
+              Ends in {eventCountdown}
+            </div>
+            <div style={{ color: "var(--text-secondary)", fontSize: "0.78rem", flex: "1 1 320px" }}>
+              {nextEvents.slice(0, 2).map((event, index) => (
+                <span key={event.id}>
+                  {index > 0 ? " • " : ""}
+                  Next {index + 1}: {event.targetGames[0]} 2x at {new Date(event.startAtMs).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
+                </span>
+              ))}
+            </div>
+            <Link
+              href={`/${liveEvent.eventKey === "plinko" ? "plinko" : liveEvent.eventKey}`}
+              style={{
+                textDecoration: "none",
+                background: "rgba(0,230,118,0.14)",
+                border: "1px solid rgba(0,230,118,0.24)",
+                color: "var(--accent-green)",
+                borderRadius: 999,
                 padding: "8px 12px",
                 fontFamily: "'Barlow Condensed', sans-serif",
+                fontSize: "0.84rem",
                 fontWeight: 700,
-                fontSize: "0.95rem",
-                letterSpacing: "0.05em",
-                cursor: "pointer",
-                whiteSpace: "nowrap",
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
               }}
-              onMouseEnter={e => (e.currentTarget.style.background = "var(--accent-green-dark)")}
-              onMouseLeave={e => (e.currentTarget.style.background = "var(--accent-green)")}
             >
-              Reset to $50.00
-            </button>
-          </div>
+              {liveEvent.ctaText}
+            </Link>
+          </>
+        ) : (
+          <>
+            <span
+              style={{
+                background: isOffHours ? "rgba(255,255,255,0.08)" : "rgba(240,180,41,0.16)",
+                color: isOffHours ? "var(--text-secondary)" : "var(--accent-gold)",
+                borderRadius: 999,
+                padding: "3px 10px",
+                fontSize: "0.62rem",
+                fontWeight: 800,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+              }}
+            >
+              {isOffHours ? "No Live Event" : "Next Event"}
+            </span>
+            <div style={{ minWidth: 180, flex: "0 1 auto", color: "var(--text-primary)", fontWeight: 700, fontSize: "0.88rem" }}>
+              {nextEvents[0] ? `${nextEvents[0].targetGames[0]} goes 2x next` : "No active event"}
+            </div>
+            <div style={{ color: "var(--accent-gold)", fontFamily: "'Barlow Condensed', sans-serif", fontSize: "0.92rem", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+              {resolvedState.nowMs < (nextEvents[0]?.startAtMs ?? 0) ? nextCountdown : "Off hours"}
+            </div>
+            <div style={{ color: "var(--text-secondary)", fontSize: "0.78rem", flex: "1 1 320px" }}>
+              {nextEvents.length > 0
+                ? nextEvents.map((event, index) => (
+                    <span key={event.id}>
+                      {index > 0 ? " • " : ""}
+                      Next {index + 1}: {event.targetGames[0]} 2x at {new Date(event.startAtMs).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
+                    </span>
+                  ))
+                : "Come back when the next hourly event window opens."}
+            </div>
+            <Link
+              href={`/${nextEvents[0]?.eventKey === "plinko" ? "plinko" : nextEvents[0]?.eventKey ?? "plinko"}`}
+              style={{
+                textDecoration: "none",
+                background: "rgba(240,180,41,0.14)",
+                border: "1px solid rgba(240,180,41,0.24)",
+                color: "var(--accent-gold)",
+                borderRadius: 999,
+                padding: "8px 12px",
+                fontFamily: "'Barlow Condensed', sans-serif",
+                fontSize: "0.84rem",
+                fontWeight: 700,
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+              }}
+            >
+              {nextEvents[0] ? `View ${nextEvents[0].targetGames[0]}` : "View Event"}
+            </Link>
+          </>
         )}
       </div>
     </header>
