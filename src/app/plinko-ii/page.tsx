@@ -5,8 +5,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useBalance } from "@/context/BalanceContext";
 import { fmtMoney } from "@/lib/format";
 
-const BOARD_WIDTH = 620;
-const BOARD_HEIGHT = 720;
+const BOARD_WIDTH = 580;
+const BOARD_HEIGHT = 620;
 const ROWS = 12;
 const BUCKETS = ROWS + 1;
 const BALL_RADIUS = 8;
@@ -15,7 +15,6 @@ const PEG_BOUNCE = 0.72;
 
 const MULTIPLIERS = [9, 4.5, 2.5, 1.6, 1.1, 0.9, 0.6, 0.9, 1.1, 1.6, 2.5, 4.5, 9];
 const DROP_OPTIONS = [1, 3, 5, 10, 25];
-const BET_OPTIONS = [0.1, 0.25, 0.5, 1, 2, 5];
 const BALL_COLORS = ["#22d3ee", "#f472b6", "#facc15", "#34d399", "#a78bfa", "#fb7185", "#60a5fa"];
 
 interface Peg { x: number; y: number }
@@ -44,7 +43,6 @@ export default function PlinkoIIPage() {
   const [pegFlashes, setPegFlashes] = useState<Flash[]>([]);
   const [binFlashes, setBinFlashes] = useState<Flash[]>([]);
   const [holding, setHolding] = useState(false);
-  const [betWheelTurn, setBetWheelTurn] = useState(0);
   const [dropWheelTurn, setDropWheelTurn] = useState(0);
 
   const ballsRef = useRef<Ball[]>([]);
@@ -135,13 +133,6 @@ export default function PlinkoIIPage() {
       left -= 1;
     }, 140);
   }, [dropCount, spawnBall]);
-
-  const spinBetWheel = useCallback((direction: 1 | -1) => {
-    const currentIdx = BET_OPTIONS.findIndex((v) => v === bet);
-    const nextIdx = (currentIdx + direction + BET_OPTIONS.length) % BET_OPTIONS.length;
-    setBet(BET_OPTIONS[nextIdx]);
-    setBetWheelTurn((prev) => prev + direction * 180);
-  }, [bet]);
 
   const spinDropWheel = useCallback((direction: 1 | -1) => {
     const currentIdx = DROP_OPTIONS.findIndex((v) => v === dropCount);
@@ -250,13 +241,13 @@ export default function PlinkoIIPage() {
       }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10, gap: 10, flexWrap: "wrap" }}>
           <h1 style={{ margin: 0, color: "#e2e8f0", fontSize: "clamp(25px, 3.7vw, 34px)", letterSpacing: "0.04em" }}>
-            Plinko II <span style={{ color: "#22d3ee" }}>Simple Mode</span>
+            Plinko II <span style={{ color: "#22d3ee" }}>Early Access, subject to change</span>
           </h1>
           <div style={{ color: "#cbd5e1", fontWeight: 700 }}>Balance: {fmtMoney(balance)}</div>
         </div>
 
         <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 12 }}>
-          <div style={{ flex: "1 1 540px", width: "100%", maxWidth: 680, margin: "0 auto", aspectRatio: `${BOARD_WIDTH} / ${BOARD_HEIGHT}`, position: "relative", borderRadius: 18, overflow: "hidden", border: "1px solid rgba(148,163,184,0.25)", background: "linear-gradient(180deg, rgba(15,23,42,0.7), rgba(2,6,23,0.95))" }}>
+          <div style={{ flex: "1 1 540px", width: "100%", maxWidth: 580, margin: "0 auto", aspectRatio: `${BOARD_WIDTH} / ${BOARD_HEIGHT}`, position: "relative", borderRadius: 18, overflow: "hidden", border: "1px solid rgba(148,163,184,0.25)", background: "linear-gradient(180deg, rgba(15,23,42,0.7), rgba(2,6,23,0.95))" }}>
             {pegs.map((peg, idx) => (
               <div key={idx} style={{ position: "absolute", left: `${(peg.x / BOARD_WIDTH) * 100}%`, top: `${(peg.y / BOARD_HEIGHT) * 100}%`, width: 10, height: 10, borderRadius: "50%", transform: "translate(-50%, -50%)", background: "radial-gradient(circle at 30% 30%, #e2e8f0, #64748b)", boxShadow: "0 0 14px rgba(34,211,238,0.4)" }} />
             ))}
@@ -302,15 +293,6 @@ export default function PlinkoIIPage() {
           </div>
 
           <aside style={{ flex: "0 1 240px", minWidth: 220, border: "1px solid rgba(255,255,255,0.18)", borderRadius: 14, background: "rgba(2,6,23,0.75)", padding: 10, display: "grid", gap: 10, alignContent: "start" }}>
-            <div style={{ color: "#94a3b8", fontSize: 12, fontWeight: 700 }}>BET PER BALL</div>
-            <div style={wheelRow}>
-              <button onClick={() => spinBetWheel(1)} style={arrowBtn}>▲</button>
-              <motion.div animate={{ rotate: betWheelTurn }} transition={{ duration: 0.35 }} style={wheelOuter}>
-                <div style={wheelInner}>{fmtMoney(bet)}</div>
-              </motion.div>
-              <button onClick={() => spinBetWheel(-1)} style={arrowBtn}>▼</button>
-            </div>
-
             <div style={{ color: "#94a3b8", fontSize: 12, fontWeight: 700 }}>BALL COUNT</div>
             <div style={wheelRow}>
               <button onClick={() => spinDropWheel(1)} style={arrowBtn}>▲</button>
@@ -322,6 +304,7 @@ export default function PlinkoIIPage() {
 
             <button onClick={() => setBet(Math.max(0.01, Math.round(balance * 0.5 * 100) / 100))} style={baseBtn}>HALF</button>
             <button onClick={() => setBet(Math.max(0.01, Math.round(balance * 100) / 100))} style={baseBtn}>ALL IN</button>
+            <div style={{ color: "#cbd5e1", fontSize: 13 }}>Bet per ball: <strong>{fmtMoney(bet)}</strong></div>
             <button onClick={dropBatch} style={dropBtn}>DROP {dropCount}</button>
             <button
               onMouseDown={startHold}
@@ -338,9 +321,6 @@ export default function PlinkoIIPage() {
               Last drop: <strong>{lastDrop ? `${lastDrop.mult}x (${fmtMoney(lastDrop.payout)})` : "Waiting..."}</strong>
             </div>
           </aside>
-          <div style={{ width: "100%", color: "#cbd5e1" }}>
-            Bet per ball: <strong>{fmtMoney(bet)}</strong>
-          </div>
         </div>
       </section>
     </main>
