@@ -44,7 +44,7 @@ export default function PlinkoIIPage() {
   const [binFlashes, setBinFlashes] = useState<Flash[]>([]);
   const [holding, setHolding] = useState(false);
   const [dropWheelTurn, setDropWheelTurn] = useState(0);
-  const [showNotice, setShowNotice] = useState(true);
+  const [showNotice] = useState(true);
 
   const ballsRef = useRef<Ball[]>([]);
   const balanceRef = useRef(balance);
@@ -256,9 +256,9 @@ export default function PlinkoIIPage() {
           }}>
             <h2 style={{ margin: "0 0 10px", fontSize: "clamp(24px, 4vw, 32px)" }}>Plinko II</h2>
             <p style={{ margin: "0 0 18px", color: "#cbd5e1", fontSize: "clamp(16px, 2.3vw, 18px)" }}>
-              The next generation of plinko is under development.
+              The next generation of plinko is under development — check back later.
             </p>
-            <button onClick={() => setShowNotice(false)} style={dropBtn}>Enter Early Access Preview</button>
+            <div style={{ color: "#94a3b8", fontSize: 14, fontWeight: 700 }}>Check back later.</div>
           </div>
         </div>
       )}
