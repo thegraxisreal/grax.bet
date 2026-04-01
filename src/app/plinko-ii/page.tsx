@@ -44,8 +44,8 @@ export default function PlinkoIIPage() {
   const [pegFlashes, setPegFlashes] = useState<Flash[]>([]);
   const [binFlashes, setBinFlashes] = useState<Flash[]>([]);
   const [holding, setHolding] = useState(false);
-  const [spinningBet, setSpinningBet] = useState(false);
-  const [spinningDrop, setSpinningDrop] = useState(false);
+  const [betWheelTurn, setBetWheelTurn] = useState(0);
+  const [dropWheelTurn, setDropWheelTurn] = useState(0);
 
   const ballsRef = useRef<Ball[]>([]);
   const balanceRef = useRef(balance);
@@ -136,25 +136,19 @@ export default function PlinkoIIPage() {
     }, 140);
   }, [dropCount, spawnBall]);
 
-  const spinBetWheel = useCallback(() => {
-    if (spinningBet) return;
-    setSpinningBet(true);
-    setTimeout(() => {
-      const nextBet = BET_OPTIONS[Math.floor(Math.random() * BET_OPTIONS.length)];
-      setBet(nextBet);
-      setSpinningBet(false);
-    }, 1400);
-  }, [spinningBet]);
+  const spinBetWheel = useCallback((direction: 1 | -1) => {
+    const currentIdx = BET_OPTIONS.findIndex((v) => v === bet);
+    const nextIdx = (currentIdx + direction + BET_OPTIONS.length) % BET_OPTIONS.length;
+    setBet(BET_OPTIONS[nextIdx]);
+    setBetWheelTurn((prev) => prev + direction * 180);
+  }, [bet]);
 
-  const spinDropWheel = useCallback(() => {
-    if (spinningDrop) return;
-    setSpinningDrop(true);
-    setTimeout(() => {
-      const nextCount = DROP_OPTIONS[Math.floor(Math.random() * DROP_OPTIONS.length)];
-      setDropCount(nextCount);
-      setSpinningDrop(false);
-    }, 1400);
-  }, [spinningDrop]);
+  const spinDropWheel = useCallback((direction: 1 | -1) => {
+    const currentIdx = DROP_OPTIONS.findIndex((v) => v === dropCount);
+    const nextIdx = (currentIdx + direction + DROP_OPTIONS.length) % DROP_OPTIONS.length;
+    setDropCount(DROP_OPTIONS[nextIdx]);
+    setDropWheelTurn((prev) => prev + direction * 180);
+  }, [dropCount]);
 
   const stopHold = useCallback(() => {
     setHolding(false);
@@ -261,35 +255,73 @@ export default function PlinkoIIPage() {
           <div style={{ color: "#cbd5e1", fontWeight: 700 }}>Balance: {fmtMoney(balance)}</div>
         </div>
 
-        <div style={{ display: "grid", gap: 12, marginBottom: 12 }}>
-          <div style={{ display: "flex", gap: 14, flexWrap: "wrap", alignItems: "center" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 12 }}>
+          <div style={{ flex: "1 1 540px", width: "100%", maxWidth: 680, margin: "0 auto", aspectRatio: `${BOARD_WIDTH} / ${BOARD_HEIGHT}`, position: "relative", borderRadius: 18, overflow: "hidden", border: "1px solid rgba(148,163,184,0.25)", background: "linear-gradient(180deg, rgba(15,23,42,0.7), rgba(2,6,23,0.95))" }}>
+            {pegs.map((peg, idx) => (
+              <div key={idx} style={{ position: "absolute", left: `${(peg.x / BOARD_WIDTH) * 100}%`, top: `${(peg.y / BOARD_HEIGHT) * 100}%`, width: 10, height: 10, borderRadius: "50%", transform: "translate(-50%, -50%)", background: "radial-gradient(circle at 30% 30%, #e2e8f0, #64748b)", boxShadow: "0 0 14px rgba(34,211,238,0.4)" }} />
+            ))}
+
+            <AnimatePresence>
+              {pegFlashes.map((f) => (
+                <motion.div
+                  key={f.id}
+                  initial={{ opacity: 0.8, scale: 0.6 }}
+                  animate={{ opacity: 0, scale: 1.5 }}
+                  exit={{ opacity: 0 }}
+                  style={{ position: "absolute", left: `${(f.x / BOARD_WIDTH) * 100}%`, top: `${(f.y / BOARD_HEIGHT) * 100}%`, width: 26, height: 26, borderRadius: "50%", border: `2px solid ${f.color}`, transform: "translate(-50%, -50%)" }}
+                />
+              ))}
+            </AnimatePresence>
+
+            <AnimatePresence>
+              {binFlashes.map((f) => (
+                <motion.div
+                  key={f.id}
+                  initial={{ opacity: 0.8, scale: 0.6 }}
+                  animate={{ opacity: 0, scale: 1.4 }}
+                  exit={{ opacity: 0 }}
+                  style={{ position: "absolute", left: `${(f.x / BOARD_WIDTH) * 100}%`, top: `${(f.y / BOARD_HEIGHT) * 100}%`, width: 52, height: 52, borderRadius: "50%", border: `2px solid ${f.color}`, boxShadow: `0 0 30px ${f.color}`, transform: "translate(-50%, -50%)" }}
+                />
+              ))}
+            </AnimatePresence>
+
+            {balls.map((ball) => (
               <motion.div
-                animate={{ rotate: spinningBet ? 1260 : 0 }}
-                transition={{ duration: 1.4, ease: "easeInOut" }}
-                style={wheelOuter}
-              >
+                key={ball.id}
+                animate={{ left: `${(ball.x / BOARD_WIDTH) * 100}%`, top: `${(ball.y / BOARD_HEIGHT) * 100}%` }}
+                transition={{ type: "tween", duration: 0.04, ease: "linear" }}
+                style={{ position: "absolute", width: BALL_RADIUS * 2, height: BALL_RADIUS * 2, borderRadius: "50%", transform: "translate(-50%, -50%)", background: `radial-gradient(circle at 30% 30%, #fff, ${ball.color})`, boxShadow: `0 0 24px ${ball.color}99` }}
+              />
+            ))}
+
+            <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, display: "grid", gridTemplateColumns: `repeat(${BUCKETS}, 1fr)`, gap: 5, padding: 8 }}>
+              {MULTIPLIERS.map((m, idx) => (
+                <div key={idx} style={{ height: "clamp(38px, 6.4vw, 52px)", borderRadius: 12, background: m >= 4 ? "linear-gradient(180deg, #f59e0b, #b45309)" : m >= 1 ? "linear-gradient(180deg, #22c55e, #166534)" : "linear-gradient(180deg, #ef4444, #7f1d1d)", color: "white", fontWeight: 900, display: "grid", placeItems: "center", fontSize: "clamp(10px, 1.8vw, 13px)", border: "1px solid rgba(255,255,255,0.35)" }}>{m}x</div>
+              ))}
+            </div>
+          </div>
+
+          <aside style={{ flex: "0 1 240px", minWidth: 220, border: "1px solid rgba(255,255,255,0.18)", borderRadius: 14, background: "rgba(2,6,23,0.75)", padding: 10, display: "grid", gap: 10, alignContent: "start" }}>
+            <div style={{ color: "#94a3b8", fontSize: 12, fontWeight: 700 }}>BET PER BALL</div>
+            <div style={wheelRow}>
+              <button onClick={() => spinBetWheel(1)} style={arrowBtn}>▲</button>
+              <motion.div animate={{ rotate: betWheelTurn }} transition={{ duration: 0.35 }} style={wheelOuter}>
                 <div style={wheelInner}>{fmtMoney(bet)}</div>
               </motion.div>
-              <button onClick={spinBetWheel} style={baseBtn}>{spinningBet ? "SPINNING..." : "SPIN BET"}</button>
+              <button onClick={() => spinBetWheel(-1)} style={arrowBtn}>▼</button>
             </div>
 
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <motion.div
-                animate={{ rotate: spinningDrop ? 1260 : 0 }}
-                transition={{ duration: 1.4, ease: "easeInOut" }}
-                style={wheelOuter}
-              >
+            <div style={{ color: "#94a3b8", fontSize: 12, fontWeight: 700 }}>BALL COUNT</div>
+            <div style={wheelRow}>
+              <button onClick={() => spinDropWheel(1)} style={arrowBtn}>▲</button>
+              <motion.div animate={{ rotate: dropWheelTurn }} transition={{ duration: 0.35 }} style={wheelOuter}>
                 <div style={wheelInner}>{dropCount}</div>
               </motion.div>
-              <button onClick={spinDropWheel} style={baseBtn}>{spinningDrop ? "SPINNING..." : "SPIN BALLS"}</button>
+              <button onClick={() => spinDropWheel(-1)} style={arrowBtn}>▼</button>
             </div>
 
             <button onClick={() => setBet(Math.max(0.01, Math.round(balance * 0.5 * 100) / 100))} style={baseBtn}>HALF</button>
             <button onClick={() => setBet(Math.max(0.01, Math.round(balance * 100) / 100))} style={baseBtn}>ALL IN</button>
-          </div>
-
-          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
             <button onClick={dropBatch} style={dropBtn}>DROP {dropCount}</button>
             <button
               onMouseDown={startHold}
@@ -301,55 +333,13 @@ export default function PlinkoIIPage() {
             >
               {holding ? "HOLDING 5%/BALL" : "HOLD TO DROP (5%/BALL)"}
             </button>
-          </div>
 
-          <div style={{ color: "#cbd5e1" }}>
-            Bet per ball: <strong>{fmtMoney(bet)}</strong> · Last drop: <strong>{lastDrop ? `${lastDrop.mult}x (${fmtMoney(lastDrop.payout)})` : "Waiting..."}</strong>
-          </div>
-        </div>
-
-        <div style={{ width: "100%", maxWidth: 760, margin: "0 auto", aspectRatio: `${BOARD_WIDTH} / ${BOARD_HEIGHT}`, position: "relative", borderRadius: 18, overflow: "hidden", border: "1px solid rgba(148,163,184,0.25)", background: "linear-gradient(180deg, rgba(15,23,42,0.7), rgba(2,6,23,0.95))" }}>
-          {pegs.map((peg, idx) => (
-            <div key={idx} style={{ position: "absolute", left: `${(peg.x / BOARD_WIDTH) * 100}%`, top: `${(peg.y / BOARD_HEIGHT) * 100}%`, width: 10, height: 10, borderRadius: "50%", transform: "translate(-50%, -50%)", background: "radial-gradient(circle at 30% 30%, #e2e8f0, #64748b)", boxShadow: "0 0 14px rgba(34,211,238,0.4)" }} />
-          ))}
-
-          <AnimatePresence>
-            {pegFlashes.map((f) => (
-              <motion.div
-                key={f.id}
-                initial={{ opacity: 0.8, scale: 0.6 }}
-                animate={{ opacity: 0, scale: 1.5 }}
-                exit={{ opacity: 0 }}
-                style={{ position: "absolute", left: `${(f.x / BOARD_WIDTH) * 100}%`, top: `${(f.y / BOARD_HEIGHT) * 100}%`, width: 26, height: 26, borderRadius: "50%", border: `2px solid ${f.color}`, transform: "translate(-50%, -50%)" }}
-              />
-            ))}
-          </AnimatePresence>
-
-          <AnimatePresence>
-            {binFlashes.map((f) => (
-              <motion.div
-                key={f.id}
-                initial={{ opacity: 0.8, scale: 0.6 }}
-                animate={{ opacity: 0, scale: 1.4 }}
-                exit={{ opacity: 0 }}
-                style={{ position: "absolute", left: `${(f.x / BOARD_WIDTH) * 100}%`, top: `${(f.y / BOARD_HEIGHT) * 100}%`, width: 52, height: 52, borderRadius: "50%", border: `2px solid ${f.color}`, boxShadow: `0 0 30px ${f.color}`, transform: "translate(-50%, -50%)" }}
-              />
-            ))}
-          </AnimatePresence>
-
-          {balls.map((ball) => (
-            <motion.div
-              key={ball.id}
-              animate={{ left: `${(ball.x / BOARD_WIDTH) * 100}%`, top: `${(ball.y / BOARD_HEIGHT) * 100}%` }}
-              transition={{ type: "tween", duration: 0.04, ease: "linear" }}
-              style={{ position: "absolute", width: BALL_RADIUS * 2, height: BALL_RADIUS * 2, borderRadius: "50%", transform: "translate(-50%, -50%)", background: `radial-gradient(circle at 30% 30%, #fff, ${ball.color})`, boxShadow: `0 0 24px ${ball.color}99` }}
-            />
-          ))}
-
-          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, display: "grid", gridTemplateColumns: `repeat(${BUCKETS}, 1fr)`, gap: 5, padding: 8 }}>
-            {MULTIPLIERS.map((m, idx) => (
-              <div key={idx} style={{ height: "clamp(38px, 6.4vw, 52px)", borderRadius: 12, background: m >= 4 ? "linear-gradient(180deg, #f59e0b, #b45309)" : m >= 1 ? "linear-gradient(180deg, #22c55e, #166534)" : "linear-gradient(180deg, #ef4444, #7f1d1d)", color: "white", fontWeight: 900, display: "grid", placeItems: "center", fontSize: "clamp(10px, 1.8vw, 13px)", border: "1px solid rgba(255,255,255,0.35)" }}>{m}x</div>
-            ))}
+            <div style={{ color: "#cbd5e1", fontSize: 13 }}>
+              Last drop: <strong>{lastDrop ? `${lastDrop.mult}x (${fmtMoney(lastDrop.payout)})` : "Waiting..."}</strong>
+            </div>
+          </aside>
+          <div style={{ width: "100%", color: "#cbd5e1" }}>
+            Bet per ball: <strong>{fmtMoney(bet)}</strong>
           </div>
         </div>
       </section>
@@ -410,4 +400,21 @@ const wheelInner: CSSProperties = {
   fontSize: 12,
   padding: 4,
   textAlign: "center",
+};
+
+const wheelRow: CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "30px 1fr 30px",
+  alignItems: "center",
+  gap: 8,
+};
+
+const arrowBtn: CSSProperties = {
+  borderRadius: 10,
+  border: "1px solid rgba(255,255,255,0.24)",
+  background: "rgba(15,23,42,0.8)",
+  color: "#e2e8f0",
+  fontWeight: 900,
+  cursor: "pointer",
+  height: 30,
 };
