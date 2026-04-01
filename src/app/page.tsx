@@ -968,7 +968,7 @@ const GAMES: ReadonlyArray<{
   {
     label: "Plinko II",
     href: "/plinko-ii",
-    locked: true,
+    locked: false,
     gradient: "linear-gradient(145deg, #0f172a 0%, #1d4ed8 35%, #7c3aed 68%, #f97316 100%)",
     art: <PlinkoIIArt />,
   },

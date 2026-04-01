@@ -10,6 +10,7 @@ interface NavItem {
   locked?: boolean;
   live?: boolean;
   promo?: string;
+  iconColor?: string;
   icon: React.ReactNode;
 }
 
@@ -277,22 +278,22 @@ function SidebarLogo() {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { label: "Home",         href: "/",            icon: <HomeIcon /> },
-  { label: "Leaderboard",  href: "/leaderboard", icon: <LeaderboardIcon /> },
-  { label: "Chat",         href: "/chat",        icon: <ChatIcon /> },
-  { label: "Blackjack",    href: "/blackjack",   icon: <BlackjackIcon /> },
-  { label: "Slots",     href: "/slots",     icon: <SlotsIcon /> },
-  { label: "Roulette",  href: "/roulette",  icon: <RouletteIcon /> },
-  { label: "Crash",     href: "/crash",     icon: <CrashIcon /> },
-  { label: "March Madness", href: "/sports",    icon: <SportsIcon />, live: true },
-  { label: "SPAM!",         href: "/spam",      icon: <SpamIcon />, promo: "15 SEC" },
-  { label: "Mines",     href: "/mines",     icon: <MinesIcon /> },
-  { label: "Golf",      href: "/golf",      icon: <GolfIcon /> },
-  { label: "Plinko",        href: "/plinko",       icon: <PlinkoIcon /> },
-  { label: "Plinko II",     href: "/plinko-ii",    icon: <PlinkoIcon />, promo: "EARLY" },
-  { label: "Horse Racing",  href: "/horse-racing",  icon: <HorseRacingIcon />, locked: true },
-  { label: "Bomb Defuse",   href: "/bomb-defuse",   icon: <BombDefuseIcon />, promo: "2X MONEY" },
-  { label: "Chicken",       href: "/chicken",       icon: <ChickenIcon /> },
+  { label: "Home",         href: "/",            icon: <HomeIcon />, iconColor: "#60a5fa" },
+  { label: "Leaderboard",  href: "/leaderboard", icon: <LeaderboardIcon />, iconColor: "#fbbf24" },
+  { label: "Chat",         href: "/chat",        icon: <ChatIcon />, iconColor: "#34d399" },
+  { label: "Blackjack",    href: "/blackjack",   icon: <BlackjackIcon />, iconColor: "#f59e0b" },
+  { label: "Slots",     href: "/slots",     icon: <SlotsIcon />, iconColor: "#22d3ee" },
+  { label: "Roulette",  href: "/roulette",  icon: <RouletteIcon />, iconColor: "#f87171" },
+  { label: "Crash",     href: "/crash",     icon: <CrashIcon />, iconColor: "#fb923c" },
+  { label: "March Madness", href: "/sports",    icon: <SportsIcon />, live: true, iconColor: "#60a5fa" },
+  { label: "SPAM!",         href: "/spam",      icon: <SpamIcon />, promo: "15 SEC", iconColor: "#2dd4bf" },
+  { label: "Mines",     href: "/mines",     icon: <MinesIcon />, iconColor: "#a78bfa" },
+  { label: "Golf",      href: "/golf",      icon: <GolfIcon />, iconColor: "#4ade80" },
+  { label: "Plinko",        href: "/plinko",       icon: <PlinkoIcon />, iconColor: "#818cf8" },
+  { label: "Plinko II",     href: "/plinko-ii",    icon: <PlinkoIcon />, promo: "EARLY", iconColor: "#22d3ee" },
+  { label: "Horse Racing",  href: "/horse-racing",  icon: <HorseRacingIcon />, locked: true, iconColor: "#facc15" },
+  { label: "Bomb Defuse",   href: "/bomb-defuse",   icon: <BombDefuseIcon />, promo: "2X MONEY", iconColor: "#fb7185" },
+  { label: "Chicken",       href: "/chicken",       icon: <ChickenIcon />, iconColor: "#f97316" },
 ];
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
@@ -343,7 +344,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               key={item.label}
               className={`sidebar-item locked`}
             >
-              <span style={{ opacity: 0.7 }}>{item.icon}</span>
+              <span style={{ opacity: 0.85, color: item.iconColor ?? "#9ca3af" }}>{item.icon}</span>
               <span style={{ flex: 1 }}>{item.label}</span>
               <span style={{
                 background: "rgba(255,255,255,0.1)",
@@ -366,7 +367,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               className={`sidebar-item ${isActive ? "active" : ""}`}
               onClick={onClose}
             >
-              {item.icon}
+              <span style={{ color: item.iconColor ?? "#9ca3af" }}>{item.icon}</span>
               <span>{item.label}</span>
               {item.live && !isActive && (
                 <span className="live-bets-badge" style={{

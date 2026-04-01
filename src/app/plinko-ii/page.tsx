@@ -44,6 +44,7 @@ export default function PlinkoIIPage() {
   const [binFlashes, setBinFlashes] = useState<Flash[]>([]);
   const [holding, setHolding] = useState(false);
   const [dropWheelTurn, setDropWheelTurn] = useState(0);
+  const [showNotice, setShowNotice] = useState(true);
 
   const ballsRef = useRef<Ball[]>([]);
   const balanceRef = useRef(balance);
@@ -232,6 +233,35 @@ export default function PlinkoIIPage() {
 
   return (
     <main style={{ padding: "clamp(12px, 2vw, 24px)" }}>
+      {showNotice && (
+        <div style={{
+          position: "fixed",
+          inset: 0,
+          zIndex: 80,
+          background: "rgba(2,6,23,0.84)",
+          backdropFilter: "blur(5px)",
+          display: "grid",
+          placeItems: "center",
+          padding: 20,
+        }}>
+          <div style={{
+            width: "min(680px, 100%)",
+            borderRadius: 18,
+            border: "1px solid rgba(148,163,184,0.35)",
+            background: "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(2,6,23,0.98))",
+            boxShadow: "0 24px 90px rgba(0,0,0,0.55)",
+            padding: "24px 20px",
+            textAlign: "center",
+            color: "#e2e8f0",
+          }}>
+            <h2 style={{ margin: "0 0 10px", fontSize: "clamp(24px, 4vw, 32px)" }}>Plinko II</h2>
+            <p style={{ margin: "0 0 18px", color: "#cbd5e1", fontSize: "clamp(16px, 2.3vw, 18px)" }}>
+              The next generation of plinko is under development.
+            </p>
+            <button onClick={() => setShowNotice(false)} style={dropBtn}>Enter Early Access Preview</button>
+          </div>
+        </div>
+      )}
       <section style={{
         borderRadius: 22,
         border: "1px solid rgba(255,255,255,0.2)",
