@@ -15,6 +15,7 @@ const PEG_BOUNCE = 0.72;
 
 const MULTIPLIERS = [9, 4.5, 2.5, 1.6, 1.1, 0.9, 0.6, 0.9, 1.1, 1.6, 2.5, 4.5, 9];
 const DROP_OPTIONS = [1, 3, 5, 10, 25];
+const BET_OPTIONS = [0.1, 0.25, 0.5, 1, 2, 5];
 const BALL_COLORS = ["#22d3ee", "#f472b6", "#facc15", "#34d399", "#a78bfa", "#fb7185", "#60a5fa"];
 
 interface Peg { x: number; y: number }
@@ -43,6 +44,8 @@ export default function PlinkoIIPage() {
   const [pegFlashes, setPegFlashes] = useState<Flash[]>([]);
   const [binFlashes, setBinFlashes] = useState<Flash[]>([]);
   const [holding, setHolding] = useState(false);
+  const [spinningBet, setSpinningBet] = useState(false);
+  const [spinningDrop, setSpinningDrop] = useState(false);
 
   const ballsRef = useRef<Ball[]>([]);
   const balanceRef = useRef(balance);
@@ -132,6 +135,26 @@ export default function PlinkoIIPage() {
       left -= 1;
     }, 140);
   }, [dropCount, spawnBall]);
+
+  const spinBetWheel = useCallback(() => {
+    if (spinningBet) return;
+    setSpinningBet(true);
+    setTimeout(() => {
+      const nextBet = BET_OPTIONS[Math.floor(Math.random() * BET_OPTIONS.length)];
+      setBet(nextBet);
+      setSpinningBet(false);
+    }, 1400);
+  }, [spinningBet]);
+
+  const spinDropWheel = useCallback(() => {
+    if (spinningDrop) return;
+    setSpinningDrop(true);
+    setTimeout(() => {
+      const nextCount = DROP_OPTIONS[Math.floor(Math.random() * DROP_OPTIONS.length)];
+      setDropCount(nextCount);
+      setSpinningDrop(false);
+    }, 1400);
+  }, [spinningDrop]);
 
   const stopHold = useCallback(() => {
     setHolding(false);
@@ -238,20 +261,35 @@ export default function PlinkoIIPage() {
           <div style={{ color: "#cbd5e1", fontWeight: 700 }}>Balance: {fmtMoney(balance)}</div>
         </div>
 
-        <div style={{ display: "grid", gap: 10, marginBottom: 12 }}>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {[0.1, 0.25, 0.5, 1, 2, 5].map((chip) => (
-              <button key={chip} onClick={() => setBet(chip)} style={bet === chip ? activeBtn : baseBtn}>{fmtMoney(chip)}</button>
-            ))}
+        <div style={{ display: "grid", gap: 12, marginBottom: 12 }}>
+          <div style={{ display: "flex", gap: 14, flexWrap: "wrap", alignItems: "center" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <motion.div
+                animate={{ rotate: spinningBet ? 1260 : 0 }}
+                transition={{ duration: 1.4, ease: "easeInOut" }}
+                style={wheelOuter}
+              >
+                <div style={wheelInner}>{fmtMoney(bet)}</div>
+              </motion.div>
+              <button onClick={spinBetWheel} style={baseBtn}>{spinningBet ? "SPINNING..." : "SPIN BET"}</button>
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <motion.div
+                animate={{ rotate: spinningDrop ? 1260 : 0 }}
+                transition={{ duration: 1.4, ease: "easeInOut" }}
+                style={wheelOuter}
+              >
+                <div style={wheelInner}>{dropCount}</div>
+              </motion.div>
+              <button onClick={spinDropWheel} style={baseBtn}>{spinningDrop ? "SPINNING..." : "SPIN BALLS"}</button>
+            </div>
+
             <button onClick={() => setBet(Math.max(0.01, Math.round(balance * 0.5 * 100) / 100))} style={baseBtn}>HALF</button>
             <button onClick={() => setBet(Math.max(0.01, Math.round(balance * 100) / 100))} style={baseBtn}>ALL IN</button>
           </div>
 
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-            <span style={{ color: "#94a3b8", fontWeight: 600 }}>Balls to drop:</span>
-            {DROP_OPTIONS.map((n) => (
-              <button key={n} onClick={() => setDropCount(n)} style={dropCount === n ? activeBtn : baseBtn}>{n}</button>
-            ))}
             <button onClick={dropBatch} style={dropBtn}>DROP {dropCount}</button>
             <button
               onMouseDown={startHold}
@@ -329,12 +367,6 @@ const baseBtn: CSSProperties = {
   cursor: "pointer",
 };
 
-const activeBtn: CSSProperties = {
-  ...baseBtn,
-  border: "1px solid #22d3ee",
-  background: "rgba(34,211,238,0.24)",
-};
-
 const dropBtn: CSSProperties = {
   borderRadius: 12,
   border: "1px solid rgba(34,211,238,0.6)",
@@ -353,4 +385,29 @@ const holdBtn: CSSProperties = {
   padding: "8px 14px",
   fontWeight: 900,
   cursor: "pointer",
+};
+
+const wheelOuter: CSSProperties = {
+  width: 74,
+  height: 74,
+  borderRadius: "50%",
+  background: "conic-gradient(#22d3ee, #a78bfa, #f472b6, #f59e0b, #22d3ee)",
+  boxShadow: "0 0 20px rgba(34,211,238,0.35)",
+  display: "grid",
+  placeItems: "center",
+  border: "2px solid rgba(255,255,255,0.4)",
+};
+
+const wheelInner: CSSProperties = {
+  width: 50,
+  height: 50,
+  borderRadius: "50%",
+  background: "#0f172a",
+  display: "grid",
+  placeItems: "center",
+  color: "#e2e8f0",
+  fontWeight: 800,
+  fontSize: 12,
+  padding: 4,
+  textAlign: "center",
 };
