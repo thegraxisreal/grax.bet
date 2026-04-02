@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 90" fill="none">
+  <ellipse cx="70" cy="82" rx="48" ry="6" fill="rgba(0,0,0,0.22)"/>
+  <ellipse cx="76" cy="44" rx="36" ry="18" fill="#8b5a2b"/>
+  <ellipse cx="40" cy="34" rx="14" ry="10" fill="#8b5a2b"/>
+  <path d="M31 28 C24 22 23 16 27 13 C33 8 41 13 44 22" fill="#3f2a16"/>
+  <path d="M56 31 C58 22 70 20 78 22 C82 16 92 15 97 21 C104 20 112 26 110 34 C108 40 101 43 95 41 C89 49 71 52 57 47 C53 43 52 37 56 31Z" fill="#9c6b35"/>
+  <circle cx="45" cy="32" r="1.6" fill="#111827"/>
+  <path d="M30 37 Q35 42 43 39" stroke="#3f2a16" stroke-width="2.5" stroke-linecap="round"/>
+  <rect x="52" y="58" width="9" height="22" rx="3.5" fill="#3f2a16"/>
+  <rect x="68" y="58" width="9" height="22" rx="3.5" fill="#3f2a16"/>
+  <rect x="88" y="58" width="9" height="22" rx="3.5" fill="#3f2a16"/>
+  <rect x="104" y="58" width="9" height="22" rx="3.5" fill="#3f2a16"/>
+  <path d="M108 40 C122 33 129 39 129 47 C129 57 117 63 105 58" fill="#3f2a16"/>
+  <rect x="65" y="39" width="22" height="10" rx="3" fill="#dbeafe" opacity="0.92"/>
+</svg>
