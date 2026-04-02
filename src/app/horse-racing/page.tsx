@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type Phase = "betting" | "racing" | "result";
 
@@ -44,6 +44,45 @@ const HORSES: HorseMeta[] = [
 
 const rand = (min: number, max: number) => Math.random() * (max - min) + min;
 
+async function loadTransparentHorseSprite(): Promise<HTMLImageElement> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.src = SPRITE_URL;
+
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        resolve(img);
+        return;
+      }
+
+      ctx.drawImage(img, 0, 0);
+
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
+
+      for (let i = 0; i < data.length; i += 4) {
+        if (data[i] === 255 && data[i + 1] === 255 && data[i + 2] === 255) {
+          data[i + 3] = 0;
+        }
+      }
+
+      ctx.putImageData(imageData, 0, 0);
+
+      const transparentImg = new Image();
+      transparentImg.src = canvas.toDataURL("image/png");
+      transparentImg.onload = () => resolve(transparentImg);
+      transparentImg.onerror = () => resolve(img);
+    };
+
+    img.onerror = () => resolve(img);
+  });
+}
+
 function formatMoney(v: number) {
   return `$${v.toFixed(2)}`;
 }
@@ -56,9 +95,23 @@ export default function HorseRacingPage() {
   const [winnerId, setWinnerId] = useState<number | null>(null);
   const [payout, setPayout] = useState(0);
   const [runners, setRunners] = useState<Runner[]>([]);
+  const [horseSpriteUrl, setHorseSpriteUrl] = useState(SPRITE_URL);
 
   const rafRef = useRef<number>(0);
   const lastTsRef = useRef<number>(0);
+
+  useEffect(() => {
+    let active = true;
+
+    loadTransparentHorseSprite().then((horseSprite) => {
+      if (!active) return;
+      setHorseSpriteUrl(horseSprite.src || SPRITE_URL);
+    });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const [oddsByHorse, setOddsByHorse] = useState(() => {
     const raw = new Map<number, number>();
@@ -380,7 +433,7 @@ export default function HorseRacingPage() {
         .horse-run {
           width: ${FRAME_WIDTH}px;
           height: ${FRAME_HEIGHT}px;
-          background-image: url(${SPRITE_URL});
+          background-image: url(${horseSpriteUrl});
           background-repeat: no-repeat;
           image-rendering: pixelated;
           animation: gallop 0.4s steps(${TOTAL_FRAMES}) infinite;
