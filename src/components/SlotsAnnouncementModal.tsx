@@ -1,23 +1,125 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
+import {
+  castNextGameVote,
+  type NextGamePollDoc,
+  type NextGameVoteOption,
+  subscribeToNextGamePoll,
+} from "@/lib/firestore";
+import { useUser } from "@/context/UserContext";
+
+const OPTION_CONFIG: Array<{ key: NextGameVoteOption; label: string; accent: string }> = [
+  { key: "tower_climb", label: "Tower Climb", accent: "#22d3ee" },
+  { key: "treasure_chests", label: "Treasure Chests", accent: "#fb7185" },
+  { key: "lucky_wheel", label: "Lucky Wheel", accent: "#fbbf24" },
+  { key: "custom", label: "Write-in", accent: "#a78bfa" },
+];
+
+const EMPTY_POLL: NextGamePollDoc = {
+  totalVotes: 0,
+  votesByOption: {
+    tower_climb: 0,
+    treasure_chests: 0,
+    lucky_wheel: 0,
+    custom: 0,
+  },
+};
 
 export default function SlotsAnnouncementModal() {
   const [visible, setVisible] = useState(false);
+  const [selectedOption, setSelectedOption] = useState<NextGameVoteOption>("tower_climb");
+  const [customSuggestion, setCustomSuggestion] = useState("");
+  const [poll, setPoll] = useState<NextGamePollDoc>(EMPTY_POLL);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [showResults, setShowResults] = useState(false);
+  const [resultSnapshot, setResultSnapshot] = useState<NextGamePollDoc | null>(null);
+
+  const { username } = useUser();
   const pathname = usePathname();
 
   useEffect(() => {
     if (pathname !== "/") {
       setVisible(false);
+      setShowResults(false);
       return;
     }
     const t = setTimeout(() => setVisible(true), 500);
     return () => clearTimeout(t);
   }, [pathname]);
 
+  useEffect(() => {
+    const unsub = subscribeToNextGamePoll(
+      (nextPoll) => setPoll(nextPoll),
+      () => setStatusMessage("Live vote sync is unavailable right now."),
+    );
+
+    return () => unsub();
+  }, []);
+
+  const optionMetrics = useMemo(() => {
+    const sourcePoll = resultSnapshot ?? poll;
+    return OPTION_CONFIG.map((option) => {
+      const votes = sourcePoll.votesByOption?.[option.key] ?? 0;
+      const pct = sourcePoll.totalVotes > 0 ? (votes / sourcePoll.totalVotes) * 100 : 0;
+      return { ...option, votes, pct };
+    });
+  }, [poll, resultSnapshot]);
+
   function dismiss() {
     setVisible(false);
+    setStatusMessage(null);
+    setShowResults(false);
+    setResultSnapshot(null);
+  }
+
+  function buildOptimisticResult(option: NextGameVoteOption): NextGamePollDoc {
+    const totalVotes = (poll.totalVotes ?? 0) + 1;
+    return {
+      totalVotes,
+      votesByOption: {
+        tower_climb: (poll.votesByOption?.tower_climb ?? 0) + (option === "tower_climb" ? 1 : 0),
+        treasure_chests: (poll.votesByOption?.treasure_chests ?? 0) + (option === "treasure_chests" ? 1 : 0),
+        lucky_wheel: (poll.votesByOption?.lucky_wheel ?? 0) + (option === "lucky_wheel" ? 1 : 0),
+        custom: (poll.votesByOption?.custom ?? 0) + (option === "custom" ? 1 : 0),
+      },
+    };
+  }
+
+  async function handleVoteSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+
+    if (selectedOption === "custom" && !customSuggestion.trim()) {
+      setStatusMessage("Please type your custom game idea first.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setStatusMessage(null);
+
+    try {
+      const submittedOption = selectedOption;
+      await castNextGameVote({
+        option: submittedOption,
+        voterName: username ?? "Anonymous",
+        customSuggestion: submittedOption === "custom" ? customSuggestion.trim().slice(0, 80) : undefined,
+      });
+
+      setCustomSuggestion("");
+      setResultSnapshot(buildOptimisticResult(submittedOption));
+      setStatusMessage("Vote sent.");
+      setShowResults(true);
+
+      setTimeout(() => {
+        dismiss();
+      }, 2000);
+    } catch {
+      setStatusMessage("Could not submit vote. Try again in a few seconds.");
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   if (!visible) return null;
@@ -43,7 +145,7 @@ export default function SlotsAnnouncementModal() {
           background: "linear-gradient(160deg, #0d1e2e 0%, #0a1520 60%, #0f1923 100%)",
           border: "2px solid rgba(34,197,94,0.45)",
           borderRadius: 22,
-          padding: "34px 28px 28px",
+          padding: "30px 24px 24px",
           maxWidth: 500,
           width: "100%",
           textAlign: "center",
@@ -68,15 +170,11 @@ export default function SlotsAnnouncementModal() {
           ✕
         </button>
 
-        <div style={{ marginBottom: 18 }}>
-          <PixelGolfFlag />
-        </div>
-
         <div
           style={{
             fontFamily: "'Barlow Condensed', sans-serif",
             fontWeight: 900,
-            fontSize: "2.2rem",
+            fontSize: "2rem",
             letterSpacing: "0.1em",
             textTransform: "uppercase",
             lineHeight: 1,
@@ -84,100 +182,126 @@ export default function SlotsAnnouncementModal() {
             color: "#86efac",
           }}
         >
-          Golf Is Here
+          Vote On The Next Game
         </div>
 
         <p
           style={{
             fontFamily: "'Barlow Condensed', sans-serif",
-            fontSize: "1rem",
+            fontSize: "0.95rem",
             fontWeight: 700,
             letterSpacing: "0.08em",
             color: "var(--text-secondary)",
             textTransform: "uppercase",
-            marginBottom: 10,
+            marginBottom: 14,
           }}
         >
-          In Beta · Pixel Art · Big Wins
+          Pick one option below
         </p>
 
-        <p
-          style={{
-            fontSize: "0.9rem",
-            color: "var(--text-muted)",
-            lineHeight: 1.6,
-            marginBottom: 22,
-            maxWidth: 390,
-            marginInline: "auto",
-          }}
-        >
-          Golf just landed in beta. Expect retro pixel vibes, tricky bank shots, and evolving levels while we keep tuning feel and balance.
-        </p>
+        <form onSubmit={handleVoteSubmit} style={{ display: "grid", gap: 9, marginBottom: showResults ? 14 : 0, textAlign: "left" }}>
+          {OPTION_CONFIG.map((option) => {
+            const isSelected = option.key === selectedOption;
+            return (
+              <label
+                key={option.key}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  border: `1px solid ${isSelected ? "rgba(52,211,153,0.5)" : "rgba(148,163,184,0.28)"}`,
+                  background: isSelected ? "rgba(52,211,153,0.1)" : "rgba(15,23,42,0.55)",
+                  borderRadius: 12,
+                  padding: "10px 12px",
+                  color: "#e2e8f0",
+                  cursor: "pointer",
+                  fontFamily: "'Barlow Condensed', sans-serif",
+                  letterSpacing: "0.05em",
+                  textTransform: "uppercase",
+                }}
+              >
+                <input
+                  type="radio"
+                  name="vote-option"
+                  value={option.key}
+                  checked={isSelected}
+                  onChange={() => setSelectedOption(option.key)}
+                />
+                <span style={{ fontWeight: 700 }}>{option.label}</span>
+              </label>
+            );
+          })}
 
-        <div style={{ display: "flex", gap: 8, justifyContent: "center", marginBottom: 20, flexWrap: "wrap" }}>
-          {[
-            "Play-money betting",
-            "Over/Under par",
-            "Arcade shot timing",
-          ].map((label) => (
-            <div
-              key={label}
+          {selectedOption === "custom" && (
+            <input
+              value={customSuggestion}
+              onChange={(e) => setCustomSuggestion(e.target.value.slice(0, 80))}
+              placeholder="Type your custom game idea..."
               style={{
-                padding: "6px 11px",
-                borderRadius: 999,
-                border: "1px solid rgba(52,211,153,0.35)",
-                background: "rgba(52,211,153,0.08)",
-                fontSize: "0.72rem",
-                letterSpacing: "0.08em",
-                textTransform: "uppercase",
-                color: "#a7f3d0",
-                fontFamily: "'Barlow Condensed', sans-serif",
-                fontWeight: 700,
+                width: "100%",
+                borderRadius: 10,
+                border: "1px solid rgba(52,211,153,0.45)",
+                background: "rgba(2,6,23,0.6)",
+                color: "#f8fafc",
+                padding: "10px 12px",
+                fontSize: ".95rem",
               }}
-            >
-              {label}
-            </div>
-          ))}
-        </div>
+            />
+          )}
 
-        <button
-          onClick={dismiss}
-          style={{
-            width: "100%",
-            padding: "14px 20px",
-            borderRadius: 10,
-            border: "none",
-            background: "linear-gradient(135deg, #22c55e, #16a34a)",
-            color: "#062315",
-            fontFamily: "'Barlow Condensed', sans-serif",
-            fontWeight: 900,
-            fontSize: "1.1rem",
-            letterSpacing: "0.13em",
-            textTransform: "uppercase",
-            cursor: "pointer",
-          }}
-        >
-          Stay Tuned
-        </button>
+          <button
+            type="submit"
+            disabled={isSubmitting || showResults}
+            style={{
+              marginTop: 4,
+              width: "100%",
+              padding: "14px 20px",
+              borderRadius: 10,
+              border: "none",
+              background: "linear-gradient(135deg, #22c55e, #16a34a)",
+              color: "#062315",
+              fontFamily: "'Barlow Condensed', sans-serif",
+              fontWeight: 900,
+              fontSize: "1.05rem",
+              letterSpacing: "0.13em",
+              textTransform: "uppercase",
+              cursor: isSubmitting || showResults ? "wait" : "pointer",
+              opacity: isSubmitting || showResults ? 0.8 : 1,
+            }}
+          >
+            {isSubmitting ? "Submitting..." : "Vote"}
+          </button>
+        </form>
+
+        {showResults && (
+          <div style={{ display: "grid", gap: 7, textAlign: "left" }}>
+            {optionMetrics.map((option) => (
+              <div key={option.key}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4, color: "#cbd5e1", fontSize: ".8rem" }}>
+                  <span style={{ fontFamily: "'Barlow Condensed', sans-serif", textTransform: "uppercase", letterSpacing: ".05em" }}>{option.label}</span>
+                  <span>{option.pct.toFixed(0)}%</span>
+                </div>
+                <div style={{ background: "rgba(148,163,184,0.2)", borderRadius: 999, overflow: "hidden", height: 8 }}>
+                  <div
+                    style={{
+                      width: `${option.pct}%`,
+                      background: `linear-gradient(90deg, ${option.accent}, rgba(255,255,255,0.85))`,
+                      height: "100%",
+                      transition: "width 220ms ease",
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {statusMessage && (
+          <p style={{ marginTop: 10, marginBottom: 0, color: statusMessage.startsWith("Vote sent") ? "#86efac" : "#fca5a5", fontSize: ".85rem" }}>
+            {statusMessage}
+          </p>
+        )}
       </div>
     </div>
-  );
-}
-
-function PixelGolfFlag() {
-  return (
-    <svg width="170" height="120" viewBox="0 0 170 120" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ display: "block", margin: "0 auto", imageRendering: "pixelated" }}>
-      <rect x="22" y="84" width="126" height="20" fill="#14532d" />
-      <rect x="40" y="72" width="90" height="12" fill="#166534" />
-      <rect x="80" y="22" width="8" height="54" fill="#e5e7eb" />
-      <rect x="88" y="26" width="34" height="18" fill="#ef4444" />
-      <rect x="92" y="30" width="8" height="4" fill="#fef2f2" />
-      <rect x="38" y="78" width="12" height="6" fill="#22c55e" />
-      <rect x="120" y="78" width="12" height="6" fill="#22c55e" />
-      <rect x="64" y="88" width="42" height="8" fill="#0f172a" />
-      <rect x="70" y="90" width="6" height="4" fill="#0b1220" />
-      <rect x="94" y="90" width="6" height="4" fill="#0b1220" />
-      <rect x="34" y="102" width="102" height="4" fill="#0f3d24" />
-    </svg>
   );
 }
