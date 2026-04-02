@@ -291,7 +291,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Golf",      href: "/golf",      icon: <GolfIcon />, iconColor: "#4ade80" },
   { label: "Plinko",        href: "/plinko",       icon: <PlinkoIcon />, iconColor: "#818cf8" },
   { label: "Plinko II",     href: "/plinko-ii",    icon: <PlinkoIcon />, promo: "EARLY", iconColor: "#22d3ee" },
-  { label: "Horse Racing",  href: "/horse-racing",  icon: <HorseRacingIcon />, locked: true, iconColor: "#facc15" },
+  { label: "Horse Racing",  href: "/horse-racing",  icon: <HorseRacingIcon />, iconColor: "#facc15" },
   { label: "Bomb Defuse",   href: "/bomb-defuse",   icon: <BombDefuseIcon />, promo: "2X MONEY", iconColor: "#fb7185" },
   { label: "Chicken",       href: "/chicken",       icon: <ChickenIcon />, iconColor: "#f97316" },
 ];

@@ -975,7 +975,7 @@ const GAMES: ReadonlyArray<{
   {
     label: "Horse Racing",
     href: "/horse-racing",
-    locked: true,
+    locked: false,
     gradient: "linear-gradient(145deg, #16a34a 0%, #166534 55%, #052e16 100%)",
     art: <HorseRacingArt />,
   },
