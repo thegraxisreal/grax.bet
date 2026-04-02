@@ -23,6 +23,7 @@ const BASE_MULTIPLIERS = [25, 12, 6, 3.2, 1.8, 1.2, 0.9, 0.8, 0.4, 0.8, 0.9, 1.2
 const HIGH_BALL_MULTIPLIERS = [10, 6, 3.5, 2.2, 1.6, 1.2, 0.95, 0.75, 0.7, 0.75, 0.95, 1.2, 1.6, 2.2, 3.5, 6, 10];
 
 const BALL_COUNTS = [1, 3, 5, 10, 25];
+const SECRET_GOLDEN_MULTIPLIER = 1000;
 
 function getMultipliersForBallCount(ballCount: number): number[] {
   return ballCount >= 10 ? HIGH_BALL_MULTIPLIERS : BASE_MULTIPLIERS;
@@ -298,6 +299,8 @@ export default function PlinkoPage() {
   const [bet, setBet] = useState(1);
   const [ballCount, setBallCount] = useState(1);
   const [sessionProfit, setSessionProfit] = useState(0);
+  const [goldenRoundArmed, setGoldenRoundArmed] = useState(false);
+  const [goldenRoundLive, setGoldenRoundLive] = useState(false);
 
   // Results
   const [ballResults, setBallResults] = useState<BallResult[]>([]);
@@ -322,6 +325,7 @@ export default function PlinkoPage() {
     results: BallResult[];
     totalPayout: number;
     allLanded: number;
+    goldenRound: boolean;
   } | null>(null);
 
   phaseRef.current = phase;
@@ -329,7 +333,9 @@ export default function PlinkoPage() {
 
   const totalBet = bet * ballCount;
   const payoutBoost = getPayoutMultiplier("Plinko");
-  const activeMultipliers = getMultipliersForBallCount(ballCount).map((multiplier) => Math.round(multiplier * payoutBoost * 100) / 100);
+  const activeMultipliers = (goldenRoundArmed || goldenRoundLive)
+    ? Array.from({ length: BUCKETS }, () => SECRET_GOLDEN_MULTIPLIER)
+    : getMultipliersForBallCount(ballCount).map((multiplier) => Math.round(multiplier * payoutBoost * 100) / 100);
   const controlsDisabled = phase === "dropping";
 
   // ── Canvas resize ─────────────────────────────────────────────────────────
@@ -703,6 +709,7 @@ export default function PlinkoPage() {
               unregisterBet();
               setTotalResult({ net, totalPayout: roundedPayout });
               setSessionProfit(prev => Math.round((prev + net) * 100) / 100);
+              if (dc.goldenRound) setGoldenRoundLive(false);
               setPhase("result");
 
               if (usernameRef.current) {
@@ -752,12 +759,17 @@ export default function PlinkoPage() {
 
   const dropBalls = useCallback(() => {
     if (totalBet > balance || totalBet <= 0) return;
+    const goldenRound = goldenRoundArmed;
 
     subtractBalance(totalBet);
     registerBet();
     setPhase("dropping");
     setBallResults([]);
     setTotalResult(null);
+    if (goldenRound) {
+      setGoldenRoundArmed(false);
+      setGoldenRoundLive(true);
+    }
 
     dropContextRef.current = {
       totalBet,
@@ -766,6 +778,7 @@ export default function PlinkoPage() {
       results: [],
       totalPayout: 0,
       allLanded: 0,
+      goldenRound,
     };
 
     // Remove old landed balls
@@ -791,7 +804,7 @@ export default function PlinkoPage() {
       };
       ballsRef.current.push(ball);
     }
-  }, [totalBet, balance, ballCount, subtractBalance, registerBet]);
+  }, [totalBet, balance, ballCount, subtractBalance, registerBet, goldenRoundArmed]);
 
   // ── Render ────────────────────────────────────────────────────────────────
 
@@ -799,6 +812,9 @@ export default function PlinkoPage() {
 
   const addChip = useCallback((v: number) => {
     playChipClick();
+    if (v === 1 && phaseRef.current !== "dropping") {
+      setGoldenRoundArmed(true);
+    }
     setBet(prev => prev + v);
   }, []);
 
