@@ -13,7 +13,7 @@ import {
 import { useUser } from "@/context/UserContext";
 
 const OPTION_CONFIG: Array<{ key: NextGameVoteOption; label: string; description: string; accent: string }> = [
-  { key: "tower_climb", label: "Tower Climb", description: "Pick paths, dodge traps.", accent: "#22d3ee" },
+  { key: "tower_climb", label: "Tower Climb", description: "3 doors per floor, 1 trap. Climb or cash out.", accent: "#22d3ee" },
   { key: "treasure_chests", label: "Treasure Chests", description: "Choose chests, avoid bust.", accent: "#fb7185" },
   { key: "lucky_wheel", label: "Lucky Wheel", description: "Spin for random multipliers.", accent: "#fbbf24" },
   { key: "custom", label: "Write-in", description: "Type your own idea.", accent: "#a78bfa" },
