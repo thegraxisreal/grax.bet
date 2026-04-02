@@ -48,7 +48,7 @@ async function loadTransparentHorseSprite(): Promise<HTMLImageElement> {
   return new Promise((resolve) => {
     const img = new Image();
     img.crossOrigin = "anonymous";
-    img.src = SPRITE_URL;
+    img.src = "https://opengameart.org/sites/default/files/horse_run_cycle_0.png";
 
     img.onload = () => {
       const canvas = document.createElement("canvas");
@@ -69,7 +69,6 @@ async function loadTransparentHorseSprite(): Promise<HTMLImageElement> {
         const r = data[i];
         const g = data[i + 1];
         const b = data[i + 2];
-
         if (r > 240 && g > 240 && b > 240) {
           data[i + 3] = 0;
         }
@@ -80,10 +79,7 @@ async function loadTransparentHorseSprite(): Promise<HTMLImageElement> {
       const transparentImg = new Image();
       transparentImg.src = canvas.toDataURL("image/png");
       transparentImg.onload = () => resolve(transparentImg);
-      transparentImg.onerror = () => resolve(img);
     };
-
-    img.onerror = () => resolve(img);
   });
 }
 
@@ -107,10 +103,13 @@ export default function HorseRacingPage() {
   useEffect(() => {
     let active = true;
 
-    loadTransparentHorseSprite().then((horseSprite) => {
+    const hydrateHorseSprite = async () => {
+      const horseSprite = await loadTransparentHorseSprite();
       if (!active) return;
       setHorseSpriteUrl(horseSprite.src || SPRITE_URL);
-    });
+    };
+
+    hydrateHorseSprite();
 
     return () => {
       active = false;
