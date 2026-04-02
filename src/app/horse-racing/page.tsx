@@ -66,7 +66,11 @@ async function loadTransparentHorseSprite(): Promise<HTMLImageElement> {
       const data = imageData.data;
 
       for (let i = 0; i < data.length; i += 4) {
-        if (data[i] === 255 && data[i + 1] === 255 && data[i + 2] === 255) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+
+        if (r > 240 && g > 240 && b > 240) {
           data[i + 3] = 0;
         }
       }
