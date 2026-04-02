@@ -41,7 +41,7 @@ function betLabel(key: BetKey): string {
 }
 
 function betPayout(key: BetKey): number {
-  if (key === "red" || key === "black") return 1;
+  if (key === "red" || key === "black") return 100;
   return 35;
 }
 
@@ -762,11 +762,11 @@ export default function RoulettePage() {
             {/* Outside bets */}
             <div className="roulette-outside" style={{ display: "grid", gridTemplateColumns: "36px 1fr 1fr", gap: "2px" }}>
               <div />
-              <BettingCell betKey="red" label="RED  1:1" color="red"
+              <BettingCell betKey="red" label="RED  100:1" color="red"
                 isSelected={selectedBet === "red"}
                 isWinner={winningSlot !== null && getPocketColor(winningSlot) === "red"}
                 onClick={handleSelectBet} disabled={phase !== "betting"} />
-              <BettingCell betKey="black" label="BLACK  1:1" color="black"
+              <BettingCell betKey="black" label="BLACK  100:1" color="black"
                 isSelected={selectedBet === "black"}
                 isWinner={winningSlot !== null && getPocketColor(winningSlot) === "black"}
                 onClick={handleSelectBet} disabled={phase !== "betting"} />
