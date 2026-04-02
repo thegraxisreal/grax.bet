@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import {
   castNextGameVote,
@@ -11,8 +11,6 @@ import {
   subscribeToNextGamePoll,
 } from "@/lib/firestore";
 import { useUser } from "@/context/UserContext";
-
-const VOTED_STORAGE_KEY = "grax_next_game_vote_seen";
 
 const OPTION_CONFIG: Array<{ key: NextGameVoteOption; label: string; description: string; accent: string }> = [
   { key: "tower_climb", label: "Tower Climb", description: "Pick paths, dodge traps.", accent: "#22d3ee" },
@@ -40,7 +38,6 @@ export default function SlotsAnnouncementModal() {
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [customSuggestions, setCustomSuggestions] = useState<CustomSuggestionDoc[]>([]);
   const [featuredSuggestion, setFeaturedSuggestion] = useState<CustomSuggestionDoc | null>(null);
-  const [hasVotedBefore, setHasVotedBefore] = useState(false);
 
   const { username } = useUser();
   const pathname = usePathname();
@@ -53,11 +50,6 @@ export default function SlotsAnnouncementModal() {
     const t = setTimeout(() => setVisible(true), 350);
     return () => clearTimeout(t);
   }, [pathname]);
-
-  useEffect(() => {
-    const seenVoteFlag = localStorage.getItem(VOTED_STORAGE_KEY) === "1";
-    setHasVotedBefore(seenVoteFlag);
-  }, []);
 
   useEffect(() => {
     const unsub = subscribeToNextGamePoll(
@@ -87,14 +79,6 @@ export default function SlotsAnnouncementModal() {
     setFeaturedSuggestion(customSuggestions[randomIndex]);
   }, [customSuggestions, visible]);
 
-  const optionMetrics = useMemo(() => {
-    return OPTION_CONFIG.map((option) => {
-      const votes = poll.votesByOption?.[option.key] ?? 0;
-      const pct = poll.totalVotes > 0 ? (votes / poll.totalVotes) * 100 : 0;
-      return { ...option, votes, pct };
-    });
-  }, [poll]);
-
   function dismiss() {
     setVisible(false);
     setStatusMessage(null);
@@ -119,8 +103,6 @@ export default function SlotsAnnouncementModal() {
       });
 
       setStatusMessage("Vote sent. Thanks for helping pick the next game!");
-      localStorage.setItem(VOTED_STORAGE_KEY, "1");
-      setHasVotedBefore(true);
       setCustomSuggestion("");
 
       const latestSuggestions = await listRecentCustomSuggestions();
@@ -130,6 +112,8 @@ export default function SlotsAnnouncementModal() {
         const randomIndex = Math.floor(Math.random() * validSuggestions.length);
         setFeaturedSuggestion(validSuggestions[randomIndex]);
       }
+
+      dismiss();
     } catch {
       setStatusMessage("Could not submit vote. Try again in a few seconds.");
     } finally {
@@ -160,9 +144,11 @@ export default function SlotsAnnouncementModal() {
           background: "linear-gradient(160deg, #0f172a 0%, #111827 50%, #1f2937 100%)",
           border: "1px solid rgba(148,163,184,0.35)",
           borderRadius: 22,
-          padding: "26px 22px 20px",
-          maxWidth: 620,
+          padding: "20px 18px 16px",
+          maxWidth: 500,
           width: "100%",
+          maxHeight: "90vh",
+          overflowY: "auto",
           position: "relative",
           boxShadow: "0 20px 60px rgba(0,0,0,0.45)",
         }}
@@ -288,35 +274,13 @@ export default function SlotsAnnouncementModal() {
           </button>
         </form>
 
-        <div style={{ display: "grid", gap: 8, marginBottom: 14 }}>
-          {optionMetrics.map((option) => (
-            <div key={option.key}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4, color: "#cbd5e1", fontSize: ".86rem" }}>
-                <span>{option.label}</span>
-                <span>{option.pct.toFixed(0)}%</span>
-              </div>
-              <div style={{ background: "rgba(148,163,184,0.2)", borderRadius: 999, overflow: "hidden", height: 9 }}>
-                <div
-                  style={{
-                    width: `${option.pct}%`,
-                    background: `linear-gradient(90deg, ${option.accent}, rgba(255,255,255,0.85))`,
-                    height: "100%",
-                    transition: "width 220ms ease",
-                  }}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <p style={{ margin: 0, color: "#94a3b8", fontSize: ".84rem" }}>
+        <p style={{ margin: 0, marginBottom: 10, color: "#94a3b8", fontSize: ".84rem" }}>
           Total votes: <strong style={{ color: "#e2e8f0" }}>{poll.totalVotes}</strong>
         </p>
 
-        {(hasVotedBefore || statusMessage?.startsWith("Vote sent")) && featuredSuggestion && (
+        {featuredSuggestion && (
           <div
             style={{
-              marginTop: 14,
               borderRadius: 12,
               border: "1px solid rgba(167,139,250,0.4)",
               background: "rgba(109,40,217,0.12)",
