@@ -10,11 +10,11 @@ import {
 } from "@/lib/firestore";
 import { useUser } from "@/context/UserContext";
 
-const OPTION_CONFIG: Array<{ key: NextGameVoteOption; label: string; accent: string }> = [
-  { key: "tower_climb", label: "Tower Climb", accent: "#22d3ee" },
-  { key: "treasure_chests", label: "Treasure Chests", accent: "#fb7185" },
-  { key: "lucky_wheel", label: "Lucky Wheel", accent: "#fbbf24" },
-  { key: "custom", label: "Write-in", accent: "#a78bfa" },
+const OPTION_CONFIG: Array<{ key: NextGameVoteOption; label: string; description: string; accent: string }> = [
+  { key: "tower_climb", label: "Tower Climb", description: "Pick paths, dodge traps.", accent: "#22d3ee" },
+  { key: "treasure_chests", label: "Treasure Chests", description: "Choose chests, avoid bust.", accent: "#fb7185" },
+  { key: "lucky_wheel", label: "Lucky Wheel", description: "Spin for random multipliers.", accent: "#fbbf24" },
+  { key: "custom", label: "Write-in", description: "Type your own idea.", accent: "#a78bfa" },
 ];
 
 const EMPTY_POLL: NextGamePollDoc = {
@@ -227,7 +227,12 @@ export default function SlotsAnnouncementModal() {
                   checked={isSelected}
                   onChange={() => setSelectedOption(option.key)}
                 />
-                <span style={{ fontWeight: 700 }}>{option.label}</span>
+                <div style={{ display: "grid", gap: 1 }}>
+                  <span style={{ fontWeight: 700 }}>{option.label}</span>
+                  <span style={{ fontSize: ".72rem", color: "#94a3b8", textTransform: "none", letterSpacing: 0 }}>
+                    {option.description}
+                  </span>
+                </div>
               </label>
             );
           })}
