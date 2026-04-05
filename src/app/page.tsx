@@ -899,6 +899,32 @@ function SpamArt() {
   );
 }
 
+function TowersArt() {
+  return (
+    <svg viewBox="0 0 200 150" fill="none" style={{ width: "100%", height: "100%" }}>
+      <defs>
+        <linearGradient id="tw-bg" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#1e40af" />
+          <stop offset="100%" stopColor="#0f172a" />
+        </linearGradient>
+      </defs>
+      <rect x="18" y="12" width="164" height="126" rx="14" fill="url(#tw-bg)" />
+      {[0, 1, 2, 3, 4].map((i) => (
+        <rect key={i} x={30 + i * 28} y={24 + i * 4} width="22" height={96 - i * 8} rx="6" fill="rgba(255,255,255,0.09)" stroke="rgba(148,163,184,0.38)" />
+      ))}
+      {[64, 100, 136].map((x, idx) => (
+        <g key={x}>
+          <rect x={x - 14} y="50" width="28" height="62" rx="8" fill="rgba(15,23,42,0.75)" stroke={idx === 1 ? "#22c55e" : "#60a5fa"} strokeWidth="2.5" />
+          <circle cx={x + 8} cy="82" r="2.8" fill={idx === 1 ? "#22c55e" : "#60a5fa"} />
+        </g>
+      ))}
+      <text x="100" y="134" textAnchor="middle" fontSize="13" fontWeight="800" fill="#dbeafe" fontFamily="'Barlow Condensed',sans-serif" letterSpacing="0.12em">
+        PICK THE SAFE DOOR
+      </text>
+    </svg>
+  );
+}
+
 // ── Game data ─────────────────────────────────────────────────────────────────
 
 const GAMES: ReadonlyArray<{
@@ -1000,6 +1026,13 @@ const GAMES: ReadonlyArray<{
     locked: false,
     gradient: "linear-gradient(145deg, #d97706 0%, #92400e 55%, #451a03 100%)",
     art: <ChickenArt />,
+  },
+  {
+    label: "Towers",
+    href: "/towers",
+    locked: false,
+    gradient: "linear-gradient(145deg, #2563eb 0%, #1d4ed8 55%, #0f172a 100%)",
+    art: <TowersArt />,
   },
 ] as const;
 
