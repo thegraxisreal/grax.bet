@@ -13,7 +13,7 @@ import { getDb } from "@/lib/firebase";
 type Phase = "idle" | "playing" | "transition" | "lost" | "cashed";
 
 const FLOORS = 6;
-const STARTING_BETS = [25, 50, 100] as const;
+const STARTING_BETS = [25, 50, 100, 200] as const;
 const EMOJIS = ["🎲", "🧗", "🏰", "😂", "🫡", "😈", "💸"];
 
 const randomPath = () => Array.from({ length: FLOORS }, () => Math.floor(Math.random() * 3));
@@ -96,6 +96,16 @@ export default function TowersPage() {
     setPhase("playing");
   };
 
+  const setHalfBet = () => {
+    const half = Math.max(25, Math.floor(balance / 2 / 25) * 25);
+    setBaseBet(Math.min(half, balance));
+  };
+
+  const setAllInBet = () => {
+    const allIn = Math.max(25, Math.floor(balance / 25) * 25);
+    setBaseBet(Math.min(allIn, balance));
+  };
+
   const settleLoss = () => {
     setPhase("lost");
     unregisterBet();
@@ -172,9 +182,43 @@ export default function TowersPage() {
         overflow: "hidden",
       }}
     >
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginBottom: 10 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginBottom: 8 }}>
         <div style={{ fontSize: "0.78rem", opacity: 0.75, letterSpacing: "0.12em", textTransform: "uppercase" }}>Towers • Fullscreen Mode</div>
-        {phase !== "playing" && phase !== "transition" && (
+        {phase === "playing" && (
+          <div style={{ fontSize: "0.78rem", opacity: 0.7 }}>Live Run</div>
+        )}
+      </div>
+
+      {(phase === "playing" || phase === "transition") && (
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, gap: 8 }}>
+          <div style={{ fontSize: "0.85rem", fontWeight: 700 }}>Floor {Math.min(floor + 1, FLOORS)} / {FLOORS}</div>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <div style={{ fontSize: "0.78rem", opacity: 0.9 }}>Now: <strong>${fmtMoney(cashoutValue)}</strong></div>
+            <div style={{ fontSize: "0.78rem", opacity: 0.75 }}>Next: ${fmtMoney(nextValue)}</div>
+            <button
+              type="button"
+              onClick={cashout}
+              disabled={phase !== "playing"}
+              style={{
+                border: 0,
+                borderRadius: 9,
+                padding: "7px 10px",
+                fontWeight: 800,
+                fontSize: "0.78rem",
+                cursor: phase === "playing" ? "pointer" : "not-allowed",
+                background: "linear-gradient(180deg,#bc8e62,#8c6444)",
+                color: "#fff",
+                opacity: phase === "playing" ? 1 : 0.55,
+              }}
+            >
+              Cash Out
+            </button>
+          </div>
+        </div>
+      )}
+
+      {phase !== "playing" && phase !== "transition" && (
+        <div style={{ display: "grid", placeItems: "center", marginBottom: 8 }}>
           <div style={{ display: "flex", gap: 6, background: "rgba(0,0,0,0.25)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 999, padding: 4 }}>
             {STARTING_BETS.map((amount) => (
               <button
@@ -195,36 +239,43 @@ export default function TowersPage() {
                 ${amount}
               </button>
             ))}
+            <button
+              type="button"
+              onClick={setHalfBet}
+              style={{
+                border: 0,
+                borderRadius: 999,
+                padding: "5px 9px",
+                fontSize: "0.72rem",
+                fontWeight: 700,
+                cursor: "pointer",
+                color: "#f0e6d8",
+                background: "rgba(255,255,255,0.08)",
+              }}
+            >
+              Half
+            </button>
+            <button
+              type="button"
+              onClick={setAllInBet}
+              style={{
+                border: 0,
+                borderRadius: 999,
+                padding: "5px 9px",
+                fontSize: "0.72rem",
+                fontWeight: 700,
+                cursor: "pointer",
+                color: "#1b1712",
+                background: "#d9b88f",
+              }}
+            >
+              All In
+            </button>
           </div>
-        )}
-      </div>
-
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10, gap: 10 }}>
-        <div style={{ fontSize: "0.96rem", fontWeight: 700 }}>Floor {Math.min(floor + 1, FLOORS)} / {FLOORS}</div>
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <div style={{ fontSize: "0.88rem", opacity: 0.9 }}>Now: <strong>${fmtMoney(cashoutValue)}</strong></div>
-          <div style={{ fontSize: "0.88rem", opacity: 0.75 }}>Next: ${fmtMoney(nextValue)}</div>
-          <button
-            type="button"
-            onClick={cashout}
-            disabled={phase !== "playing"}
-            style={{
-              border: 0,
-              borderRadius: 10,
-              padding: "9px 12px",
-              fontWeight: 800,
-              cursor: phase === "playing" ? "pointer" : "not-allowed",
-              background: "linear-gradient(180deg,#bc8e62,#8c6444)",
-              color: "#fff",
-              opacity: phase === "playing" ? 1 : 0.55,
-            }}
-          >
-            Cash Out
-          </button>
         </div>
-      </div>
+      )}
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 12, minHeight: "calc(100vh - 180px)", alignItems: "stretch" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 10, minHeight: phase === "playing" || phase === "transition" ? "calc(100vh - 120px)" : "calc(100vh - 210px)", alignItems: "stretch" }}>
         {[0, 1, 2].map((door) => {
           const isSafe = revealedDoor === door;
           const isBust = selectedDoor === door && revealedDoor !== door;
@@ -241,10 +292,10 @@ export default function TowersPage() {
               animate={{ y: isSliding ? 62 : 0, opacity: phase === "lost" ? 0.7 : 1 }}
               transition={{ duration: 0.23, ease: "easeOut" }}
               style={{
-                borderRadius: 14,
+                borderRadius: 12,
                 border: "1px solid rgba(255,255,255,0.16)",
                 background: "linear-gradient(180deg, rgba(62,49,35,0.96), rgba(33,25,18,0.98))",
-                padding: 10,
+                padding: 7,
                 cursor: phase === "playing" ? "pointer" : "default",
                 boxShadow: "inset 0 1px 0 rgba(255,255,255,0.12), 0 10px 30px rgba(0,0,0,0.28)",
               }}
@@ -300,22 +351,22 @@ export default function TowersPage() {
             style={{
               position: "absolute",
               left: "50%",
-              bottom: 16,
+              bottom: 14,
               transform: "translateX(-50%)",
               display: "flex",
               gap: 8,
               alignItems: "center",
-              background: "rgba(20,15,11,0.9)",
-              border: "1px solid rgba(255,255,255,0.16)",
-              borderRadius: 999,
-              padding: "8px 10px",
+              background: "rgba(20,15,11,0.95)",
+              border: "1px solid rgba(217,184,143,0.32)",
+              borderRadius: 12,
+              padding: "10px 12px",
             }}
           >
-            <div style={{ fontSize: "0.8rem", opacity: 0.8 }}>Balance ${fmtMoney(balance)}</div>
+            <div style={{ fontSize: "0.8rem", opacity: 0.8 }}>Balance ${fmtMoney(balance)} · Bet ${fmtMoney(baseBet)}</div>
             <button
               type="button"
               onClick={phase === "idle" ? startGame : reset}
-              style={{ border: 0, borderRadius: 999, padding: "8px 12px", background: "#d9b88f", color: "#231b14", fontWeight: 800, cursor: "pointer" }}
+              style={{ border: 0, borderRadius: 10, padding: "8px 12px", background: "#d9b88f", color: "#231b14", fontWeight: 800, cursor: "pointer" }}
             >
               {phase === "idle" ? `Start $${baseBet}` : "Play Again"}
             </button>
