@@ -100,7 +100,7 @@ export default function TowersPage() {
     const net = Math.round((payout - bet) * 100) / 100;
     setLastNet(net);
     setPhase("cashed");
-    if (username) logFeedEvent(username, "Towers", bet, net > 0 ? "win" : "cashout", payout);
+    if (username && net > 0) logFeedEvent(username, "Towers", net, "win");
     addPopup(`${EMOJIS[Math.floor(Math.random() * EMOJIS.length)]} ${username ?? "Player"} cashed out $${fmtMoney(payout)} on floor ${floor + 1}!`);
   };
 
@@ -128,7 +128,8 @@ export default function TowersPage() {
           setLastNet(Math.round((finalPayout - bet) * 100) / 100);
           setPhase("cashed");
           playCashoutWin();
-          if (username) logFeedEvent(username, "Towers", bet, "win", finalPayout);
+          const perfectRunNet = Math.round((finalPayout - bet) * 100) / 100;
+          if (username && perfectRunNet > 0) logFeedEvent(username, "Towers", perfectRunNet, "win");
           addPopup(`🏆 PERFECT RUN! ${username ?? "Player"} cleared all towers for $${fmtMoney(finalPayout)}.`);
         }
       }
@@ -239,7 +240,7 @@ export default function TowersPage() {
               <div style={{ color: "var(--text-secondary)", marginBottom: 8, fontSize: "0.82rem" }}>Select your bet</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                 {[1, 5, 10, 25, 50, 100].map((chip) => (
-                  <CasinoChip key={chip} value={chip} onClick={(v) => setPendingBet((prev) => Math.max(0, Math.min(balance, prev + v)))} disabled={phase === "playing" || balance <= 0} />
+                  <CasinoChip key={chip} value={chip} onClick={(v) => setPendingBet((prev) => Math.max(0, Math.min(balance, prev + v)))} disabled={balance <= 0} />
                 ))}
               </div>
               <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
