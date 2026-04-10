@@ -290,7 +290,6 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Mines",     href: "/mines",     icon: <MinesIcon />, iconColor: "#a78bfa" },
   { label: "Golf",      href: "/golf",      icon: <GolfIcon />, iconColor: "#4ade80" },
   { label: "Plinko",        href: "/plinko",       icon: <PlinkoIcon />, iconColor: "#818cf8" },
-  { label: "Plinko II",     href: "/plinko-ii",    icon: <PlinkoIcon />, promo: "EARLY", iconColor: "#22d3ee" },
   { label: "Horse Racing",  href: "/horse-racing",  icon: <HorseRacingIcon />, locked: true, iconColor: "#facc15" },
   { label: "Bomb Defuse",   href: "/bomb-defuse",   icon: <BombDefuseIcon />, promo: "2X MONEY", iconColor: "#fb7185" },
   { label: "Chicken",       href: "/chicken",       icon: <ChickenIcon />, iconColor: "#f97316" },
@@ -338,7 +337,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       {/* Nav items */}
       <nav style={{ flex: 1 }}>
         {NAV_ITEMS.map(item => {
-          const isActive = pathname === item.href;
+          const isActive = item.href === "/" ? pathname === item.href : pathname === item.href || pathname.startsWith(`${item.href}/`);
           return item.locked ? (
             <div
               key={item.label}

@@ -10,7 +10,6 @@ import CooldownModal from "@/components/CooldownModal";
 import UsernameModal from "@/components/UsernameModal";
 import ActivityFeed from "@/components/ActivityFeed";
 import WinShareButton from "@/components/WinShareButton";
-import SlotsAnnouncementModal from "@/components/SlotsAnnouncementModal";
 import { LiveEventsProvider } from "@/context/LiveEventsContext";
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
@@ -59,7 +58,6 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       <UsernameModal />
       <ActivityFeed />
       <WinShareButton />
-      <SlotsAnnouncementModal />
       </LiveEventsProvider>
     </BalanceProvider>
     </UserProvider>
