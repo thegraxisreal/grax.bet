@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useBalance } from "@/context/BalanceContext";
@@ -125,10 +125,6 @@ export default function ChickenLanesPage() {
 
   const clearedRows = currentRow;
   const currentMultiplier = getMultiplierForClears(clearedRows);
-
-  const potentialPayout = useMemo(() => {
-    return clampMoney(bet * currentMultiplier);
-  }, [bet, currentMultiplier]);
 
   const resetBoard = useCallback(() => {
     if (resolveTimeoutRef.current) {
@@ -519,11 +515,9 @@ export default function ChickenLanesPage() {
             <Stat label="Cashout" value={`$${fmtMoney(clampMoney(bet * currentMultiplier))}`} accent="green" />
             <Stat label="Next Lane" value={formatMultiplier(nextTarget)} />
             <div style={{ ...mutedStyle, marginTop: 4 }}>
-              {phase === "idle"
-                ? "Enter a bet, then tap any coop on lane 1 to start instantly."
-                : lastPick
-                  ? `Last pick: lane ${lastPick.row + 1}, ${tileLabel(lastPick.tile).toLowerCase()} coop.`
-                  : "Pick one coop on the highlighted lane."}
+              {lastPick
+                ? `Last pick: lane ${lastPick.row + 1}, ${tileLabel(lastPick.tile).toLowerCase()} coop.`
+                : "Pick one coop on the highlighted lane."}
             </div>
             {isResolvingSafePick && (
               <div style={{ ...mutedStyle, color: "#86efac" }}>Safe. Advancing...</div>
