@@ -214,6 +214,18 @@ function ChickenIcon() {
   );
 }
 
+function TowersIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+      <rect x="2" y="3" width="18" height="16" rx="2.8" stroke="currentColor" strokeWidth="1.4" />
+      <rect x="4.5" y="5.5" width="4" height="11" rx="1.3" fill="currentColor" opacity="0.35" />
+      <rect x="9" y="5.5" width="4" height="11" rx="1.3" fill="currentColor" opacity="0.6" />
+      <rect x="13.5" y="5.5" width="4" height="11" rx="1.3" fill="currentColor" opacity="0.9" />
+      <path d="M5.8 9.6 L6.8 10.7 L8.1 8.8" stroke="#0f1923" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 function SpamIcon() {
   return (
     <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
@@ -293,6 +305,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Horse Racing",  href: "/horse-racing",  icon: <HorseRacingIcon />, locked: true, iconColor: "#facc15" },
   { label: "Bomb Defuse",   href: "/bomb-defuse",   icon: <BombDefuseIcon />, promo: "2X MONEY", iconColor: "#fb7185" },
   { label: "Chicken",       href: "/chicken",       icon: <ChickenIcon />, iconColor: "#f97316" },
+  { label: "Towers",        href: "/towers",        icon: <TowersIcon />, promo: "NEW", iconColor: "#38bdf8" },
 ];
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
