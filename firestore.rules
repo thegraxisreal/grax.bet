@@ -10,6 +10,11 @@ service cloud.firestore {
       match /bets/{betId} {
         allow read, write: if true;
       }
+
+      // Shop inventory
+      match /inventory/{itemId} {
+        allow read, write: if true;
+      }
     }
 
     // Bracket games — publicly readable, written only by Cloud Functions
