@@ -105,7 +105,7 @@ function SidebarLogoIcon({
           width: "100%",
           height: "100%",
           objectFit: "contain",
-          mixBlendMode: blendMode,
+          mixBlendMode: opaqueBackground ? "normal" : blendMode,
           filter: opaqueBackground ? "contrast(1.14) saturate(0.96) brightness(0.94)" : "none",
           opacity: opaqueBackground ? 0.96 : 1,
         }}
