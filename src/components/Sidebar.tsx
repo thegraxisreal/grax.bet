@@ -1,8 +1,24 @@
 "use client";
 
+import Image, { StaticImageData } from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import MusicPlayer from "@/components/MusicPlayer";
+import bombLogo from "../../images/bomb.png";
+import chickenLogo from "../../images/chicken.png";
+import crashLogo from "../../images/crash.png";
+import chatLogo from "../../images/chat.png";
+import golfLogo from "../../images/golf.png";
+import homeLogo from "../../images/home.png";
+import iconLogo from "../../images/icon.png";
+import inventoryLogo from "../../images/inventory.png";
+import leaderboardLogo from "../../images/leaderboard.png";
+import minesLogo from "../../images/mines.png";
+import plinkoLogo from "../../images/plinko.png";
+import rouletteLogo from "../../images/roulette.png";
+import shopLogo from "../../images/shop.png";
+import slotsLogo from "../../images/slots.png";
+import spamLogo from "../../images/spam.png";
 
 interface NavItem {
   label: string;
@@ -38,113 +54,35 @@ function BlackjackIcon() {
   );
 }
 
-function SlotsIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-      <rect x="1" y="3" width="20" height="16" rx="3" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-      <rect x="4" y="6" width="4" height="10" rx="1" fill="currentColor" opacity="0.6"/>
-      <rect x="9" y="6" width="4" height="10" rx="1" fill="currentColor" opacity="0.6"/>
-      <rect x="14" y="6" width="4" height="10" rx="1" fill="currentColor" opacity="0.6"/>
-      <circle cx="6" cy="11" r="1.5" fill="#0f1923"/>
-      <circle cx="11" cy="11" r="1.5" fill="#0f1923"/>
-      <circle cx="16" cy="11" r="1.5" fill="#0f1923"/>
-    </svg>
-  );
-}
-
-function RouletteIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-      <circle cx="11" cy="11" r="9" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-      <circle cx="11" cy="11" r="5.5" stroke="currentColor" strokeWidth="1" fill="none" opacity="0.5"/>
-      <circle cx="11" cy="11" r="2" fill="currentColor"/>
-      {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, i) => (
-        <line
-          key={i}
-          x1="11" y1="3"
-          x2="11" y2="5.5"
-          stroke="currentColor"
-          strokeWidth="1.2"
-          transform={`rotate(${angle} 11 11)`}
-          opacity="0.7"
-        />
-      ))}
-    </svg>
-  );
-}
-
-function CrashIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-      <polyline points="3,18 8,12 12,9 17,4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-      <circle cx="17" cy="4" r="2.5" fill="currentColor"/>
-      <line x1="3" y1="18" x2="20" y2="18" stroke="currentColor" strokeWidth="1.2" opacity="0.5"/>
-    </svg>
-  );
-}
-
-function SportsIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-      <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-      {/* Horizontal seam */}
-      <path d="M3 11 Q7 7 11 7 Q15 7 19 11" stroke="currentColor" strokeWidth="1" fill="none" opacity="0.7"/>
-      <path d="M3 11 Q7 15 11 15 Q15 15 19 11" stroke="currentColor" strokeWidth="1" fill="none" opacity="0.7"/>
-      {/* Vertical seam */}
-      <line x1="11" y1="3" x2="11" y2="19" stroke="currentColor" strokeWidth="1" opacity="0.5"/>
-      {/* Cross seams */}
-      <path d="M6 5 Q8 8 6 11 Q8 14 6 17" stroke="currentColor" strokeWidth="0.8" fill="none" opacity="0.4"/>
-      <path d="M16 5 Q14 8 16 11 Q14 14 16 17" stroke="currentColor" strokeWidth="0.8" fill="none" opacity="0.4"/>
-    </svg>
-  );
-}
-
-function MinesIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-      <circle cx="11" cy="11" r="6" fill="currentColor" opacity="0.8"/>
-      <circle cx="11" cy="11" r="3" fill="#0f1923"/>
-      {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, i) => (
-        <line
-          key={i}
-          x1="11" y1="3"
-          x2="11" y2="1"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          transform={`rotate(${angle} 11 11)`}
-        />
-      ))}
-    </svg>
-  );
-}
-
-function PlinkoIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-      <circle cx="11" cy="2.5" r="1.8" fill="currentColor"/>
-      {[4, 7, 10, 13].map((y, row) =>
-        Array.from({ length: row + 1 }).map((_, col) => (
-          <circle
-            key={`${row}-${col}`}
-            cx={11 - row * 1.8 + col * 3.6}
-            cy={y + 3}
-            r="1"
-            fill="currentColor"
-            opacity="0.6"
-          />
-        ))
-      )}
-    </svg>
-  );
-}
-
 function ChatIcon() {
   return (
     <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
       <path d="M3 4.5h16a1 1 0 011 1v9a1 1 0 01-1 1H7.5L3 19V5.5a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinejoin="round"/>
       <line x1="7" y1="9" x2="15" y2="9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" opacity="0.7"/>
       <line x1="7" y1="12" x2="12" y2="12" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" opacity="0.5"/>
+    </svg>
+  );
+}
+
+function ShopIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+      <path d="M4 7.5 H18 L16.8 18.5 H5.2 Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" fill="none" />
+      <path d="M7 8 V6.5 A4 4 0 0 1 15 6.5 V8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      <circle cx="8" cy="11.5" r="1.1" fill="currentColor" />
+      <circle cx="14" cy="11.5" r="1.1" fill="currentColor" opacity="0.6" />
+    </svg>
+  );
+}
+
+function InventoryIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+      <rect x="3" y="4" width="16" height="14" rx="2.5" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M7 4.5 V3.5 H15 V4.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+      <path d="M7 9 H15" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+      <path d="M7 13 H11" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" opacity="0.75" />
+      <circle cx="15" cy="13" r="1.2" fill="currentColor" />
     </svg>
   );
 }
@@ -188,54 +126,47 @@ function HorseRacingIcon() {
   );
 }
 
-function BombDefuseIcon() {
+function SidebarLogoIcon({
+  src,
+  alt,
+  blendMode = "normal",
+  opaqueBackground = false,
+}: {
+  src: StaticImageData;
+  alt: string;
+  blendMode?: "normal" | "multiply";
+  opaqueBackground?: boolean;
+}) {
   return (
-    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-      <circle cx="11" cy="13" r="6.5" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-      <circle cx="11" cy="13" r="3" fill="currentColor" opacity="0.6"/>
-      <path d="M11 6.5 L11 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-      <path d="M14 5 Q16 3 18 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" fill="none" opacity="0.8"/>
-      <circle cx="18" cy="4" r="1.2" fill="currentColor" opacity="0.9"/>
-      <line x1="8" y1="10" x2="14" y2="10" stroke="currentColor" strokeWidth="1" opacity="0.5" strokeLinecap="round"/>
-    </svg>
-  );
-}
-
-function ChickenIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-      <ellipse cx="11" cy="13" rx="5" ry="4" stroke="currentColor" strokeWidth="1.4" fill="none"/>
-      <circle cx="11" cy="7.5" r="3" stroke="currentColor" strokeWidth="1.4" fill="none"/>
-      <path d="M9 7 L7 6 L8 8" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/>
-      <path d="M8 17 L7 20" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
-      <path d="M14 17 L15 20" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
-      <path d="M11 10.5 L11 9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-    </svg>
-  );
-}
-
-function SpamIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-      <rect x="2" y="3" width="18" height="16" rx="5" stroke="currentColor" strokeWidth="1.4" />
-      <path d="M7 8.5h8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-      <path d="M7 12h8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" opacity="0.8" />
-      <path d="M7 15.5h5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" opacity="0.6" />
-      <circle cx="16.5" cy="15.5" r="1.4" fill="currentColor" />
-    </svg>
-  );
-}
-
-
-function GolfIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-      <rect x="2" y="2" width="18" height="18" rx="3" stroke="currentColor" strokeWidth="1.4" />
-      <circle cx="8" cy="14" r="2.2" fill="currentColor" opacity="0.8" />
-      <circle cx="15.5" cy="7" r="1.5" fill="currentColor" opacity="0.45" />
-      <line x1="15.5" y1="7" x2="15.5" y2="3.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-      <path d="M15.5 3.5 L18 4.5 L15.5 5.5 Z" fill="currentColor" />
-    </svg>
+    <span
+      style={{
+        width: 30,
+        height: 30,
+        borderRadius: 8,
+        overflow: "hidden",
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: opaqueBackground ? "transparent" : "rgba(255,255,255,0.05)",
+        border: opaqueBackground ? "none" : "1px solid rgba(255,255,255,0.08)",
+        flexShrink: 0,
+      }}
+    >
+      <Image
+        src={src}
+        alt={alt}
+        width={30}
+        height={30}
+        style={{
+          width: "100%",
+          height: "100%",
+          objectFit: "contain",
+          mixBlendMode: blendMode,
+          filter: opaqueBackground ? "contrast(1.14) saturate(0.96) brightness(0.94)" : "none",
+          opacity: opaqueBackground ? 0.96 : 1,
+        }}
+      />
+    </span>
   );
 }
 
@@ -250,49 +181,37 @@ function CloseIcon() {
 
 function SidebarLogo() {
   return (
-    <svg width="90" height="32" viewBox="0 0 90 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="sb-g1" x1="0" y1="0" x2="90" y2="32" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#f0b429" />
-          <stop offset="55%" stopColor="#fffbe6" />
-          <stop offset="100%" stopColor="#f0b429" />
-        </linearGradient>
-        <linearGradient id="sb-dot" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#f97316" />
-          <stop offset="100%" stopColor="#ef4444" />
-        </linearGradient>
-      </defs>
-      {/* G mark */}
-      <circle cx="14" cy="16" r="11" fill="rgba(240,180,41,0.1)" stroke="#f0b429" strokeWidth="1.3"/>
-      <path d="M19 12 Q14 9 10 12 Q7 15 9 19 Q11 23 16 22 L16 18 L19 18" stroke="#f0b429" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-      {/* GRAX */}
-      <text x="30" y="22" fontFamily="'Barlow Condensed', Arial Black, sans-serif" fontWeight="900" fontSize="18" letterSpacing="0.5" fill="url(#sb-g1)">GRAX</text>
-      {/* .bet */}
-      <text x="70" y="22" fontFamily="'Barlow Condensed', Arial Black, sans-serif" fontWeight="500" fontSize="13" fill="rgba(255,255,255,0.4)">.bet</text>
-      {/* pulse dot */}
-      <circle cx="87" cy="8" r="3" fill="url(#sb-dot)">
-        <animate attributeName="opacity" values="1;0.3;1" dur="1.8s" repeatCount="indefinite"/>
-      </circle>
-    </svg>
+    <Image
+      src={iconLogo}
+      alt="grax.bet"
+      priority
+      style={{
+        width: "auto",
+        height: 48,
+        objectFit: "contain",
+        filter: "drop-shadow(0 8px 18px rgba(0,0,0,0.45))",
+      }}
+    />
   );
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { label: "Home",         href: "/",            icon: <HomeIcon />, iconColor: "#60a5fa" },
-  { label: "Leaderboard",  href: "/leaderboard", icon: <LeaderboardIcon />, iconColor: "#fbbf24" },
-  { label: "Chat",         href: "/chat",        icon: <ChatIcon />, iconColor: "#34d399" },
+  { label: "Home",         href: "/",            icon: <SidebarLogoIcon src={homeLogo} alt="Home logo" opaqueBackground />, iconColor: "#60a5fa" },
+  { label: "Leaderboard",  href: "/leaderboard", icon: <SidebarLogoIcon src={leaderboardLogo} alt="Leaderboard logo" opaqueBackground />, iconColor: "#fbbf24" },
+  { label: "Shop",         href: "/shop",        icon: <SidebarLogoIcon src={shopLogo} alt="Shop logo" opaqueBackground />, locked: true, iconColor: "#f472b6" },
+  { label: "Inventory",    href: "/inventory",   icon: <SidebarLogoIcon src={inventoryLogo} alt="Inventory logo" opaqueBackground />, locked: true, iconColor: "#38bdf8" },
+  { label: "Chat",         href: "/chat",        icon: <SidebarLogoIcon src={chatLogo} alt="Chat logo" opaqueBackground />, iconColor: "#34d399" },
   { label: "Blackjack",    href: "/blackjack",   icon: <BlackjackIcon />, iconColor: "#f59e0b" },
-  { label: "Slots",     href: "/slots",     icon: <SlotsIcon />, iconColor: "#22d3ee" },
-  { label: "Roulette",  href: "/roulette",  icon: <RouletteIcon />, iconColor: "#f87171" },
-  { label: "Crash",     href: "/crash",     icon: <CrashIcon />, iconColor: "#fb923c" },
-  { label: "March Madness", href: "/sports",    icon: <SportsIcon />, live: true, iconColor: "#60a5fa" },
-  { label: "SPAM!",         href: "/spam",      icon: <SpamIcon />, promo: "15 SEC", iconColor: "#2dd4bf" },
-  { label: "Mines",     href: "/mines",     icon: <MinesIcon />, iconColor: "#a78bfa" },
-  { label: "Golf",      href: "/golf",      icon: <GolfIcon />, iconColor: "#4ade80" },
-  { label: "Plinko",        href: "/plinko",       icon: <PlinkoIcon />, iconColor: "#818cf8" },
+  { label: "Slots",     href: "/slots",     icon: <SidebarLogoIcon src={slotsLogo} alt="Slots logo" blendMode="multiply" opaqueBackground />, iconColor: "#22d3ee" },
+  { label: "Roulette",  href: "/roulette",  icon: <SidebarLogoIcon src={rouletteLogo} alt="Roulette logo" blendMode="multiply" opaqueBackground />, iconColor: "#f87171" },
+  { label: "Crash",     href: "/crash",     icon: <SidebarLogoIcon src={crashLogo} alt="Crash logo" blendMode="multiply" opaqueBackground />, iconColor: "#fb923c" },
+  { label: "SPAM!",         href: "/spam",      icon: <SidebarLogoIcon src={spamLogo} alt="Spam logo" blendMode="multiply" opaqueBackground />, promo: "15 SEC", iconColor: "#2dd4bf" },
+  { label: "Mines",     href: "/mines",     icon: <SidebarLogoIcon src={minesLogo} alt="Mines logo" blendMode="multiply" opaqueBackground />, iconColor: "#a78bfa" },
+  { label: "Golf",      href: "/golf",      icon: <SidebarLogoIcon src={golfLogo} alt="Golf logo" blendMode="multiply" opaqueBackground />, iconColor: "#4ade80" },
+  { label: "Plinko",        href: "/plinko",       icon: <SidebarLogoIcon src={plinkoLogo} alt="Plinko logo" blendMode="multiply" opaqueBackground />, iconColor: "#818cf8" },
   { label: "Horse Racing",  href: "/horse-racing",  icon: <HorseRacingIcon />, locked: true, iconColor: "#facc15" },
-  { label: "Bomb Defuse",   href: "/bomb-defuse",   icon: <BombDefuseIcon />, promo: "2X MONEY", iconColor: "#fb7185" },
-  { label: "Chicken",       href: "/chicken",       icon: <ChickenIcon />, iconColor: "#f97316" },
+  { label: "Bomb Defuse",   href: "/bomb-defuse",   icon: <SidebarLogoIcon src={bombLogo} alt="Bomb Defuse logo" blendMode="multiply" opaqueBackground />, promo: "2X MONEY", iconColor: "#fb7185" },
+  { label: "Chicken",       href: "/chicken",       icon: <SidebarLogoIcon src={chickenLogo} alt="Chicken logo" blendMode="multiply" opaqueBackground />, iconColor: "#f97316" },
 ];
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
@@ -344,7 +263,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               className={`sidebar-item locked`}
             >
               <span style={{ opacity: 0.85, color: item.iconColor ?? "#9ca3af" }}>{item.icon}</span>
-              <span style={{ flex: 1 }}>{item.label}</span>
+              <span style={{ flex: 1, color: item.iconColor ?? "var(--text-muted)" }}>{item.label}</span>
               <span style={{
                 background: "rgba(255,255,255,0.1)",
                 borderRadius: "10px",
@@ -367,7 +286,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               onClick={onClose}
             >
               <span style={{ color: item.iconColor ?? "#9ca3af" }}>{item.icon}</span>
-              <span>{item.label}</span>
+              <span style={{ color: isActive ? "var(--text-primary)" : item.iconColor ?? "var(--text-secondary)" }}>{item.label}</span>
               {item.live && !isActive && (
                 <span className="live-bets-badge" style={{
                   background: "linear-gradient(135deg, #f97316, #ef4444)",
