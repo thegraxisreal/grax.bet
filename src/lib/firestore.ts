@@ -12,6 +12,12 @@ export interface UserDoc {
   balance: number;
   totalWinnings: number;
   gamesPlayed: number;
+  favoriteGame: string;
+  biggestWin: number;
+  equippedTitleId: string | null;
+  equippedFrameId: string | null;
+  equippedCarId: string | null;
+  equippedHouseId: string | null;
 }
 
 export async function checkUsernameAvailable(username: string): Promise<boolean> {
@@ -28,6 +34,12 @@ export async function createUser(username: string, startingBalance: number): Pro
     balance: startingBalance,
     totalWinnings: 0,
     gamesPlayed: 0,
+    favoriteGame: "",
+    biggestWin: 0,
+    equippedTitleId: null,
+    equippedFrameId: null,
+    equippedCarId: null,
+    equippedHouseId: null,
   };
   await setDoc(ref, userDoc);
 }

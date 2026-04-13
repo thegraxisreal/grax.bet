@@ -1,8 +1,12 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 import { useLiveEvents } from "@/context/LiveEventsContext";
+import chickenPopupImage from "../../images/chickenpopup.png";
+import textLogo from "../../images/textlogo.png";
 
 // ── Game card illustrations ───────────────────────────────────────────────────
 
@@ -301,65 +305,6 @@ function CrashArt() {
       {[[170,25],[180,38],[175,50]].map(([x,y],i)=>(
         <line key={i} x1={162} y1={22} x2={x} y2={y} stroke="#ef4444" strokeWidth={2-i*0.4} strokeLinecap="round" opacity={0.7-i*0.15} />
       ))}
-    </svg>
-  );
-}
-
-function SportsArt() {
-  return (
-    <svg viewBox="0 0 200 150" fill="none" style={{ width: "100%", height: "100%" }}>
-      <defs>
-        <radialGradient id="ball-grad" cx="35%" cy="30%" r="65%">
-          <stop offset="0%" stopColor="#f97316" />
-          <stop offset="100%" stopColor="#9a3412" />
-        </radialGradient>
-        <filter id="sports-glow">
-          <feGaussianBlur stdDeviation="6" result="blur" />
-          <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-        </filter>
-      </defs>
-      {/* Court lines background */}
-      <g opacity="0.12">
-        <rect x="30" y="20" width="140" height="110" rx="4" stroke="white" strokeWidth="1.5" fill="none"/>
-        <circle cx="100" cy="75" r="25" stroke="white" strokeWidth="1" fill="none"/>
-        <line x1="100" y1="20" x2="100" y2="130" stroke="white" strokeWidth="1"/>
-      </g>
-      {/* Bounce shadow */}
-      <ellipse cx="100" cy="130" rx="30" ry="6" fill="rgba(249,115,22,0.15)" />
-      {/* Basketball */}
-      <g filter="url(#sports-glow)">
-        <circle cx="100" cy="75" r="40" fill="url(#ball-grad)" />
-        {/* Ball texture - pebble dots */}
-        {[
-          [88,58],[95,62],[108,60],[115,68],[85,72],[112,78],
-          [90,85],[105,90],[95,95],[110,95],[88,100],[100,68],
-        ].map(([x,y],i)=>(
-          <circle key={`d${i}`} cx={x} cy={y} r="1.2" fill="rgba(0,0,0,0.15)" />
-        ))}
-        {/* Horizontal seam */}
-        <path d="M60 75 Q80 60 100 60 Q120 60 140 75" stroke="#1a0a00" strokeWidth="1.8" fill="none" opacity="0.6"/>
-        <path d="M60 75 Q80 90 100 90 Q120 90 140 75" stroke="#1a0a00" strokeWidth="1.8" fill="none" opacity="0.6"/>
-        {/* Vertical seam */}
-        <line x1="100" y1="35" x2="100" y2="115" stroke="#1a0a00" strokeWidth="1.8" opacity="0.6"/>
-        {/* Side seams */}
-        <path d="M78 42 Q72 55 72 75 Q72 95 78 108" stroke="#1a0a00" strokeWidth="1.2" fill="none" opacity="0.4"/>
-        <path d="M122 42 Q128 55 128 75 Q128 95 122 108" stroke="#1a0a00" strokeWidth="1.2" fill="none" opacity="0.4"/>
-        {/* Shine */}
-        <ellipse cx="86" cy="58" rx="12" ry="8" fill="rgba(255,255,255,0.3)" transform="rotate(-30 86 58)" />
-      </g>
-      {/* Bracket badge */}
-      <g>
-        <rect x="10" y="10" width="60" height="28" rx="6" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
-        <text x="40" y="19" textAnchor="middle" fontSize="6.5" fontWeight="600" fill="rgba(255,255,255,0.5)" fontFamily="'Barlow Condensed',sans-serif" letterSpacing="0.1em">MARCH</text>
-        <text x="40" y="32" textAnchor="middle" fontSize="11" fontWeight="800" fill="white" fontFamily="'Barlow Condensed',sans-serif" letterSpacing="0.05em">MADNESS</text>
-      </g>
-      {/* Live indicator */}
-      <g>
-        <circle cx="170" cy="22" r="4" fill="#ef4444" opacity="0.8">
-          <animate attributeName="opacity" values="0.8;0.3;0.8" dur="1.5s" repeatCount="indefinite"/>
-        </circle>
-        <text x="170" y="34" textAnchor="middle" fontSize="6" fontWeight="700" fill="#ef4444" fontFamily="'Barlow Condensed',sans-serif" letterSpacing="0.1em">LIVE</text>
-      </g>
     </svg>
   );
 }
@@ -824,13 +769,6 @@ const GAMES: ReadonlyArray<{
     art: <CrashArt />,
   },
   {
-    label: "March Madness",
-    href: "/sports",
-    locked: false,
-    gradient: "linear-gradient(145deg, #2563eb 0%, #1e3a8a 55%, #0f1f5c 100%)",
-    art: <SportsArt />,
-  },
-  {
     label: "Plinko",
     href: "/plinko",
     locked: false,
@@ -1009,6 +947,12 @@ function LiveEventsHeroCard() {
 }
 
 export default function Home() {
+  const [showChickenPromo, setShowChickenPromo] = useState(false);
+
+  useEffect(() => {
+    setShowChickenPromo(true);
+  }, []);
+
   return (
     <div style={{
       height: "100%",
@@ -1016,34 +960,244 @@ export default function Home() {
       background: "var(--bg-primary)",
       padding: "32px 28px 40px",
     }}>
+      {showChickenPromo && (
+        <div
+          className="modal-overlay"
+          onClick={() => setShowChickenPromo(false)}
+          style={{ zIndex: 120 }}
+        >
+          <motion.div
+            initial={{ opacity: 0, y: 16, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.22 }}
+            className="modal-card"
+            onClick={(event) => event.stopPropagation()}
+            style={{
+              maxWidth: 460,
+              width: "min(92vw, 460px)",
+              padding: 0,
+              overflow: "hidden",
+              borderRadius: 18,
+              background: "linear-gradient(180deg, rgba(36,18,4,0.98) 0%, rgba(16,10,4,0.98) 100%)",
+              border: "1px solid rgba(249,115,22,0.22)",
+              boxShadow: "0 28px 80px rgba(0,0,0,0.72)",
+            }}
+          >
+            <div
+              style={{
+                position: "relative",
+                padding: "18px 18px 14px",
+                background: "radial-gradient(circle at top left, rgba(249,115,22,0.22), transparent 58%)",
+                borderBottom: "1px solid rgba(255,255,255,0.06)",
+              }}
+            >
+              <button
+                onClick={() => setShowChickenPromo(false)}
+                style={{
+                  position: "absolute",
+                  top: 12,
+                  right: 12,
+                  width: 32,
+                  height: 32,
+                  borderRadius: 999,
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  background: "rgba(255,255,255,0.06)",
+                  color: "var(--text-primary)",
+                  cursor: "pointer",
+                  fontSize: "1rem",
+                }}
+                aria-label="Close new Chicken Lanes popup"
+              >
+                ×
+              </button>
+
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 16,
+                  paddingRight: 28,
+                }}
+              >
+                <div
+                  style={{
+                    width: 88,
+                    height: 88,
+                    borderRadius: 18,
+                    background: "rgba(255,255,255,0.06)",
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                  }}
+                >
+                  <Image
+                    src={chickenPopupImage}
+                    alt="Chicken Lanes promo art"
+                    width={70}
+                    height={70}
+                    style={{ width: 70, height: 70, objectFit: "contain" }}
+                  />
+                </div>
+
+                <div style={{ textAlign: "left" }}>
+                  <div
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      borderRadius: 999,
+                      padding: "4px 9px",
+                      background: "rgba(249,115,22,0.14)",
+                      border: "1px solid rgba(249,115,22,0.22)",
+                      color: "#fdba74",
+                      fontSize: "0.62rem",
+                      fontWeight: 800,
+                      letterSpacing: "0.14em",
+                      textTransform: "uppercase",
+                      marginBottom: 10,
+                    }}
+                  >
+                    New Mode
+                  </div>
+                  <h2
+                    style={{
+                      margin: 0,
+                      color: "var(--text-primary)",
+                      fontFamily: "'Barlow Condensed', sans-serif",
+                      fontSize: "2rem",
+                      lineHeight: 0.95,
+                      letterSpacing: "0.05em",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    Chicken Lanes
+                  </h2>
+                  <p
+                    style={{
+                      margin: "10px 0 0",
+                      color: "var(--text-secondary)",
+                      fontSize: "0.92rem",
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    Chicken has a new mode selector now. Try the new <strong style={{ color: "#fdba74" }}>Lanes</strong> mode from Chicken and push deeper runs.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div
+              style={{
+                padding: "16px 18px 18px",
+                display: "flex",
+                gap: 10,
+                flexWrap: "wrap",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <div
+                style={{
+                  color: "var(--text-muted)",
+                  fontSize: "0.72rem",
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  fontWeight: 700,
+                }}
+              >
+                Available now in Chicken
+              </div>
+
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                <Link
+                  href="/chicken"
+                  onClick={() => setShowChickenPromo(false)}
+                  style={{
+                    textDecoration: "none",
+                    borderRadius: 999,
+                    padding: "10px 14px",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    background: "rgba(255,255,255,0.05)",
+                    color: "var(--text-primary)",
+                    fontFamily: "'Barlow Condensed', sans-serif",
+                    fontWeight: 700,
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Open Chicken
+                </Link>
+                <Link
+                  href="/chicken/lanes"
+                  onClick={() => setShowChickenPromo(false)}
+                  style={{
+                    textDecoration: "none",
+                    borderRadius: 999,
+                    padding: "10px 16px",
+                    background: "linear-gradient(135deg, #f97316, #ea580c)",
+                    color: "#fff",
+                    fontFamily: "'Barlow Condensed', sans-serif",
+                    fontWeight: 800,
+                    letterSpacing: "0.09em",
+                    textTransform: "uppercase",
+                    boxShadow: "0 10px 24px rgba(249,115,22,0.28)",
+                  }}
+                >
+                  Play Lanes
+                </Link>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
 
       {/* Hero */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        style={{ marginBottom: "36px" }}
+        style={{
+          marginBottom: "18px",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "flex-start",
+          textAlign: "left",
+        }}
       >
-        <h1 style={{
-          fontFamily: "'Barlow Condensed', sans-serif",
-          fontSize: "clamp(2rem, 4vw, 3rem)",
-          fontWeight: 800,
-          letterSpacing: "0.06em",
-          textTransform: "uppercase",
-          lineHeight: 1.1,
-          marginBottom: "10px",
-        }}>
-          <span className="shimmer-text">GRAX</span>
-          <span style={{ color: "rgba(255,255,255,0.35)", fontSize: "0.6em", fontWeight: 500, letterSpacing: "0.05em" }}>.bet</span>
-        </h1>
-        <p style={{
-          color: "var(--text-secondary)",
-          fontSize: "0.95rem",
-          maxWidth: "420px",
-          lineHeight: 1.6,
-        }}>
-          Premium fake-money casino. All the thrills, none of the risk.
-        </p>
+        <div
+          style={{
+            position: "relative",
+            width: "min(100%, 860px)",
+            height: "clamp(110px, 14vw, 150px)",
+            padding: "4px 0 0 0",
+            overflow: "hidden",
+          }}
+        >
+          <div
+            style={{
+              position: "absolute",
+              inset: "6% 22% 10% 0%",
+              background: "radial-gradient(circle, rgba(0,230,118,0.12) 0%, rgba(240,180,41,0.1) 30%, rgba(15,25,35,0) 72%)",
+              filter: "blur(18px)",
+              pointerEvents: "none",
+            }}
+          />
+          <Image
+            src={textLogo}
+            alt="grax.bet"
+            priority
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              objectPosition: "left center",
+              position: "relative",
+              zIndex: 1,
+              filter: "drop-shadow(0 22px 42px rgba(0,0,0,0.55))",
+            }}
+          />
+        </div>
       </motion.div>
 
       <LiveEventsHeroCard />
