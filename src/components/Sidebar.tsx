@@ -35,14 +35,6 @@ interface SidebarProps {
   onClose: () => void;
 }
 
-function HomeIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-      <path d="M3 10.5L11 3L19 10.5V19.5H14.5V14H7.5V19.5H3V10.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" fill="none"/>
-    </svg>
-  );
-}
-
 function BlackjackIcon() {
   return (
     <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
@@ -50,54 +42,6 @@ function BlackjackIcon() {
       <rect x="12" y="10" width="8" height="11" rx="1.5" fill="currentColor" opacity="0.6"/>
       <text x="6" y="9" textAnchor="middle" fontSize="7" fill="#0f1923" fontWeight="bold" fontFamily="monospace">A</text>
       <text x="16" y="18" textAnchor="middle" fontSize="6" fill="#0f1923" fontWeight="bold" fontFamily="monospace">K</text>
-    </svg>
-  );
-}
-
-function ChatIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-      <path d="M3 4.5h16a1 1 0 011 1v9a1 1 0 01-1 1H7.5L3 19V5.5a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinejoin="round"/>
-      <line x1="7" y1="9" x2="15" y2="9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" opacity="0.7"/>
-      <line x1="7" y1="12" x2="12" y2="12" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" opacity="0.5"/>
-    </svg>
-  );
-}
-
-function ShopIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-      <path d="M4 7.5 H18 L16.8 18.5 H5.2 Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" fill="none" />
-      <path d="M7 8 V6.5 A4 4 0 0 1 15 6.5 V8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-      <circle cx="8" cy="11.5" r="1.1" fill="currentColor" />
-      <circle cx="14" cy="11.5" r="1.1" fill="currentColor" opacity="0.6" />
-    </svg>
-  );
-}
-
-function InventoryIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-      <rect x="3" y="4" width="16" height="14" rx="2.5" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M7 4.5 V3.5 H15 V4.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-      <path d="M7 9 H15" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-      <path d="M7 13 H11" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" opacity="0.75" />
-      <circle cx="15" cy="13" r="1.2" fill="currentColor" />
-    </svg>
-  );
-}
-
-function LeaderboardIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-      {/* Center podium — 1st place */}
-      <rect x="8.5" y="7" width="5" height="12" rx="1" fill="currentColor"/>
-      {/* Left podium — 2nd place */}
-      <rect x="2" y="11" width="5.5" height="8" rx="1" fill="currentColor" opacity="0.65"/>
-      {/* Right podium — 3rd place */}
-      <rect x="14.5" y="13" width="5.5" height="6" rx="1" fill="currentColor" opacity="0.45"/>
-      {/* Trophy on top of center */}
-      <path d="M10 4.5h2v1.8a1 1 0 01-2 0V4.5z" stroke="currentColor" strokeWidth="1" fill="currentColor" opacity="0.9"/>
     </svg>
   );
 }
