@@ -140,9 +140,9 @@ function SidebarLogoIcon({
   return (
     <span
       style={{
-        width: 24,
-        height: 24,
-        borderRadius: 7,
+        width: 30,
+        height: 30,
+        borderRadius: 8,
         overflow: "hidden",
         display: "inline-flex",
         alignItems: "center",
@@ -155,8 +155,8 @@ function SidebarLogoIcon({
       <Image
         src={src}
         alt={alt}
-        width={24}
-        height={24}
+        width={30}
+        height={30}
         style={{
           width: "100%",
           height: "100%",
@@ -263,7 +263,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               className={`sidebar-item locked`}
             >
               <span style={{ opacity: 0.85, color: item.iconColor ?? "#9ca3af" }}>{item.icon}</span>
-              <span style={{ flex: 1 }}>{item.label}</span>
+              <span style={{ flex: 1, color: item.iconColor ?? "var(--text-muted)" }}>{item.label}</span>
               <span style={{
                 background: "rgba(255,255,255,0.1)",
                 borderRadius: "10px",
@@ -286,7 +286,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               onClick={onClose}
             >
               <span style={{ color: item.iconColor ?? "#9ca3af" }}>{item.icon}</span>
-              <span>{item.label}</span>
+              <span style={{ color: isActive ? "var(--text-primary)" : item.iconColor ?? "var(--text-secondary)" }}>{item.label}</span>
               {item.live && !isActive && (
                 <span className="live-bets-badge" style={{
                   background: "linear-gradient(135deg, #f97316, #ef4444)",
