@@ -11,6 +11,11 @@ const ClientLayout = dynamic(() => import("@/components/ClientLayout"), {
 export const metadata: Metadata = {
   title: "grax.bet",
   description: "Premium fake money casino — for fun with friends",
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({
