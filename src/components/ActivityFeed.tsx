@@ -181,6 +181,7 @@ export default function ActivityFeed() {
               cursor: "pointer",
             }}
             onClick={() => dismiss(toast.id)}
+            onMouseEnter={() => dismiss(toast.id)}
           >
             <span style={{ fontSize: "1.4rem", flexShrink: 0 }}>
               {GAME_ICONS[toast.game] ?? "🎰"}
